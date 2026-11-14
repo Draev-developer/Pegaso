@@ -2402,6 +2402,23 @@
 #define IDC_PG_VPN_ADAPTER_LBL          5023
 #define IDC_PG_VPN_ADAPTER              5024
 #define IDC_PG_VPN_KILL                 5025
+#define IDD_WEB_SEARCH                  5003
+#define IDD_WEB_PROVIDERS               5004
+#define IDC_WS_QUERY                    5030
+#define IDC_WS_SEARCH                   5031
+#define IDC_WS_PROVIDERS                5032
+#define IDC_WS_LIST                     5033
+#define IDC_WS_STATUS                   5034
+#define IDC_WS_DOWNLOAD                 5035
+#define IDC_WP_LIST                     5040
+#define IDC_WP_NAME_LBL                 5041
+#define IDC_WP_NAME                     5042
+#define IDC_WP_URL_LBL                  5043
+#define IDC_WP_URL                      5044
+#define IDC_WP_KEY_LBL                  5045
+#define IDC_WP_KEY                      5046
+#define IDC_WP_SAVE                     5047
+#define IDC_WP_REMOVE                   5048
 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS

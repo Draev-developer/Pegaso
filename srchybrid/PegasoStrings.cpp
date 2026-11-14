@@ -48,6 +48,44 @@ namespace
 		{L"Stop all transfers while it is disconnected", L"Detener todas las transferencias mientras est\u00e9 desconectado", L"Arr\u00eater tous les transferts tant qu'elle est d\u00e9connect\u00e9e", L"Ferma tutti i trasferimenti mentre \u00e8 disconnessa", L"\u041e\u0441\u0442\u0430\u043d\u0430\u0432\u043b\u0438\u0432\u0430\u0442\u044c \u0432\u0441\u0435 \u043f\u0435\u0440\u0435\u0434\u0430\u0447\u0438, \u043f\u043e\u043a\u0430 \u043e\u043d \u043e\u0442\u043a\u043b\u044e\u0447\u0451\u043d", L"Parar todas as transfer\u00eancias enquanto estiver desligado", L"Alle \u00dcbertragungen anhalten, solange er getrennt ist"},
 		// PS_OPT_VPN_DOWN
 		{L"not connected", L"no conectado", L"non connect\u00e9e", L"non connessa", L"\u043d\u0435 \u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0451\u043d", L"n\u00e3o ligado", L"nicht verbunden"},
+		// PS_WS_MENU
+		{L"Search torrents on the web...", L"Buscar torrents en la web...", L"Rechercher des torrents sur le web...", L"Cerca torrent sul web...", L"\u041f\u043e\u0438\u0441\u043a \u0442\u043e\u0440\u0440\u0435\u043d\u0442\u043e\u0432 \u0432 \u0438\u043d\u0442\u0435\u0440\u043d\u0435\u0442\u0435...", L"Procurar torrents na web...", L"Torrents im Web suchen..."},
+		// PS_WS_TITLE
+		{L"Web search", L"B\u00fasqueda web", L"Recherche web", L"Ricerca web", L"\u041f\u043e\u0438\u0441\u043a \u0432 \u0438\u043d\u0442\u0435\u0440\u043d\u0435\u0442\u0435", L"Pesquisa web", L"Websuche"},
+		// PS_WS_SEARCH
+		{L"Search", L"Buscar", L"Rechercher", L"Cerca", L"\u0418\u0441\u043a\u0430\u0442\u044c", L"Procurar", L"Suchen"},
+		// PS_WS_DOWNLOAD
+		{L"Download", L"Descargar", L"T\u00e9l\u00e9charger", L"Scarica", L"\u0417\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044c", L"Transferir", L"Herunterladen"},
+		// PS_WS_CLOSE
+		{L"Close", L"Cerrar", L"Fermer", L"Chiudi", L"\u0417\u0430\u043a\u0440\u044b\u0442\u044c", L"Fechar", L"Schlie\u00dfen"},
+		// PS_WS_PROVIDERS
+		{L"Providers...", L"Proveedores...", L"Fournisseurs...", L"Provider...", L"\u0418\u0441\u0442\u043e\u0447\u043d\u0438\u043a\u0438...", L"Fornecedores...", L"Anbieter..."},
+		// PS_WS_NO_PROVIDERS
+		{L"No search provider is configured. Add a Torznab provider first (for example your own Jackett or Prowlarr).", L"No hay ning\u00fan proveedor de b\u00fasqueda configurado. A\u00f1ade antes un proveedor Torznab (por ejemplo tu propio Jackett o Prowlarr).", L"Aucun fournisseur de recherche n'est configur\u00e9. Ajoutez d'abord un fournisseur Torznab (par exemple votre propre Jackett ou Prowlarr).", L"Nessun provider di ricerca configurato. Aggiungi prima un provider Torznab (ad esempio il tuo Jackett o Prowlarr).", L"\u0418\u0441\u0442\u043e\u0447\u043d\u0438\u043a\u0438 \u043f\u043e\u0438\u0441\u043a\u0430 \u043d\u0435 \u043d\u0430\u0441\u0442\u0440\u043e\u0435\u043d\u044b. \u0421\u043d\u0430\u0447\u0430\u043b\u0430 \u0434\u043e\u0431\u0430\u0432\u044c\u0442\u0435 \u0438\u0441\u0442\u043e\u0447\u043d\u0438\u043a Torznab (\u043d\u0430\u043f\u0440\u0438\u043c\u0435\u0440, \u0441\u0432\u043e\u0439 Jackett \u0438\u043b\u0438 Prowlarr).", L"N\u00e3o h\u00e1 nenhum fornecedor de pesquisa configurado. Adicione primeiro um fornecedor Torznab (por exemplo o seu Jackett ou Prowlarr).", L"Es ist kein Suchanbieter eingerichtet. Bitte zuerst einen Torznab-Anbieter hinzuf\u00fcgen (zum Beispiel den eigenen Jackett oder Prowlarr)."},
+		// PS_WS_SEARCHING
+		{L"Searching...", L"Buscando...", L"Recherche en cours...", L"Ricerca in corso...", L"\u0418\u0434\u0451\u0442 \u043f\u043e\u0438\u0441\u043a...", L"A procurar...", L"Suche l\u00e4uft..."},
+		// PS_WS_RESULTS
+		{L"%d results", L"%d resultados", L"%d r\u00e9sultats", L"%d risultati", L"\u0420\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442\u043e\u0432: %d", L"%d resultados", L"%d Ergebnisse"},
+		// PS_WS_BLOCKED
+		{L"VPN protection is holding all network activity.", L"La protecci\u00f3n VPN mantiene detenida toda la actividad de red.", L"La protection VPN bloque toute activit\u00e9 r\u00e9seau.", L"La protezione VPN blocca tutta l'attivit\u00e0 di rete.", L"\u0417\u0430\u0449\u0438\u0442\u0430 VPN \u043e\u0441\u0442\u0430\u043d\u043e\u0432\u0438\u043b\u0430 \u0432\u0441\u044e \u0441\u0435\u0442\u0435\u0432\u0443\u044e \u0430\u043a\u0442\u0438\u0432\u043d\u043e\u0441\u0442\u044c.", L"A prote\u00e7\u00e3o VPN est\u00e1 a reter toda a atividade de rede.", L"Der VPN-Schutz h\u00e4lt alle Netzwerkaktivit\u00e4ten an."},
+		// PS_WS_COL_SEEDS
+		{L"Seeds", L"Semillas", L"Sources", L"Seed", L"\u0421\u0438\u0434\u044b", L"Sementes", L"Seeds"},
+		// PS_WS_COL_PEERS
+		{L"Peers", L"Pares", L"Pairs", L"Peer", L"\u041f\u0438\u0440\u044b", L"Pares", L"Peers"},
+		// PS_WS_COL_PROVIDER
+		{L"Provider", L"Proveedor", L"Fournisseur", L"Provider", L"\u0418\u0441\u0442\u043e\u0447\u043d\u0438\u043a", L"Fornecedor", L"Anbieter"},
+		// PS_WS_PROV_TITLE
+		{L"Search providers (Torznab)", L"Proveedores de b\u00fasqueda (Torznab)", L"Fournisseurs de recherche (Torznab)", L"Provider di ricerca (Torznab)", L"\u0418\u0441\u0442\u043e\u0447\u043d\u0438\u043a\u0438 \u043f\u043e\u0438\u0441\u043a\u0430 (Torznab)", L"Fornecedores de pesquisa (Torznab)", L"Suchanbieter (Torznab)"},
+		// PS_WS_PROV_NAME
+		{L"Name", L"Nombre", L"Nom", L"Nome", L"\u041d\u0430\u0437\u0432\u0430\u043d\u0438\u0435", L"Nome", L"Name"},
+		// PS_WS_PROV_URL
+		{L"Address of the Torznab API", L"Direcci\u00f3n de la API Torznab", L"Adresse de l'API Torznab", L"Indirizzo dell'API Torznab", L"\u0410\u0434\u0440\u0435\u0441 API Torznab", L"Endere\u00e7o da API Torznab", L"Adresse der Torznab-API"},
+		// PS_WS_PROV_KEY
+		{L"API key", L"Clave de API", L"Cl\u00e9 API", L"Chiave API", L"\u041a\u043b\u044e\u0447 API", L"Chave de API", L"API-Schl\u00fcssel"},
+		// PS_WS_PROV_SAVE
+		{L"Add / update", L"A\u00f1adir / actualizar", L"Ajouter / mettre \u00e0 jour", L"Aggiungi / aggiorna", L"\u0414\u043e\u0431\u0430\u0432\u0438\u0442\u044c / \u043e\u0431\u043d\u043e\u0432\u0438\u0442\u044c", L"Adicionar / atualizar", L"Hinzuf\u00fcgen / \u00e4ndern"},
+		// PS_WS_PROV_REMOVE
+		{L"Remove", L"Quitar", L"Supprimer", L"Rimuovi", L"\u0423\u0434\u0430\u043b\u0438\u0442\u044c", L"Remover", L"Entfernen"},
 	};
 }
 

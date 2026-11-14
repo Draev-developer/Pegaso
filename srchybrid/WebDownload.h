@@ -76,3 +76,10 @@ private:
 };
 
 extern CWebDownloadQueue theWebDownloads;
+
+// Fetches a small document (search answers, .torrent files) into memory. Any thread.
+bool PegasoHttpGet(const CString &sUrl, std::vector<BYTE> &data, CString &sError, size_t uMaxSize);
+
+// Marks a downloaded file as coming from the Internet (the "Zone.Identifier" stream), as
+// browsers do: Windows then applies SmartScreen and its warnings when the file is opened.
+void PegasoMarkFromInternet(const CString &sPath, const CString &sSourceUrl = CString());

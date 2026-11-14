@@ -844,3 +844,47 @@ void CWebDownloadQueue::Process()
 		AddLogLine(true, _T("Web download added: %s (%s)"), (LPCTSTR)pFile->GetFileName(), (LPCTSTR)CastItoXBytes((uint64)pFile->GetFileSize()));
 	}
 }
+
+// ---------------------------------------------------------------- shared helpers
+
+bool PegasoHttpGet(const CString &sUrl, std::vector<BYTE> &data, CString &sError, size_t uMaxSize)
+{
+	data.clear();
+	SHttpRequest req;
+	DWORD dwStatus;
+	if (!SendGet(sUrl, NULL, req, dwStatus, sError))
+		return false;
+	if (dwStatus != HTTP_STATUS_OK) {
+		sError.Format(_T("HTTP status %u"), dwStatus);
+		return false;
+	}
+	BYTE buffer[16 * 1024];
+	for (;;) {
+		DWORD dwRead = 0;
+		if (!::WinHttpReadData(req.hRequest, buffer, sizeof buffer, &dwRead)) {
+			sError = WinHttpError(_T("read"));
+			return false;
+		}
+		if (dwRead == 0)
+			return true;
+		if (data.size() + dwRead > uMaxSize) {
+			sError = _T("the answer is too large");
+			return false;
+		}
+		data.insert(data.end(), buffer, buffer + dwRead);
+	}
+}
+
+void PegasoMarkFromInternet(const CString &sPath, const CString &sSourceUrl)
+{
+	// An alternate data stream; file systems without them (FAT) simply refuse it.
+	HANDLE hFile = ::CreateFile(sPath + _T(":Zone.Identifier"), GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	if (hFile == INVALID_HANDLE_VALUE)
+		return;
+	CStringA sText("[ZoneTransfer]\r\nZoneId=3\r\n");	// 3 = Internet zone
+	if (CWebDownloadQueue::IsWebUrl(sSourceUrl))
+		sText += "HostUrl=" + CStringA(EncodeUrlUtf8(sSourceUrl)) + "\r\n";
+	DWORD dwWritten;
+	::WriteFile(hFile, (LPCSTR)sText, (DWORD)sText.GetLength(), &dwWritten, NULL);
+	::CloseHandle(hFile);
+}

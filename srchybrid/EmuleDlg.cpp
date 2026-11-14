@@ -35,6 +35,8 @@
 #include "emuleDlg.h"
 #include "WebDownload.h"
 #include "TorrentQueue.h"
+#include "WebSearch.h"
+#include "PegasoStrings.h"
 #include "otherfunctions.h"
 #include "ServerWnd.h"
 #include "KademliaWnd.h"
@@ -2545,6 +2547,12 @@ BOOL CemuleDlg::OnCommand(WPARAM wParam, LPARAM lParam)
 			CDirectDownloadDlg dlg;
 			dlg.DoModal();
 		}
+		break;
+	case MP_PEGASO_WEBSEARCH:	// Pegaso: torrent search through the providers of the user
+		{
+			CWebSearchDlg dlg(this);
+			dlg.DoModal();
+		}
 	}
 	if (wParam >= MP_WEBURL && wParam <= MP_WEBURL + 99)
 		theWebServices.RunURL(NULL, (UINT)wParam);
@@ -2630,6 +2638,7 @@ void CemuleDlg::ShowToolPopup(bool toolsonly)
 	menu.AppendMenu(MF_STRING, MP_HM_1STSWIZARD, GetResString(IDS_WIZ1) + _T("..."), _T("WIZARD"));
 	menu.AppendMenu(MF_STRING, MP_HM_IPFILTER, GetResString(IDS_IPFILTER) + _T("..."), _T("IPFILTER"));
 	menu.AppendMenu(MF_STRING, MP_HM_DIRECT_DOWNLOAD, GetResString(IDS_SW_DIRECTDOWNLOAD) + _T("..."), _T("PASTELINK"));
+	menu.AppendMenu(MF_STRING, MP_PEGASO_WEBSEARCH, GetPegasoString(PS_WS_MENU), _T("SEARCH"));	// Pegaso
 
 	menu.AppendMenu(MF_SEPARATOR);
 	menu.AppendMenu(MF_STRING | MF_POPUP, (UINT_PTR)Links.m_hMenu, GetResString(IDS_LINKS), _T("WEB"));

@@ -7,6 +7,7 @@
 #include "OtherFunctions.h"
 #include "Log.h"
 #include "NetGuard.h"
+#include "WebDownload.h"
 #include "PartFile.h"
 #include "DownloadQueue.h"
 #include "emuleDlg.h"
@@ -244,6 +245,10 @@ void CTorrentQueue::Process()
 			break;
 		case TE_FINISHED:
 			AddLogLine(true, _T("Torrent finished: %s"), ev.name.c_str());
+			// mark what was downloaded as coming from the Internet, like any other download
+			for (const STorrentFile &file : m_engine.GetFiles(ev.id))
+				if (file.wanted)
+					PegasoMarkFromInternet(thePrefs.GetMuleDirectory(EMULE_INCOMINGDIR) + file.path.c_str());
 			break;
 		case TE_REMOVED:
 			AddLogLine(false, _T("Torrent removed: %s"), ev.name.c_str());

@@ -3120,6 +3120,14 @@ void CPartFile::PerformFileCompleteEnd(DWORD dwResult)
 		m_tCompleteSourcesTime = 0; //force update in Shared Files
 
 		SetStatus(PS_COMPLETE); // (set status and) update status-related modification of GUI elements
+		{
+			// Pegaso: whatever was downloaded is marked as coming from the Internet
+			CString sSourceUrl;
+			for (INT_PTR iTag = 0; iTag < m_taglist.GetCount(); ++iTag)
+				if (m_taglist[iTag]->GetNameID() == 0 && m_taglist[iTag]->IsStr() && strcmp(m_taglist[iTag]->GetName(), PEGASO_TAG_WEBURL) == 0)
+					sSourceUrl = m_taglist[iTag]->GetStr();
+			PegasoMarkFromInternet(GetFilePath(), sSourceUrl);
+		}
 		theApp.knownfiles->SafeAddKFile(this);
 		ASSERT(!nInUse);
 		theApp.downloadqueue->RemoveFile(this);

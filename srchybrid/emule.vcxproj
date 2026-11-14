@@ -418,6 +418,7 @@
     <ClCompile Include="TorrentQueue.cpp" />
     <ClCompile Include="URLClient.cpp" />
     <ClCompile Include="WebDownload.cpp" />
+    <ClCompile Include="WebSearch.cpp" />
     <ClCompile Include="Version.cpp" />
     <ClCompile Include="WebServer.cpp" />
     <ClCompile Include="WebSocket.cpp" />
@@ -709,6 +710,7 @@
     <ClInclude Include="TorrentQueue.h" />
     <ClInclude Include="URLClient.h" />
     <ClInclude Include="WebDownload.h" />
+    <ClInclude Include="WebSearch.h" />
     <ClInclude Include="UserMsgs.h" />
     <ClInclude Include="Version.h" />
     <ClInclude Include="VistaDefines.h" />

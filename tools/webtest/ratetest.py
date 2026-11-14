@@ -28,7 +28,7 @@ import nettest  # noqa: E402
 MP_PEGASO_RATE = 10982
 IDC_RT_MISMATCH, IDC_RT_WHAT, IDC_RT_LANG, IDC_RT_TEXT, IDC_RT_OTHERS = 5054, 5057, 5059, 5061, 5062
 BM_CLICK, CB_SETCURSEL, WM_SETTEXT, WM_GETTEXT = 0x00F5, 0x014E, 0x000C, 0x000D
-NAME = 'Pelicula.de.prueba.(Castellano).avi'
+NAME = 'Video.prueba.(Castellano).avi'
 SIZE = 6 * 1024 * 1024
 
 
@@ -177,7 +177,7 @@ def main():
         # ---- 2. A1 and A2 share the file, each calling it a fake
         for i, folder in enumerate(a):
             open(os.path.join(folder, 'config', os.path.basename(stored)), 'w', encoding='utf-8', newline='\r\n').write(
-                '%s\nComment=[FAKE] no es la pelicula, es otra cosa (%d)\nRate=1\n' % (section, i + 1))
+                '%s\nComment=[FAKE] no es el video, es otra cosa (%d)\nRate=1\n' % (section, i + 1))
             procs.append(start(folder))
         time.sleep(15)  # hashing of the shared file
 

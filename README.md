@@ -4,7 +4,7 @@
 
 Pegaso es un cliente P2P libre para Windows, derivado de [eMule](https://www.emule-project.net) 0.72a (edición de la comunidad). Conserva todo lo que hace eMule en las redes eD2K y Kad y añade BitTorrent, descargas web y varias medidas de seguridad, todo en la misma lista de descargas.
 
-![Pegaso descargando un torrent](docs/img/pegaso-descargas.png)
+![La lista de descargas de Pegaso, con la columna Origen](docs/img/pegaso-descargas.png)
 
 ## Qué hace
 
@@ -13,6 +13,7 @@ Pegaso es un cliente P2P libre para Windows, derivado de [eMule](https://www.emu
 | **Redes eMule** | Servidores eD2K y Kad, compatibles con cualquier cliente eMule. Trae servidores de serie y arranca Kad sin configuración: basta pulsar **Conectar**. |
 | **BitTorrent** | Enlaces magnet y archivos `.torrent` (motor libtorrent). Selección de archivos, mapa de piezas, siembra con límite de ratio y semillas web. |
 | **Descargas web** | HTTP y HTTPS con varias conexiones por archivo, pausa y reanudación tras cerrar el programa. |
+| **Una sola lista** | La columna **Origen** dice de dónde viene cada descarga: `E` eMule, `T` torrent, `W` web, o una mezcla como `E+T+W`. |
 | **Enjambre híbrido** | Una misma descarga puede recibir datos de fuentes eMule, de un servidor web y de un torrent a la vez. Todo lo que llega se comprueba con los hashes de eMule. |
 | **Marcador de archivos** | Quien tiene un archivo puede avisar a los demás: correcto, mala calidad, falso o no cumple la descripción (por ejemplo, el nombre dice español y está en inglés). Los archivos señalados por varios usuarios aparecen como sospechosos. |
 | **Protección VPN** | Pegaso puede atarse a un adaptador de red y cortar todo el tráfico si la VPN se cae. |

@@ -41,7 +41,7 @@ def bencode(x):
 
 
 def make_torrent(path):
-    files = [('Pelicula.mkv', os.urandom(300000)), ('Leeme.txt', b'hola\n' * 200),
+    files = [('Video.mkv', os.urandom(300000)), ('Leeme.txt', b'hola\n' * 200),
              ('Visita nuestra web.URL', b'[InternetShortcut]\nURL=http://example.invalid/\n'),
              ('extras/Subtitulos.srt', b'1\n00:00:01,000 --> 00:00:02,000\nhola\n' * 50)]
     piece = 16384

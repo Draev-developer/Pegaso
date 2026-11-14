@@ -36,7 +36,7 @@ BM_CLICK = 0x00F5
 
 
 def make_torrent():
-    name = 'Pelicula.de.prueba.%s.mkv' % os.urandom(4).hex()
+    name = 'Video.de.prueba.%s.mkv' % os.urandom(4).hex()
     data = os.urandom(400000)
     pieces = b''.join(hashlib.sha1(data[i:i + 16384]).digest() for i in range(0, len(data), 16384))
     info = {'name': name, 'piece length': 16384, 'pieces': pieces, 'length': len(data)}

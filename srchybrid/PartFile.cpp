@@ -254,6 +254,8 @@ void CPartFile::Init()
 	m_uTorrentUpRate = 0;
 	m_uTorrentUploaded = 0;
 	m_uTorrentTotalSize = 0;
+	m_bTorrentWebSeeds = false;
+	m_bWebSourcesPending = false;
 	m_iTorrentPiecesDone = -1;
 	m_bTorrentFinished = false;
 	m_iHybridPeers = -1;
@@ -391,6 +393,7 @@ void CPartFile::Dump(CDumpContext &dc) const
 
 // Pegaso: web downloads ---------------------------------------------------------------
 #define PEGASO_TAG_WEBURL	"PegasoWebUrl"	// part.met: address a web download is fetched from
+#define PEGASO_TAG_WEBSRC	"PegasoWebSources"	// part.met: web addresses given as sources of an ed2k download, separated by spaces
 
 void CPartFile::SetWebUrl(const CString &sUrl)
 {
@@ -406,6 +409,16 @@ void CPartFile::SetWebUrl(const CString &sUrl)
 
 void CPartFile::ProcessWeb(bool bActive)
 {
+	if (m_bWebSourcesPending && theApp.IsRunning()) {
+		m_bWebSourcesPending = false;
+		const CString sWebSources(GetStrTagValue(PEGASO_TAG_WEBSRC));
+		for (int iPos = 0; iPos >= 0;) {
+			const CString &sUrl(sWebSources.Tokenize(_T(" "), iPos));
+			if (sUrl.IsEmpty())
+				break;
+			AddWebSource(sUrl);
+		}
+	}
 	if (m_pWebDownload)
 		m_pWebDownload->Process(this, bActive && !theApp.IsClosing());
 }
@@ -502,6 +515,7 @@ void CPartFile::UpdateFromTorrent(const STorrentStatus &st)
 	m_uTorrentUploaded = (uint64)max((int64_t)0, st.uploaded);
 	m_bTorrentFinished = st.finished;
 	m_uTorrentTotalSize = (uint64)max((int64_t)0, st.totalSize);
+	m_bTorrentWebSeeds = st.webSeeds;
 	m_percentcompleted = (float)(uDone * 100.0 / uSize);
 	m_datarate = (uint32)max(0, st.downloadRate);
 	m_uTorrentPeers = (UINT)max(0, st.peers);
@@ -1138,6 +1152,9 @@ EPartFileLoadResult CPartFile::LoadPartFile(LPCTSTR in_directory, LPCTSTR in_fil
 				m_bWebFile = true;
 			}
 		}
+		// Pegaso: the web addresses which were given as sources become sources again - later,
+		// see ProcessWeb(): a source is only accepted for a file which is in the queue
+		m_bWebSourcesPending = !GetStrTagValue(PEGASO_TAG_WEBSRC).IsEmpty();
 
 		//m_bAICHPartHashsetNeeded = m_FileIdentifier.GetTheoreticalAICHPartHashCount() > 0;
 		if (bHadAICHHashSetTag)
@@ -2700,8 +2717,29 @@ void CPartFile::AddSource(LPCTSTR pszURL, uint32 nIP)
 	}
 	client->SetRequestFile(this);
 	client->SetSourceFrom(SF_LINK);
+	RememberWebSource(pszURL);
 	if (theApp.downloadqueue->CheckAndAddSource(this, client))
 		UpdatePartsInfo();
+}
+
+// eMule does not keep the sources of a download; a web address the user gave would be gone
+// after a restart. It is written to the part.met and added again when the file is loaded.
+void CPartFile::RememberWebSource(const CString &sUrl)
+{
+	if (sUrl.IsEmpty() || sUrl.FindOneOf(_T(" \t\r\n")) >= 0)
+		return;
+	CString sAll(GetStrTagValue(PEGASO_TAG_WEBSRC));
+	if ((_T(' ') + sAll + _T(' ')).Find(_T(' ') + sUrl + _T(' ')) >= 0)
+		return;
+	if (!sAll.IsEmpty())
+		sAll += _T(' ');
+	sAll += sUrl;
+	for (INT_PTR iTag = m_taglist.GetCount(); --iTag >= 0;)
+		if (m_taglist[iTag]->GetNameID() == 0 && strcmp(m_taglist[iTag]->GetName(), PEGASO_TAG_WEBSRC) == 0) {
+			delete m_taglist[iTag];
+			m_taglist.RemoveAt(iTag);
+		}
+	m_taglist.Add(new CTag(PEGASO_TAG_WEBSRC, sAll));
 }
 
 // Pegaso: a web address as one more source of an ed2k download. Same path as a source
@@ -3616,6 +3654,34 @@ void CPartFile::ResumeFileInsufficient()
 		m_LastSearchTime = 0;
 		UpdateDisplayedInfo(true);
 	}
+}
+
+// Pegaso: the "origin" column of the download list.
+CString CPartFile::GetOriginText() const
+{
+	bool bEmule = false, bTorrent = false, bWeb = false;
+	if (IsTorrent()) {
+		bTorrent = true;
+		bWeb = m_bTorrentWebSeeds;
+	} else if (m_bWebFile || !GetStrTagValue(PEGASO_TAG_WEBURL).IsEmpty())
+		bWeb = true;	// a web download; also once it is finished and has become an ordinary file
+	else {
+		bEmule = true;
+		bTorrent = m_iHybridPeers >= 0;	// hybrid download: a torrent among its sources
+		for (POSITION pos = srclist.GetHeadPosition(); pos != NULL && !bWeb;)
+			bWeb = srclist.GetNext(pos)->GetClientSoft() == SO_URL;	// a web address among its sources
+		// a web server which is busy with another download of the list is still a source of this one
+		for (POSITION pos = A4AFsrclist.GetHeadPosition(); pos != NULL && !bWeb;)
+			bWeb = A4AFsrclist.GetNext(pos)->GetClientSoft() == SO_URL;
+	}
+	CString sText;
+	if (bEmule)
+		sText = _T("E");
+	if (bTorrent)
+		sText += sText.IsEmpty() ? _T("T") : _T("+T");
+	if (bWeb)
+		sText += sText.IsEmpty() ? _T("W") : _T("+W");
+	return sText;
 }
 
 CString CPartFile::getPartfileStatus() const

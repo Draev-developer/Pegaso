@@ -148,6 +148,8 @@ namespace
 		{L"Add download links", L"A\u00f1adir enlaces de descarga", L"Ajouter des liens de t\u00e9l\u00e9chargement", L"Aggiungi link di download", L"\u0414\u043e\u0431\u0430\u0432\u0438\u0442\u044c \u0441\u0441\u044b\u043b\u043a\u0438 \u0434\u043b\u044f \u0437\u0430\u0433\u0440\u0443\u0437\u043a\u0438", L"Adicionar liga\u00e7\u00f5es de transfer\u00eancia", L"Download-Links hinzuf\u00fcgen"},
 		// PS_ADD_LINKS_HINT
 		{L"Links, one per line (web addresses, magnet, ed2k):", L"Enlaces, uno por l\u00ednea (direcciones web, magnet, ed2k):", L"Liens, un par ligne (adresses web, magnet, ed2k) :", L"Link, uno per riga (indirizzi web, magnet, ed2k):", L"\u0421\u0441\u044b\u043b\u043a\u0438, \u043f\u043e \u043e\u0434\u043d\u043e\u0439 \u0432 \u0441\u0442\u0440\u043e\u043a\u0435 (\u0432\u0435\u0431-\u0430\u0434\u0440\u0435\u0441\u0430, magnet, ed2k):", L"Liga\u00e7\u00f5es, uma por linha (endere\u00e7os web, magnet, ed2k):", L"Links, einer pro Zeile (Web-Adressen, Magnet, ed2k):"},
+		// PS_COL_ORIGIN
+		{L"Origin", L"Origen", L"Origine", L"Origine", L"\u0418\u0441\u0442\u043e\u0447\u043d\u0438\u043a", L"Origem", L"Herkunft"},
 		// PS_LINK_HOME
 		{L"Pegaso on GitHub", L"Pegaso en GitHub", L"Pegaso sur GitHub", L"Pegaso su GitHub", L"Pegaso \u043d\u0430 GitHub", L"Pegaso no GitHub", L"Pegaso auf GitHub"},
 		// PS_LINK_HELP

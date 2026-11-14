@@ -50,6 +50,7 @@ struct STorrentStatus
 	int		seeds = 0;
 	ETorrentState state = TS_METADATA;
 	bool	finished = false;	// everything wanted is there (also true while paused)
+	bool	webSeeds = false;	// the torrent has web servers among its sources
 	int64_t	uploaded = 0;		// payload sent to others, all sessions
 	int		piecesDone = 0;
 	// Missing data as [start, end) ranges on a scale of 0..mapSize: the wanted pieces put

@@ -25,6 +25,7 @@ Pegaso parte de eMule 0.72a (edición de la comunidad). El historial de eMule es
 ### Enjambre híbrido
 - Una descarga de eMule puede recibir además una fuente web y un torrent del mismo archivo.
 - El torrent baja solo lo que falta y sus datos pasan la comprobación de hashes de eMule; un torrent que no es el mismo archivo se descarta.
+- Las fuentes web y el torrent añadidos a una descarga se conservan al reiniciar.
 
 ### Seguridad
 - Marcador de archivos: correcto, mala calidad, falso o no cumple la descripción, con aviso cuando varios usuarios señalan un archivo.
@@ -35,6 +36,7 @@ Pegaso parte de eMule 0.72a (edición de la comunidad). El historial de eMule es
 
 ### Interfaz
 - Nombre, iconos e identidad propios.
+- Columna «Origen» en la lista de descargas: E (eMule), T (torrent), W (web) o su combinación.
 - Página de opciones «Web y BitTorrent».
 - Buscador de torrents con proveedores Torznab configurados por el usuario.
 - Idiomas incluidos: español, inglés, francés, italiano, portugués, alemán y ruso.

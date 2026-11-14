@@ -22,6 +22,7 @@
 #include "PegasoRating.h"
 #include "InputBox.h"
 #include "HybridSwarm.h"
+#include "Ini2.h"
 #include "PPgPegaso.h"
 #include "updownclient.h"
 #include "MenuCmds.h"
@@ -134,9 +135,34 @@ void CDownloadListCtrl::Init()
 	InsertColumn(11,	_T(""),	LVCFMT_LEFT,	120, -1, true);					//IDS_FD_LASTCHANGE
 	InsertColumn(12,	_T(""),	LVCFMT_LEFT,	100, -1, true);					//IDS_CAT
 	InsertColumn(13,	_T(""),	LVCFMT_LEFT,	120);							//IDS_ADDEDON
+	InsertColumn(14,	_T(""),	LVCFMT_CENTER,	55);							//Pegaso: origin (E, T, W)
 
 	SetAllIcons();
 	Localize();
+	// Pegaso: the origin column is shown right after the name the first time (a column added
+	// later would land at the far right, behind the stored order of the others). This is done
+	// in the stored order - display position -> column - which LoadSettings() applies.
+	if (theApp.GetProfileInt(_T("ListControlSetup"), _T("PegasoOriginColumnPlaced"), 0) == 0) {
+		theApp.WriteProfileInt(_T("ListControlSetup"), _T("PegasoOriginColumnPlaced"), 1);
+		const int iCount = 15;
+		int aiOrder[iCount] = {}, aiNew[iCount];
+		bool abSeen[iCount] = {};
+		CIni ini(thePrefs.GetConfigFile(), _T("ListControlSetup"));
+		ini.SerGet(true, aiOrder, iCount, _T("DownloadListCtrlColumnOrders"));
+		int iNew = 0;
+		aiNew[iNew++] = 0;
+		aiNew[iNew++] = 14;
+		abSeen[0] = abSeen[14] = true;
+		for (int i = 1; i < iCount; ++i)	// the others keep their order; what is missing follows
+			if (aiOrder[i] > 0 && aiOrder[i] < iCount && !abSeen[aiOrder[i]]) {
+				abSeen[aiOrder[i]] = true;
+				aiNew[iNew++] = aiOrder[i];
+			}
+		for (int i = 1; i < iCount; ++i)
+			if (!abSeen[i])
+				aiNew[iNew++] = i;
+		ini.SerGet(false, aiNew, iCount, _T("DownloadListCtrlColumnOrders"));
+	}
 	LoadSettings();
 	m_curTab = 0;
 
@@ -213,13 +239,17 @@ void CDownloadListCtrl::Localize()
 	{
 		IDS_DL_FILENAME, IDS_DL_SIZE, IDS_DL_TRANSF, IDS_DL_TRANSFCOMPL, IDS_DL_SPEED
 		, IDS_DL_PROGRESS, IDS_DL_SOURCES, IDS_PRIORITY, IDS_STATUS, IDS_DL_REMAINS
-		, UINT_MAX/*IDS_LASTSEENCOMPL*/, UINT_MAX/*IDS_FD_LASTCHANGE*/, IDS_CAT, IDS_ADDEDON, 0
+		, UINT_MAX/*IDS_LASTSEENCOMPL*/, UINT_MAX/*IDS_FD_LASTCHANGE*/, IDS_CAT, IDS_ADDEDON, UINT_MAX/*origin*/, 0
 	};
 	LocaliseHeader(uids);
 
 	CHeaderCtrl *pHeaderCtrl = GetHeaderCtrl();
 	HDITEM hdi;
 	hdi.mask = HDI_TEXT;
+
+	CString sOrigin(GetPegasoString(PS_COL_ORIGIN));	// Pegaso
+	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)sOrigin);
+	pHeaderCtrl->SetItem(14, &hdi);
 
 	CString strRes(GetResString(IDS_LASTSEENCOMPL));
 	strRes.Remove(_T(':'));
@@ -1887,6 +1917,8 @@ int CDownloadListCtrl::Compare(const CPartFile *file1, const CPartFile *file2, L
 				  , (const_cast<CPartFile*>(file2)->GetCategory() != 0) ? thePrefs.GetCategory(const_cast<CPartFile*>(file2)->GetCategory())->strTitle : GetResString(IDS_ALL));
 	case 13: // added on
 		return sgn(file1->GetCrFileDate() - file2->GetCrFileDate());
+	case 14: // Pegaso: origin
+		return file1->GetOriginText().Compare(file2->GetOriginText());
 	}
 	return 0;
 }
@@ -2244,6 +2276,9 @@ CString CDownloadListCtrl::GetFileItemDisplayText(const CPartFile *lpPartFile, i
 			sText = lpPartFile->GetCrCFileDate().Format(thePrefs.GetDateTimeFormat4Lists());
 		else
 			sText += _T("?");
+		break;
+	case 14: // Pegaso: origin (E = eMule, T = torrent, W = web)
+		sText = lpPartFile->GetOriginText();
 	}
 	return sText;
 }

@@ -146,6 +146,10 @@ bool CHybridSwarm::Link(CPartFile *pFile, const CString &sTorrent)
 void CHybridSwarm::Process(CTorrentEngine &engine, const std::vector<STorrentStatus> &status)
 {
 	Load();
+	// The engine is polled from the first moments of the program, before the downloads have
+	// been read from disk: a link whose download "is not there" then is not a finished one.
+	if (!theApp.IsRunning())
+		return;
 	for (auto it = m_leaving.begin(); it != m_leaving.end();) {
 		bool bThere = false;
 		for (const STorrentStatus &st : status)
@@ -174,8 +178,7 @@ void CHybridSwarm::Process(CTorrentEngine &engine, const std::vector<STorrentSta
 
 		LPCTSTR pszDrop = NULL;
 		if (pFile == NULL) {
-			// finished, cancelled or broken: the helper has done its job. (At startup the part
-			// files are loaded before the first call, so a missing download really is gone.)
+			// finished, cancelled or broken: the helper has done its job
 			pszDrop = _T("");
 		} else if (pStatus == NULL) {
 			if (dwNow - link.dwAdded > SEC2MS(60))

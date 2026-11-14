@@ -196,6 +196,7 @@ public:
 	void	AddSources(CSafeMemFile *sources, uint32 serverip, uint16 serverport, bool bWithObfuscationAndHash);
 	void	AddSource(LPCTSTR pszURL, uint32 nIP);
 	void	AddWebSource(const CString &sUrl);	// Pegaso
+	void	RememberWebSource(const CString &sUrl);	// Pegaso: kept in the part.met, so it is there again after a restart
 	static bool CanAddSource(uint32 userid, uint16 port, uint32 serverip, uint16 serverport, UINT *pdebug_lowiddropped = NULL, bool ed2kID = true);
 
 	EPartFileStatus	GetStatus(bool ignorepause = false) const;
@@ -242,6 +243,8 @@ public:
 	UINT	GetTorrentSeeds() const						{ return m_uTorrentSeeds; }
 	uint32	GetTorrentUpDatarate() const				{ return m_uTorrentUpRate; }
 	uint64	GetTorrentTotalSize() const					{ return m_uTorrentTotalSize; }	// all files; 0 while not known
+	// Where the data comes from: E = eMule networks, T = BitTorrent, W = web; e.g. "E+T"
+	CString	GetOriginText() const;
 	// hybrid download: peers of the torrent which works as one more source; -1 = there is none
 	int		GetHybridPeers() const						{ return m_iHybridPeers; }
 	void	SetHybridPeers(int iPeers)					{ m_iHybridPeers = iPeers; }
@@ -435,6 +438,8 @@ private:
 	uint32	m_uTorrentUpRate;
 	uint64	m_uTorrentUploaded;
 	uint64	m_uTorrentTotalSize;
+	bool	m_bTorrentWebSeeds;
+	bool	m_bWebSourcesPending;	// web sources read from the part.met, to be added once the file is in the queue
 	int		m_iTorrentPiecesDone;
 	bool	m_bTorrentFinished;
 	int		m_iHybridPeers;

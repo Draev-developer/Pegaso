@@ -2912,6 +2912,12 @@ CString CPreferences::GetDefaultDirectory(EDefaultDirectory eDirectory, bool bCr
 
 		// Do we need to get SystemFolders, or do we use our old Default anyway? (Executable Dir)
 		bool bVista = (GetWindowsVersion() >= _WINVER_VISTA_);
+		// Pegaso: a copy which has its configuration next to the program (portable) uses it,
+		// whatever else is installed on the computer. eMule preferred the configuration of
+		// the user profile if there was one, so a portable copy silently worked on the data
+		// of the installed program.
+		if (bConfigAvailableExecutable && nRegistrySetting == _UI32_MAX)
+			nRegistrySetting = 2;
 		if (nRegistrySetting == 0
 			|| (nRegistrySetting == 1 && bVista)
 			|| (nRegistrySetting == _UI32_MAX && (!bConfigAvailableExecutable || bVista)))

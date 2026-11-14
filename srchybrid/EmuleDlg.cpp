@@ -774,8 +774,16 @@ void CemuleDlg::StopTimer()
 		DoVersioncheck(false);
 
 	if (!theApp.m_strPendingLink.IsEmpty()) {
-		OnWMData(NULL, (LPARAM)&theApp.sendstruct);
+		// Pegaso: the link, torrent or collection the program was started with. The structure
+		// prepared at startup is only filled in when there is another instance to send it to,
+		// so what was given to a cold start got lost: it is built here from the stored text.
+		CString sPending(theApp.m_strPendingLink);
 		theApp.m_strPendingLink.Empty();
+		COPYDATASTRUCT pending = {};
+		pending.dwData = CCollection::HasCollectionExtention(sPending) ? OP_COLLECTION : OP_ED2KLINK;
+		pending.cbData = static_cast<DWORD>((sPending.GetLength() + 1) * sizeof(TCHAR));
+		pending.lpData = const_cast<LPTSTR>((LPCTSTR)sPending);
+		OnWMData(NULL, (LPARAM)&pending);
 	}
 }
 

@@ -725,9 +725,13 @@ bool CemuleApp::ProcessCommandline()
 	// If we create our TCP listen socket with SO_REUSEADDR, we have to ensure that there are
 	// no 2 eMules are running on the same port.
 	// NOTE: This will not prevent from some other application using that port!
-	UINT uTcpPort = theApp.GetProfileInt(_T("eMule"), _T("Port"), DEFAULT_TCP_PORT_OLD);
-	CString strMutextName;
-	strMutextName.Format(_T("%s:%u"), EMULE_GUID, uTcpPort);
+	// Pegaso: one instance per configuration. eMule keyed this on the TCP port, but on a first
+	// start the port is chosen after this point, so that instance was not recognised later and
+	// a link or torrent opened from outside started a second one on the same configuration.
+	CString strMutextName(m_pszProfileName);
+	strMutextName.MakeLower();
+	strMutextName.Replace(_T('\\'), _T('/'));	// no backslashes in the name of a mutex
+	strMutextName = CString(EMULE_GUID) + _T(':') + strMutextName.Right(200);
 	m_hMutexOneInstance = CreateMutex(NULL, FALSE, strMutextName);
 
 	const CString &command(cmdInfo.m_strFileName);
@@ -793,6 +797,20 @@ BOOL CALLBACK CemuleApp::SearchEmuleWindow(HWND hWnd, LPARAM lParam) noexcept
 	DWORD_PTR dwMsgResult;
 	LRESULT res = ::SendMessageTimeout(hWnd, UWM_ARE_YOU_EMULE, 0, 0, SMTO_BLOCK | SMTO_ABORTIFHUNG, SEC2MS(10), &dwMsgResult);
 	if (res != 0 && dwMsgResult == UWM_ARE_YOU_EMULE) {
+		// Pegaso: several copies with their own configuration may be open (installed, portable).
+		// The one to talk to is the one started from the same program file.
+		DWORD dwPid = 0;
+		::GetWindowThreadProcessId(hWnd, &dwPid);
+		HANDLE hProcess = ::OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, dwPid);
+		if (hProcess != NULL) {
+			TCHAR szOther[MAX_PATH], szMine[MAX_PATH];
+			DWORD dwLen = _countof(szOther);
+			const bool bKnown = ::QueryFullProcessImageName(hProcess, 0, szOther, &dwLen) != FALSE
+				&& ::GetModuleFileName(NULL, szMine, _countof(szMine)) != 0;
+			::CloseHandle(hProcess);
+			if (bKnown && _tcsicmp(szOther, szMine) != 0)
+				return TRUE;	// another installation: keep looking
+		}
 		*reinterpret_cast<HWND*>(lParam) = hWnd;
 		return FALSE;
 	}

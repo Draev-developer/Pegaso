@@ -18,6 +18,7 @@
 #include "emule.h"
 #include "DirectDownloadDlg.h"
 #include "WebDownload.h"
+#include "TorrentQueue.h"
 #include "ED2KLink.h"
 #include "DownloadQueue.h"
 #include "Preferences.h"
@@ -87,6 +88,8 @@ void CDirectDownloadDlg::OnOK()
 		const CString &sToken(strLinks.Tokenize(_T(" \t\r\n"), iPos)); //tokenize by whitespace
 		if (sToken.IsEmpty())
 			break;
+		if (theTorrents.AddLink(sToken))	// Pegaso: magnet link of a torrent
+			continue;
 		if (CWebDownloadQueue::IsWebUrl(sToken)) {	// Pegaso: web address instead of an ed2k link
 			theWebDownloads.AddUrl(sToken, thePrefs.GetCatCount() ? m_cattabs.GetCurSel() : 0);
 			continue;

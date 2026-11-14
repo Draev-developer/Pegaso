@@ -20,6 +20,7 @@
 #include "UpDownClient.h"
 #include "DownloadQueue.h"
 #include "WebDownload.h"
+#include "TorrentQueue.h"
 #include "PartFile.h"
 #include "ed2kLink.h"
 #include "SearchFile.h"
@@ -361,6 +362,7 @@ bool CDownloadQueue::IsFileExisting(const uchar *fileid, bool bLogWarnings) cons
 void CDownloadQueue::Process()
 {
 	theWebDownloads.Process();	// Pegaso: turn pending web addresses into downloads
+	theTorrents.Process();		// Pegaso: BitTorrent engine
 	ProcessLocalRequests(); // send src requests to local server
 
 	uint32 factor;
@@ -413,6 +415,7 @@ void CDownloadQueue::Process()
 			cur_file->StopPausedFile(); //also drop sources for paused and stopped files
 	}
 
+	datarateX += theTorrents.GetDatarate();	// Pegaso: torrents count for the overall rate and the graphs
 	theWebDownloads.SetOtherDatarate(datarateX > datarateWeb ? datarateX - datarateWeb : 0);	// Pegaso: shared download limit
 	average_dr_hist.AddTail(TransferredData{datarateX, curTick});
 	m_datarateMS += datarateX;

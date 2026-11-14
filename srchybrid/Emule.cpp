@@ -26,6 +26,7 @@
 #include <uxtheme.h>
 #include "emule.h"
 #include "WebDownload.h"
+#include "TorrentQueue.h"
 #include "opcodes.h"
 #include "ini2.h"
 #include "mdump.h"
@@ -753,7 +754,7 @@ bool CemuleApp::ProcessCommandline()
 			sendstruct.cbData = static_cast<DWORD>((command.GetLength() + 1) * sizeof(TCHAR));
 			sendstruct.lpData = const_cast<LPTSTR>((LPCTSTR)command);
 		}
-		if (command.Find(_T("://")) > 0 || command.Find(_T("magnet:?")) >= 0) {
+		if (command.Find(_T("://")) > 0 || command.Find(_T("magnet:?")) >= 0 || CTorrentQueue::IsTorrentLink(command)) {
 			if (maininst)
 				sendstruct.dwData = OP_ED2KLINK;
 			else
@@ -1256,6 +1257,8 @@ void CemuleApp::AddEd2kLinksToDownload(const CString &strLinks, int cat)
 		const CString &sToken(strLinks.Tokenize(_T(" \t\r\n"), iPos)); //tokenize by whitespace
 		if (sToken.IsEmpty())
 			break;
+		if (theTorrents.AddLink(sToken))	// Pegaso: magnet link of a torrent
+			continue;
 		if (CWebDownloadQueue::IsWebUrl(sToken)) {	// Pegaso: web address
 			theWebDownloads.AddUrl(sToken, cat);
 			continue;

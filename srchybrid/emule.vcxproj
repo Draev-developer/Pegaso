@@ -58,6 +58,9 @@
     <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
   </ImportGroup>
   <PropertyGroup>
+    <PegasoVcpkg Condition="'$(PegasoVcpkg)'==''">$(ProjectDir)..\..\..\vcpkg\installed\$(Platform)-windows-static</PegasoVcpkg>
+    <PegasoVcpkgLib Condition="'$(Configuration)'=='Release'">$(PegasoVcpkg)\lib</PegasoVcpkgLib>
+    <PegasoVcpkgLib Condition="'$(Configuration)'!='Release'">$(PegasoVcpkg)\debug\lib</PegasoVcpkgLib>
     <_ProjectFileVersion>11.0.60610.1</_ProjectFileVersion>
     <ExtensionsToDeleteOnClean>*.obj;*.ilk;*.pdb;*.tlb;*.tli;*.tlh;*.tmp;*.rsp;*.bat;*.asm;</ExtensionsToDeleteOnClean>
   </PropertyGroup>
@@ -85,7 +88,7 @@
       <WarningLevel>EnableAllWarnings</WarningLevel>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>ADSIId.lib;crypt32.lib;delayimp.lib;iphlpapi.lib;version.lib;winmm.lib;ws2_32.lib;..\cryptopp\$(Platform)\$(Configuration)\cryptlib.lib;..\id3lib\libprj\$(Platform)\$(Configuration)\id3lib.lib;..\mbedtls\visualc\vs2017\$(Platform)\$(Configuration)\mbedtls.lib;..\miniupnpc\msvc\$(Platform)\$(Configuration)\miniupnpc.lib;..\resizablelib\$(Platform)\$(Configuration)\resizablelib.lib;..\zlib\contrib\vstudio\vc\$(Platform)\$(Configuration)\zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(PegasoVcpkgLib)\torrent-rasterbar.lib;$(PegasoVcpkgLib)\libssl.lib;$(PegasoVcpkgLib)\libcrypto.lib;bcrypt.lib;mswsock.lib;dbghelp.lib;ADSIId.lib;crypt32.lib;delayimp.lib;iphlpapi.lib;version.lib;winmm.lib;ws2_32.lib;..\cryptopp\$(Platform)\$(Configuration)\cryptlib.lib;..\id3lib\libprj\$(Platform)\$(Configuration)\id3lib.lib;..\mbedtls\visualc\vs2017\$(Platform)\$(Configuration)\mbedtls.lib;..\miniupnpc\msvc\$(Platform)\$(Configuration)\miniupnpc.lib;..\resizablelib\$(Platform)\$(Configuration)\resizablelib.lib;..\zlib\contrib\vstudio\vc\$(Platform)\$(Configuration)\zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions Condition="'$(Platform)'=='Win32'">/safeseh</AdditionalOptions>
       <DelayLoadDLLs>gdiplus.dll;msimg32.dll;oleacc.dll;ws2_32.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
       <IgnoreSpecificDefaultLibraries>mpr.lib;rasapi32.lib;secur32.lib;sensapi.lib;vfw32.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -113,7 +116,7 @@
       <WarningLevel>EnableAllWarnings</WarningLevel>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>ADSIId.lib;crypt32.lib;delayimp.lib;iphlpapi.lib;version.lib;winmm.lib;ws2_32.lib;..\cryptopp\$(Platform)\$(Configuration)\cryptlib.lib;..\id3lib\libprj\$(Platform)\$(Configuration)\id3lib.lib;..\mbedtls\visualc\vs2017\$(Platform)\$(Configuration)\mbedtls.lib;..\miniupnpc\msvc\$(Platform)\$(Configuration)\miniupnpc.lib;..\resizablelib\$(Platform)\$(Configuration)\resizablelib.lib;..\zlib\contrib\vstudio\vc\$(Platform)\$(Configuration)\zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(PegasoVcpkgLib)\torrent-rasterbar.lib;$(PegasoVcpkgLib)\libssl.lib;$(PegasoVcpkgLib)\libcrypto.lib;bcrypt.lib;mswsock.lib;dbghelp.lib;ADSIId.lib;crypt32.lib;delayimp.lib;iphlpapi.lib;version.lib;winmm.lib;ws2_32.lib;..\cryptopp\$(Platform)\$(Configuration)\cryptlib.lib;..\id3lib\libprj\$(Platform)\$(Configuration)\id3lib.lib;..\mbedtls\visualc\vs2017\$(Platform)\$(Configuration)\mbedtls.lib;..\miniupnpc\msvc\$(Platform)\$(Configuration)\miniupnpc.lib;..\resizablelib\$(Platform)\$(Configuration)\resizablelib.lib;..\zlib\contrib\vstudio\vc\$(Platform)\$(Configuration)\zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions Condition="'$(Platform)'=='Win32'">/safeseh</AdditionalOptions>
       <DelayLoadDLLs>gdiplus.dll;msimg32.dll;oleacc.dll;ws2_32.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
       <IgnoreSpecificDefaultLibraries>mpr.lib;rasapi32.lib;secur32.lib;sensapi.lib;vfw32.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -140,7 +143,7 @@
       <WarningLevel>EnableAllWarnings</WarningLevel>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>ADSIId.lib;crypt32.lib;delayimp.lib;iphlpapi.lib;version.lib;winmm.lib;ws2_32.lib;..\cryptopp\$(Platform)\Debug\cryptlib.lib;..\id3lib\libprj\$(Platform)\Debug\id3lib.lib;..\mbedtls\visualc\vs2017\$(Platform)\Debug\mbedtls.lib;..\miniupnpc\msvc\$(Platform)\Debug\miniupnpc.lib;..\resizablelib\$(Platform)\Debug\resizablelib.lib;..\zlib\contrib\vstudio\vc\$(Platform)\Debug\zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(PegasoVcpkgLib)\torrent-rasterbar.lib;$(PegasoVcpkgLib)\libssl.lib;$(PegasoVcpkgLib)\libcrypto.lib;bcrypt.lib;mswsock.lib;dbghelp.lib;ADSIId.lib;crypt32.lib;delayimp.lib;iphlpapi.lib;version.lib;winmm.lib;ws2_32.lib;..\cryptopp\$(Platform)\Debug\cryptlib.lib;..\id3lib\libprj\$(Platform)\Debug\id3lib.lib;..\mbedtls\visualc\vs2017\$(Platform)\Debug\mbedtls.lib;..\miniupnpc\msvc\$(Platform)\Debug\miniupnpc.lib;..\resizablelib\$(Platform)\Debug\resizablelib.lib;..\zlib\contrib\vstudio\vc\$(Platform)\Debug\zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions Condition="'$(Platform)'=='Win32'">/safeseh</AdditionalOptions>
       <DelayLoadDLLs>gdiplus.dll;msimg32.dll;oleacc.dll;ws2_32.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
       <IgnoreSpecificDefaultLibraries>mpr.lib;rasapi32.lib;secur32.lib;sensapi.lib;vfw32.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -400,6 +403,16 @@
     <ClCompile Include="UPnPImplMiniLib.cpp" />
     <ClCompile Include="UPnPImplWinServ.cpp" />
     <ClCompile Include="UPnPImplWrapper.cpp" />
+    <ClCompile Include="TorrentEngine.cpp">
+      <!-- libtorrent and Boost: own language level, no MFC precompiled header -->
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <WarningLevel>Level3</WarningLevel>
+      <AdditionalIncludeDirectories>$(PegasoVcpkg)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>BOOST_ASIO_NO_DEPRECATED;BOOST_SYSTEM_USE_UTF8;BOOST_ASIO_ENABLE_CANCELIO;WIN32_LEAN_AND_MEAN;BOOST_ALL_NO_LIB;_SCL_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_DEPRECATE;_SILENCE_CXX17_ALLOCATOR_VOID_DEPRECATION_WARNING;TORRENT_ABI_VERSION=100;TORRENT_USE_RTC=0;TORRENT_USE_OPENSSL;TORRENT_USE_LIBCRYPTO;TORRENT_SSL_PEERS;OPENSSL_NO_SSL2;OPENSSL_NO_SSL3;OPENSSL_NO_TLS1;OPENSSL_NO_TLS1_1;OPENSSL_NO_DTLS1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="'$(Configuration)'!='Release'">TORRENT_USE_ASSERTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Include="TorrentQueue.cpp" />
     <ClCompile Include="URLClient.cpp" />
     <ClCompile Include="WebDownload.cpp" />
     <ClCompile Include="Version.cpp" />
@@ -686,6 +699,8 @@
     <ClInclude Include="UPnPImplMiniLib.h" />
     <ClInclude Include="UPnPImplWinServ.h" />
     <ClInclude Include="UPnPImplWrapper.h" />
+    <ClInclude Include="TorrentEngine.h" />
+    <ClInclude Include="TorrentQueue.h" />
     <ClInclude Include="URLClient.h" />
     <ClInclude Include="WebDownload.h" />
     <ClInclude Include="UserMsgs.h" />

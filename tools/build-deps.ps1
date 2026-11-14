@@ -2,6 +2,7 @@
 # Usage:  pwsh tools\build-deps.ps1 [-Configuration Release|Debug] [-Only zlib,mbedtls,...]
 # Libraries are expected one level above srchybrid (see readme.txt):
 #   cryptopp, id3lib, mbedtls, miniupnpc, ResizableLib, zlib
+# libtorrent (BitTorrent) comes with Boost and OpenSSL from vcpkg, see the end of this script.
 # Outputs are copied to the paths emule.vcxproj links from.
 param(
     [ValidateSet('Release', 'Debug')] [string]$Configuration = 'Release',
@@ -106,6 +107,18 @@ if (Want 'mbedtls') {
     New-Item -ItemType Directory -Force (Split-Path -Parent $target) | Out-Null
     Run $libexe (@('/NOLOGO', "/OUT:$target") + $libs)
     Write-Host "  -> $target (merged from $($libs.Count) archives)"
+}
+
+if (Want 'libtorrent') {
+    Write-Host '== libtorrent, with Boost and OpenSSL (through vcpkg; the first build takes a long time)'
+    # Kept outside of the source tree: three levels above srchybrid, where emule.vcxproj looks for it
+    # (override with the PegasoVcpkg MSBuild property). vcpkg builds both Release and Debug.
+    $vcpkg = Join-Path (Split-Path -Parent (Split-Path -Parent $root)) 'vcpkg'
+    if (-not (Test-Path "$vcpkg\vcpkg.exe")) {
+        if (-not (Test-Path $vcpkg)) { Run 'git' @('clone', '--depth', '1', 'https://github.com/microsoft/vcpkg', $vcpkg) }
+        Run "$vcpkg\bootstrap-vcpkg.bat" @('-disableMetrics')
+    }
+    Run "$vcpkg\vcpkg.exe" @('install', "libtorrent[core]:$Platform-windows-static", '--clean-buildtrees-after-build')
 }
 
 Write-Host 'Dependencies built.'

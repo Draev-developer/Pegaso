@@ -34,6 +34,7 @@
 #include "emule.h"
 #include "emuleDlg.h"
 #include "WebDownload.h"
+#include "TorrentQueue.h"
 #include "otherfunctions.h"
 #include "ServerWnd.h"
 #include "KademliaWnd.h"
@@ -1236,7 +1237,10 @@ void CemuleDlg::OnSize(UINT nType, int cx, int cy)
 
 void CemuleDlg::ProcessED2KLink(LPCWSTR pszData)
 {
-	// Pegaso: web addresses arrive the same way as ed2k links (command line, other instance)
+	// Pegaso: torrents (magnet links, .torrent files) and web addresses arrive the same way
+	// as ed2k links (command line, other instance)
+	if (theTorrents.AddLink(CString(pszData)))
+		return;
 	if (CWebDownloadQueue::IsWebUrl(CString(pszData))) {
 		theWebDownloads.AddUrl(CString(pszData), searchwnd->GetSelectedCat());
 		return;
@@ -1762,6 +1766,7 @@ void CemuleDlg::OnClose()
 	delete theApp.knownfiles;				theApp.knownfiles = NULL;
 	delete theApp.searchlist;				theApp.searchlist = NULL;
 	delete theApp.clientcredits;			theApp.clientcredits = NULL;	// CClientCreditsList::SaveList
+	theTorrents.Stop();						// Pegaso: saves the state of the torrents
 	delete theApp.downloadqueue;			theApp.downloadqueue = NULL;	// N * (CPartFile::FlushBuffer + CPartFile::SavePartFile)
 	delete theApp.uploadqueue;				theApp.uploadqueue = NULL;
 	delete theApp.clientlist;				theApp.clientlist = NULL;

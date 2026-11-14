@@ -23,6 +23,7 @@
 #endif
 #include "emule.h"
 #include "PartFile.h"
+#include "WebDownload.h"
 #include "UpDownClient.h"
 #include "UrlClient.h"
 #include "ED2KLink.h"
@@ -241,6 +242,8 @@ void CPartFile::Init()
 	m_bLocalSrcReqQueued = false;
 	srcarevisible = false;
 	m_bMD4HashsetNeeded = true;
+	m_pWebDownload = NULL;
+	m_bWebFile = false;
 
 	m_pAICHRecoveryHashSet = new CAICHRecoveryHashSet(this);
 	m_completedsize = 0ull;
@@ -287,6 +290,8 @@ void CPartFile::Init()
 
 CPartFile::~CPartFile()
 {
+	delete m_pWebDownload;	// Pegaso: drops the connections
+	m_pWebDownload = NULL;
 	// Barry - Ensure all buffered data is written
 	if ((HANDLE)m_hpartfile != INVALID_HANDLE_VALUE) {
 		// commit file and directory entry
@@ -370,6 +375,54 @@ void CPartFile::Dump(CDumpContext &dc) const
 	CKnownFile::Dump(dc);
 }
 #endif
+
+// Pegaso: web downloads ---------------------------------------------------------------
+#define PEGASO_TAG_WEBURL	"PegasoWebUrl"	// part.met: address a web download is fetched from
+
+void CPartFile::SetWebUrl(const CString &sUrl)
+{
+	ASSERT(m_pWebDownload == NULL);
+	m_taglist.Add(new CTag(PEGASO_TAG_WEBURL, sUrl));
+	m_pWebDownload = new CWebDownload(sUrl);
+	m_bWebFile = true;
+	m_bMD4HashsetNeeded = false;	// nobody can provide a hashset for a placeholder hash
+	m_bAICHPartHashsetNeeded = false;
+	SavePartFile();
+}
+
+void CPartFile::ProcessWeb(bool bActive)
+{
+	if (m_pWebDownload)
+		m_pWebDownload->Process(this, bActive && !theApp.IsClosing());
+}
+
+void CPartFile::WriteWebData(uint64 uStart, BYTE *pData, uint32 uLen)
+{
+	if (uLen == 0 || uStart + uLen > (uint64)m_nFileSize || !inSet(GetStatus(), PS_READY, PS_EMPTY)) {
+		delete[] pData;
+		return;
+	}
+	m_uTransferred += uLen;
+	theApp.UpdateReceivedBytes(uLen);
+
+	// The write path expects blocks which stay within one part.
+	const uint64 uEnd = uStart + uLen - 1;
+	const uint64 uPartEnd = (uStart / PARTSIZE + 1) * PARTSIZE - 1;
+	if (uEnd > uPartEnd) {
+		const uint32 uFirst = (uint32)(uPartEnd - uStart + 1);
+		BYTE *pHead = new BYTE[uFirst];
+		memcpy(pHead, pData, uFirst);
+		BYTE *pTail = new BYTE[uLen - uFirst];
+		memcpy(pTail, pData + uFirst, uLen - uFirst);
+		delete[] pData;
+		if (!WriteToBuffer(uFirst, pHead, uStart, uPartEnd, NULL, NULL, false))
+			delete[] pHead;
+		if (!WriteToBuffer(uLen - uFirst, pTail, uPartEnd + 1, uEnd, NULL, NULL, false))
+			delete[] pTail;
+	} else if (!WriteToBuffer(uLen, pData, uStart, uEnd, NULL, NULL, false))
+		delete[] pData;	// nothing was taken over (data already present)
+}
+// -------------------------------------------------------------------------------------
 
 void CPartFile::CreatePartFile(UINT cat)
 {
@@ -980,6 +1033,15 @@ EPartFileLoadResult CPartFile::LoadPartFile(LPCTSTR in_directory, LPCTSTR in_fil
 			delete newtag;
 		}
 
+		// Pegaso: a web download is recognised by the tag carrying its address
+		for (INT_PTR iTag = 0; iTag < m_taglist.GetCount() && m_pWebDownload == NULL; ++iTag) {
+			const CTag *pWebTag = m_taglist[iTag];
+			if (pWebTag->GetNameID() == 0 && pWebTag->IsStr() && strcmp(pWebTag->GetName(), PEGASO_TAG_WEBURL) == 0) {
+				m_pWebDownload = new CWebDownload(pWebTag->GetStr());
+				m_bWebFile = true;
+			}
+		}
+
 		//m_bAICHPartHashsetNeeded = m_FileIdentifier.GetTheoreticalAICHPartHashCount() > 0;
 		if (bHadAICHHashSetTag)
 			if (m_FileIdentifier.VerifyAICHHashSet()) {
@@ -1090,7 +1152,15 @@ EPartFileLoadResult CPartFile::LoadPartFile(LPCTSTR in_directory, LPCTSTR in_fil
 			memset(&m_SrcPartFrequency[0], 0, GetPartCount() * sizeof m_SrcPartFrequency[0]);
 		SetStatus(PS_EMPTY);
 		// check hash count, file status etc
-		m_bMD4HashsetNeeded = !m_FileIdentifier.HasExpectedMD4HashCount();
+		m_bMD4HashsetNeeded = !m_bWebFile && !m_FileIdentifier.HasExpectedMD4HashCount();
+		if (m_bWebFile) {
+			// Pegaso: nothing to verify against; an already complete file only needs its final hash
+			if (m_gaplist.IsEmpty())
+				CompleteFile(false);
+			else
+				UpdateCompletedInfos();
+			return PLR_LOADSUCCESS;
+		}
 		if (m_bMD4HashsetNeeded) {
 			ASSERT(m_FileIdentifier.GetRawMD4HashSet().GetCount() == 0);
 			return PLR_LOADSUCCESS;
@@ -1469,6 +1539,19 @@ void CPartFile::PartFileHashFinished(CKnownFile *result)
 {
 	ASSERT(!result->GetFileSize() || result->GetFileIdentifier().GetTheoreticalMD4PartHashCount() == m_FileIdentifier.GetTheoreticalMD4PartHashCount());
 	ASSERT(result->GetFileIdentifier().GetTheoreticalAICHPartHashCount() == m_FileIdentifier.GetTheoreticalAICHPartHashCount());
+	if (m_bWebFile) {
+		// Pegaso: a web file gets its ed2k identity from the downloaded data
+		if (status != PS_COMPLETING || !m_gaplist.IsEmpty()) {
+			delete result;
+			SetStatus(PS_EMPTY);
+			SavePartFile();
+			return;
+		}
+		m_FileIdentifier.SetMD4Hash(result->GetFileIdentifier().GetMD4Hash());
+		m_FileIdentifier.SetMD4HashSet(result->GetFileIdentifier().GetRawMD4HashSet());
+		m_bMD4HashsetNeeded = false;
+		m_bWebFile = false;	// from here on an ordinary file
+	}
 	bool errorfound = false;
 	bool bToShare = false; // add to the shared files list if a complete part was found
 	// check each part
@@ -2314,10 +2397,14 @@ uint32 CPartFile::Process(uint32 factor, UINT icounter)
 				}
 			}
 		}
+		if (m_pWebDownload)	// Pegaso: web connections count as transferring sources
+			m_anStates[DS_DOWNLOADING] += m_pWebDownload->GetConnectionCount();
 		if (downloadingbefore != (m_anStates[DS_DOWNLOADING] > 0))
 			NotifyStatusChange();
 
-		if (GetMaxSourcePerFileUDP() > GetSourceCount()) {
+		if (m_bWebFile) {
+			// Pegaso: the placeholder hash of a web file must not be searched for
+		} else if (GetMaxSourcePerFileUDP() > GetSourceCount()) {
 			if (theApp.downloadqueue->DoKademliaFileRequest() && (Kademlia::CKademlia::GetTotalFile() < KADEMLIATOTALFILE) && (curTick >= m_LastSearchTimeKad) && Kademlia::CKademlia::IsConnected() && theApp.IsConnected() && !m_stopped) { //Once we can handle lowID users in Kad, we remove the second IsConnected
 				//Kademlia
 				theApp.downloadqueue->SetLastKademliaFileRequest();
@@ -2337,7 +2424,7 @@ uint32 CPartFile::Process(uint32 factor, UINT icounter)
 			Kademlia::CSearchManager::StopSearch(GetKadFileSearchID(), true);
 
 		// check if we want new sources from server
-		if (!m_bLocalSrcReqQueued && (!m_LastSearchTime || curTick >= m_LastSearchTime + SERVERREASKTIME) && theApp.serverconnect->IsConnected()
+		if (!m_bWebFile && !m_bLocalSrcReqQueued && (!m_LastSearchTime || curTick >= m_LastSearchTime + SERVERREASKTIME) && theApp.serverconnect->IsConnected()
 			&& GetMaxSourcePerFileSoft() > GetSourceCount() && !m_stopped
 			&& (!IsLargeFile() || (theApp.serverconnect->GetCurrentServer() != NULL && theApp.serverconnect->GetCurrentServer()->SupportsLargeFilesTCP())))
 		{
@@ -2362,6 +2449,8 @@ uint32 CPartFile::Process(uint32 factor, UINT icounter)
 			theApp.emuledlg->transferwnd->UpdateCatTabTitles();
 	}
 
+	if (m_pWebDownload)
+		m_datarate += m_pWebDownload->GetDatarate();
 	return m_datarate;
 }
 
@@ -3087,6 +3176,8 @@ bool CPartFile::HashSinglePart(UINT partnumber, bool *pbAICHReportedOK)
 	// At least with the current implementation nothing can go horribly wrong (from the security PoV)
 	if (pbAICHReportedOK != NULL)
 		*pbAICHReportedOK = false;
+	if (m_bWebFile)	// Pegaso: no hashes to compare with before the file is complete
+		return true;
 	if (!m_FileIdentifier.HasExpectedMD4HashCount() && !(m_FileIdentifier.HasAICHHash() && m_FileIdentifier.HasExpectedAICHHashCount())) {
 		LogError(LOG_STATUSBAR, GetResString(IDS_ERR_HASHERRORWARNING), (LPCTSTR)GetFileName());
 		m_bMD4HashsetNeeded = true;
@@ -4467,6 +4558,7 @@ void CPartFile::CharFillRange(LPCSTR p, uint32 start, uint32 end, char color) co
 void CPartFile::AddToSharedFiles()
 {
 	if (status == PS_EMPTY
+		&& !m_bWebFile
 		&& !m_bMD4HashsetNeeded
 		&& m_FileIdentifier.HasExpectedMD4HashCount()
 		&& !theApp.IsClosing()) // may be called during shutdown!

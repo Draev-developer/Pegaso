@@ -33,6 +33,7 @@
 #include <uxtheme.h>
 #include "emule.h"
 #include "emuleDlg.h"
+#include "WebDownload.h"
 #include "otherfunctions.h"
 #include "ServerWnd.h"
 #include "KademliaWnd.h"
@@ -1235,6 +1236,11 @@ void CemuleDlg::OnSize(UINT nType, int cx, int cy)
 
 void CemuleDlg::ProcessED2KLink(LPCWSTR pszData)
 {
+	// Pegaso: web addresses arrive the same way as ed2k links (command line, other instance)
+	if (CWebDownloadQueue::IsWebUrl(CString(pszData))) {
+		theWebDownloads.AddUrl(CString(pszData), searchwnd->GetSelectedCat());
+		return;
+	}
 	CED2KLink *pLink = NULL;
 	try {
 		CString link(pszData);

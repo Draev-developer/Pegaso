@@ -19,6 +19,7 @@
 #include "emule.h"
 #include "UpDownClient.h"
 #include "DownloadQueue.h"
+#include "WebDownload.h"
 #include "PartFile.h"
 #include "ed2kLink.h"
 #include "SearchFile.h"
@@ -359,6 +360,7 @@ bool CDownloadQueue::IsFileExisting(const uchar *fileid, bool bLogWarnings) cons
 //This method is called every 100 ms
 void CDownloadQueue::Process()
 {
+	theWebDownloads.Process();	// Pegaso: turn pending web addresses into downloads
 	ProcessLocalRequests(); // send src requests to local server
 
 	uint32 factor;
@@ -402,6 +404,7 @@ void CDownloadQueue::Process()
 		if (cur_file->GetStatus() == PS_ERROR)
 			theStats.m_dwOverallStatus |= STATE_ERROROUS;
 
+		cur_file->ProcessWeb(inSet(cur_file->GetStatus(), PS_READY, PS_EMPTY));	// Pegaso
 		if (inSet(cur_file->GetStatus(), PS_READY, PS_EMPTY))
 			datarateX += cur_file->Process(factor, m_udcounter);
 		else
@@ -860,7 +863,7 @@ bool CDownloadQueue::SendNextUDPPacket()
 			m_lastfile = nextfile;
 		}
 
-		if (!bSentPacket && nextfile && nextfile->GetSourceCount() < nextfile->GetMaxSourcePerFileUDP() && (bServerSupportsLargeFiles || !nextfile->IsLargeFile())) {
+		if (!bSentPacket && nextfile && !nextfile->IsWebFile() && nextfile->GetSourceCount() < nextfile->GetMaxSourcePerFileUDP() && (bServerSupportsLargeFiles || !nextfile->IsLargeFile())) {
 			// GETSOURCES Packet (<HASH_16> *)
 			dataGlobGetSources.WriteHash16(nextfile->GetFileHash());
 			if (bGetSources2Packet)

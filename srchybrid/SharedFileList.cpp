@@ -654,6 +654,9 @@ bool CSharedFileList::CheckAndAddSingleFile(const CString &rstrFilePath)
 
 bool CSharedFileList::SafeAddKFile(CKnownFile *toadd, bool bOnlyAdd)
 {
+	// Pegaso: a web download has only a placeholder hash until it is complete
+	if (toadd->IsPartFile() && static_cast<CPartFile*>(toadd)->IsWebFile())
+		return false;
 	RemoveFromHashing(toadd);	// SLUGFILLER: SafeHash - hashed OK, remove from list if it was in
 	bool bAdded = AddFile(toadd);
 	if (!bOnlyAdd) {

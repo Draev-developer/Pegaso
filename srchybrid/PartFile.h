@@ -218,6 +218,16 @@ public:
 	UINT	GetSrcStatisticsValue(EDownloadState nDLState) const { return m_anStates[nDLState]; } //ASSERT(nDLState < _countof(m_anStates));
 	UINT	GetTransferringSrcCount() const;
 	uint64	GetTransferred() const						{ return m_uTransferred; }
+
+	// Pegaso: web (HTTP/HTTPS) downloads, see WebDownload.h
+	// A web file has no ed2k identity yet: its hash is a placeholder until the
+	// file is complete, so it must not be published, shared or verified by parts.
+	bool	IsWebFile() const							{ return m_bWebFile; }
+	bool	HasWebSource() const						{ return m_pWebDownload != NULL; }
+	void	SetWebUrl(const CString &sUrl);
+	void	ProcessWeb(bool bActive);
+	void	WriteWebData(uint64 uStart, BYTE *pData, uint32 uLen);	// takes ownership of pData (new BYTE[])
+	const CList<Gap_Struct>& GetGapList() const			{ return m_gaplist; }
 	uint32	GetDatarate() const							{ return m_datarate; }
 	float	GetPercentCompleted() const					{ return m_percentcompleted; }
 	UINT	GetNotCurrentSourcesCount() const;
@@ -400,6 +410,8 @@ private:
 	DWORD	m_lastpurgetime;
 	uint32	m_uPartsSavedDueICH;
 	uint32	m_datarate;
+	class CWebDownload *m_pWebDownload;	// Pegaso: not NULL if the file is fetched from a web address
+	bool	m_bWebFile;					// Pegaso: web file whose final hash is not known yet
 	float	m_percentcompleted;
 	EPartFileStatus	status;
 	volatile EPartFileOp m_eFileOp;

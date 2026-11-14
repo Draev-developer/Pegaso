@@ -28,7 +28,8 @@ CWebDownloadQueue theWebDownloads;
 
 namespace
 {
-	const UINT		WEB_MAX_CONNECTIONS = 8;				// per file
+	const UINT		WEB_DEF_CONNECTIONS = 8;				// per file; preferences.ini: WebMaxConnections
+	const UINT		WEB_MAX_CONNECTIONS = 16;
 	const uint64	WEB_MIN_SPLIT = 1024 * 1024;			// do not split a segment into pieces smaller than this
 	const uint32	WEB_READ_SIZE = 64 * 1024;
 	const uint64	WEB_MAX_QUEUED = 16 * 1024 * 1024;		// workers wait when this much data is pending
@@ -465,6 +466,7 @@ namespace
 
 CWebDownload::CWebDownload(const CString &sUrl)
 	: m_sUrl(sUrl)
+	, m_uMaxConnections(max(1u, min(WEB_MAX_CONNECTIONS, theApp.GetProfileInt(_T("eMule"), _T("WebMaxConnections"), WEB_DEF_CONNECTIONS))))
 	, m_dwRetryTick()
 	, m_dwRateTick()
 	, m_uRateBytes()
@@ -509,7 +511,7 @@ bool CWebDownload::StartSegment(uint64 uStart, uint64 uEnd)
 void CWebDownload::StartSegments(CPartFile *pFile)
 {
 	// With range support unknown or missing only one connection is used.
-	const UINT uMax = m_shared->rangesOk ? WEB_MAX_CONNECTIONS : 1;
+	const UINT uMax = m_shared->rangesOk ? m_uMaxConnections : 1;
 	while (m_segments.size() < uMax) {
 		// Claimed by running connections: everything from the last drained position to the segment end.
 		// Data between snapPos and the real position may still be in the queue and thus not yet
@@ -575,8 +577,18 @@ void CWebDownload::StartSegments(CPartFile *pFile)
 void CWebDownload::Process(CPartFile *pFile, bool bActive)
 {
 	if (!bActive) {
-		if (m_shared)
+		if (m_shared) {
+			// keep what was received already (pause); the file ignores it when it cannot take data
+			std::deque<SWebChunk> chunks;
+			{
+				std::lock_guard<std::mutex> lock(m_shared->mtx);
+				chunks.swap(m_shared->chunks);
+				m_shared->queuedBytes = 0;
+			}
 			Stop();
+			for (const SWebChunk &chunk : chunks)
+				pFile->WriteWebData(chunk.start, chunk.data, chunk.len);
+		}
 		return;
 	}
 
@@ -588,11 +600,6 @@ void CWebDownload::Process(CPartFile *pFile, bool bActive)
 		m_dwRateTick = dwNow;
 		m_uRateBytes = 0;
 	}
-
-	// The download limit of the preferences applies to all web downloads together.
-	// It is not yet shared with the ed2k sources, which are limited on their own.
-	const uint64 uMaxDownload = thePrefs.GetMaxDownloadInBytesPerSec(true);
-	g_uRateLimit = (uMaxDownload == UNLIMITED * 1024ull || uMaxDownload > _UI32_MAX) ? 0 : (uint32)uMaxDownload;
 
 	// Take over the received data and note how far each connection got, in one step.
 	std::deque<SWebChunk> chunks;
@@ -732,8 +739,44 @@ void CWebDownloadQueue::Clear()
 	m_probes.clear();	// running workers keep their own reference
 }
 
+bool CWebDownloadQueue::LooksLikeFileUrl(const CString &sText)
+{
+	CString sUrl(sText);
+	sUrl.Trim();
+	if (!IsWebUrl(sUrl) || sUrl.FindOneOf(_T(" \t\r\n")) >= 0 || sUrl.GetLength() > 2000)
+		return false;
+	CString sName(FileNameFromUrl(sUrl));
+	int iDot = sName.ReverseFind(_T('.'));
+	if (iDot < 0)
+		return false;
+	CString sExt(sName.Mid(iDot + 1));
+	sExt.MakeLower();
+	static LPCTSTR const apszExt[] = {
+		_T("zip"), _T("rar"), _T("7z"), _T("gz"), _T("bz2"), _T("xz"), _T("zst"), _T("tar"), _T("tgz"), _T("cab"),
+		_T("iso"), _T("img"), _T("bin"), _T("dmg"), _T("exe"), _T("msi"), _T("msix"), _T("apk"), _T("deb"), _T("rpm"),
+		_T("mp4"), _T("mkv"), _T("avi"), _T("mov"), _T("wmv"), _T("webm"), _T("mpg"), _T("mpeg"), _T("ts"), _T("m4v"),
+		_T("mp3"), _T("flac"), _T("ogg"), _T("opus"), _T("m4a"), _T("wav"), _T("aac"),
+		_T("pdf"), _T("epub"), _T("mobi"), _T("azw3"), _T("cbz"), _T("cbr"), _T("djvu")
+	};
+	for (LPCTSTR pszExt : apszExt)
+		if (sExt == pszExt)
+			return true;
+	return false;
+}
+
 void CWebDownloadQueue::Process()
 {
+	// The download limit of the preferences covers ed2k and web together:
+	// the web downloads may use what the ed2k sources leave, but never less than a tenth.
+	const uint64 uMaxDownload = thePrefs.GetMaxDownloadInBytesPerSec(true);
+	if (uMaxDownload == UNLIMITED * 1024ull || uMaxDownload > _UI32_MAX)
+		g_uRateLimit = 0;
+	else {
+		const uint32 uLimit = (uint32)uMaxDownload;
+		const uint32 uFloor = max(uLimit / 10, 1024u);
+		g_uRateLimit = (m_uOtherDatarate + uFloor < uLimit) ? uLimit - m_uOtherDatarate : uFloor;
+	}
+
 	UINT uRunning = 0;
 	for (const std::shared_ptr<SWebProbe> &pProbe : m_probes)
 		uRunning += static_cast<UINT>(pProbe->started && !pProbe->done);

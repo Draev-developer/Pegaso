@@ -226,6 +226,7 @@ public:
 	bool	HasWebSource() const						{ return m_pWebDownload != NULL; }
 	void	SetWebUrl(const CString &sUrl);
 	void	ProcessWeb(bool bActive);
+	uint32	GetWebDatarate() const;
 	void	WriteWebData(uint64 uStart, BYTE *pData, uint32 uLen);	// takes ownership of pData (new BYTE[])
 	const CList<Gap_Struct>& GetGapList() const			{ return m_gaplist; }
 	uint32	GetDatarate() const							{ return m_datarate; }

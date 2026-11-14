@@ -386,6 +386,7 @@ void CDownloadQueue::Process()
 		m_datarate = 0;
 
 	uint32 datarateX = 0;
+	uint32 datarateWeb = 0;	// Pegaso
 	++m_udcounter;
 
 	theStats.m_fGlobalDone = 0;
@@ -405,12 +406,14 @@ void CDownloadQueue::Process()
 			theStats.m_dwOverallStatus |= STATE_ERROROUS;
 
 		cur_file->ProcessWeb(inSet(cur_file->GetStatus(), PS_READY, PS_EMPTY));	// Pegaso
+		datarateWeb += cur_file->GetWebDatarate();
 		if (inSet(cur_file->GetStatus(), PS_READY, PS_EMPTY))
 			datarateX += cur_file->Process(factor, m_udcounter);
 		else
 			cur_file->StopPausedFile(); //also drop sources for paused and stopped files
 	}
 
+	theWebDownloads.SetOtherDatarate(datarateX > datarateWeb ? datarateX - datarateWeb : 0);	// Pegaso: shared download limit
 	average_dr_hist.AddTail(TransferredData{datarateX, curTick});
 	m_datarateMS += datarateX;
 

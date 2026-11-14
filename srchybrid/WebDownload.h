@@ -40,6 +40,7 @@ private:
 	CString	m_sUrl;
 	std::shared_ptr<SWebShared> m_shared;
 	std::vector<std::shared_ptr<SWebSegment> > m_segments;	// running connections
+	UINT	m_uMaxConnections;
 	DWORD	m_dwRetryTick;		// no new connections before this time
 	DWORD	m_dwRateTick;
 	uint64	m_uRateBytes;
@@ -53,6 +54,13 @@ class CWebDownloadQueue
 {
 public:
 	static bool IsWebUrl(const CString &sUrl);
+	// A single address whose path ends like a file worth downloading (archive, video, ...).
+	// Used to decide whether an address copied to the clipboard is offered as a download.
+	static bool LooksLikeFileUrl(const CString &sText);
+
+	// Download rate of everything which is not a web download (ed2k sources), in bytes per
+	// second. The web downloads get what this leaves of the configured download limit.
+	void	SetOtherDatarate(uint32 uBytesPerSec)		{ m_uOtherDatarate = uBytesPerSec; }
 
 	void	AddUrl(const CString &sUrl, int cat);
 	void	Process();		// main thread, called from CDownloadQueue::Process()
@@ -60,6 +68,7 @@ public:
 
 private:
 	std::vector<std::shared_ptr<SWebProbe> > m_probes;
+	uint32	m_uOtherDatarate = 0;
 };
 
 extern CWebDownloadQueue theWebDownloads;

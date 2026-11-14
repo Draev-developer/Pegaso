@@ -25,6 +25,7 @@
 #include <timeapi.h>
 #include <uxtheme.h>
 #include "emule.h"
+#include "WebDownload.h"
 #include "opcodes.h"
 #include "ini2.h"
 #include "mdump.h"
@@ -1255,6 +1256,10 @@ void CemuleApp::AddEd2kLinksToDownload(const CString &strLinks, int cat)
 		const CString &sToken(strLinks.Tokenize(_T(" \t\r\n"), iPos)); //tokenize by whitespace
 		if (sToken.IsEmpty())
 			break;
+		if (CWebDownloadQueue::IsWebUrl(sToken)) {	// Pegaso: web address
+			theWebDownloads.AddUrl(sToken, cat);
+			continue;
+		}
 		bool bSlash = (sToken[sToken.GetLength() - 1] == _T('/'));
 		CED2KLink *pLink = NULL;
 		try {

@@ -387,6 +387,7 @@ void CPartFile::SetWebUrl(const CString &sUrl)
 	m_bWebFile = true;
 	m_bMD4HashsetNeeded = false;	// nobody can provide a hashset for a placeholder hash
 	m_bAICHPartHashsetNeeded = false;
+	UpdatePartsInfo();
 	SavePartFile();
 }
 
@@ -396,9 +397,15 @@ void CPartFile::ProcessWeb(bool bActive)
 		m_pWebDownload->Process(this, bActive && !theApp.IsClosing());
 }
 
+uint32 CPartFile::GetWebDatarate() const
+{
+	return m_pWebDownload ? m_pWebDownload->GetDatarate() : 0;
+}
+
 void CPartFile::WriteWebData(uint64 uStart, BYTE *pData, uint32 uLen)
 {
-	if (uLen == 0 || uStart + uLen > (uint64)m_nFileSize || !inSet(GetStatus(), PS_READY, PS_EMPTY)) {
+	// data which arrives while the file is being paused is still worth keeping
+	if (uLen == 0 || uStart + uLen > (uint64)m_nFileSize || !(inSet(GetStatus(), PS_READY, PS_EMPTY) || inSet(GetStatus(), PS_PAUSED, PS_INSUFFICIENT))) {
 		delete[] pData;
 		return;
 	}
@@ -1157,8 +1164,10 @@ EPartFileLoadResult CPartFile::LoadPartFile(LPCTSTR in_directory, LPCTSTR in_fil
 			// Pegaso: nothing to verify against; an already complete file only needs its final hash
 			if (m_gaplist.IsEmpty())
 				CompleteFile(false);
-			else
+			else {
+				UpdatePartsInfo();
 				UpdateCompletedInfos();
+			}
 			return PLR_LOADSUCCESS;
 		}
 		if (m_bMD4HashsetNeeded) {
@@ -2615,6 +2624,9 @@ void CPartFile::UpdatePartsInfo()
 	// Reset part counters
 	m_SrcPartFrequency.SetSize(GetPartCount());
 	memset(&m_SrcPartFrequency[0], 0, GetPartCount() * sizeof m_SrcPartFrequency[0]);
+	if (m_pWebDownload)	// Pegaso: the web server has every part
+		for (INT_PTR i = GetPartCount(); --i >= 0;)
+			m_SrcPartFrequency[i] = 1;
 
 	CArray<uint16> acount;
 	if (bRefresh)

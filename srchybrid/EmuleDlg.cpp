@@ -3574,7 +3574,9 @@ void CemuleDlg::OnDrawClipboard()
 		LPCTSTR pszTrimmedLinks = strLinks;
 		while (_istspace(*pszTrimmedLinks)) // Skip leading white space
 			++pszTrimmedLinks;
-		if (_tcsnicmp(pszTrimmedLinks, _T("ed2k://|file|"), 13) == 0) {
+		if (_tcsnicmp(pszTrimmedLinks, _T("ed2k://|file|"), 13) == 0
+			|| CWebDownloadQueue::LooksLikeFileUrl(pszTrimmedLinks))	// Pegaso: also addresses of downloadable files
+		{
 			// Don't feed too long strings into the MessageBox function, it may freak out.
 			CString strLinksDisplay(GetResString(IDS_ADDDOWNLOADSFROMCB));
 			if (strLinks.GetLength() > 512)

@@ -15,6 +15,7 @@
 //along with this program; if not, write to the Free Software
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #pragma once
+#include <string>
 #include "KnownFile.h"
 #include "DeadSourceList.h"
 #include "CorruptionBlackBox.h"
@@ -229,6 +230,15 @@ public:
 	uint32	GetWebDatarate() const;
 	void	WriteWebData(uint64 uStart, BYTE *pData, uint32 uLen);	// takes ownership of pData (new BYTE[])
 	const CList<Gap_Struct>& GetGapList() const			{ return m_gaplist; }
+
+	// Pegaso: a torrent is shown in the download list through a stand-in part file. It owns no
+	// data and no part.met - libtorrent does the work - and only mirrors the state of the torrent.
+	bool	IsTorrent() const							{ return !m_sTorrentId.empty(); }
+	const std::string& GetTorrentId() const				{ return m_sTorrentId; }
+	static CPartFile* CreateTorrentProxy(const struct STorrentStatus &st);
+	void	UpdateFromTorrent(const struct STorrentStatus &st);
+	UINT	GetTorrentPeers() const						{ return m_uTorrentPeers; }
+	UINT	GetTorrentSeeds() const						{ return m_uTorrentSeeds; }
 	uint32	GetDatarate() const							{ return m_datarate; }
 	float	GetPercentCompleted() const					{ return m_percentcompleted; }
 	UINT	GetNotCurrentSourcesCount() const;
@@ -412,6 +422,10 @@ private:
 	uint32	m_uPartsSavedDueICH;
 	uint32	m_datarate;
 	class CWebDownload *m_pWebDownload;	// Pegaso: not NULL if the file is fetched from a web address
+	std::string m_sTorrentId;			// Pegaso: not empty for the stand-in of a torrent
+	int		m_eTorrentState;
+	UINT	m_uTorrentPeers;
+	UINT	m_uTorrentSeeds;
 	bool	m_bWebFile;					// Pegaso: web file whose final hash is not known yet
 	float	m_percentcompleted;
 	EPartFileStatus	status;

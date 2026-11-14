@@ -81,8 +81,7 @@ CPreferencesDlg::CPreferencesDlg()
 	AddPage(&m_wndFiles);
 	AddPage(&m_wndNotify);
 	AddPage(&m_wndStats);
-	AddPage(&m_wndIRC);
-	AddPage(&m_wndMessages);
+	// Pegaso: no IRC and no chat, hence no option pages for them
 	AddPage(&m_wndSecurity);
 	AddPage(&m_wndScheduler);
 	AddPage(&m_wndWebServer);

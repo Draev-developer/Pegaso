@@ -2635,6 +2635,13 @@ void CUpDownClient::GetDisplayImage(int &iImage, UINT &uOverlayImage) const
 
 void CUpDownClient::ProcessChatMessage(CSafeMemFile &data, uint32 nLength)
 {
+	// Pegaso has no chat window: messages of other clients are dropped
+	if (!GetMessageFiltered() && thePrefs.GetVerbose())
+		AddDebugLogLine(false, _T("Chat message from '%s' (IP:%s) ignored"), GetUserName(), (LPCTSTR)ipstr(GetConnectIP()));
+	SetMessageFiltered(true);
+	UNREFERENCED_PARAMETER(data);
+	UNREFERENCED_PARAMETER(nLength);
+#if 0
 	//filter me?
 	if ((thePrefs.MsgOnlyFriends() && !IsFriend()) || (thePrefs.MsgOnlySecure() && GetUserName() == NULL)) {
 		if (!GetMessageFiltered() && thePrefs.GetVerbose())
@@ -2771,6 +2778,7 @@ void CUpDownClient::ProcessChatMessage(CSafeMemFile &data, uint32 nLength)
 	}
 
 	theApp.emuledlg->chatwnd->chatselector.ProcessMessage(this, strMessage);
+#endif
 }
 
 void CUpDownClient::ProcessCaptchaRequest(CSafeMemFile &data)

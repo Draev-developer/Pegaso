@@ -109,7 +109,7 @@ void CSplashScreen::OnPaint()
 			CFont font;
 			font.CreateFontIndirect(&lf);
 			CFont *pOldFont = dc.SelectObject(&font);
-			const CString &strAppVersion(_T("eMule ") + theApp.m_strCurVersionLong);
+			const CString &strAppVersion(theApp.GetAppTitle());
 			rc.top += dc.DrawText(strAppVersion, &rc, DT_CENTER | DT_NOPREFIX);
 			if (pOldFont)
 				dc.SelectObject(pOldFont);

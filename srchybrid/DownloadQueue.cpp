@@ -407,6 +407,8 @@ void CDownloadQueue::Process()
 		if (cur_file->GetStatus() == PS_ERROR)
 			theStats.m_dwOverallStatus |= STATE_ERROROUS;
 
+		if (cur_file->IsTorrent())	// Pegaso: driven by the BitTorrent engine, see CTorrentQueue::Process
+			continue;
 		cur_file->ProcessWeb(inSet(cur_file->GetStatus(), PS_READY, PS_EMPTY));	// Pegaso
 		datarateWeb += cur_file->GetWebDatarate();
 		if (inSet(cur_file->GetStatus(), PS_READY, PS_EMPTY))

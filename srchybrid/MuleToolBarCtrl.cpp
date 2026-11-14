@@ -170,6 +170,10 @@ void CMuleToolbarCtrl::Init()
 	const CString &config(thePrefs.GetToolbarSettings());
 	for (int i = 0; i < config.GetLength(); i += 2) {
 		int index = _tstoi(config.Mid(i, 2));
+		if (index == TBBTN_MESSAGES - IDC_TOOLBARBUTTON || index == TBBTN_IRC - IDC_TOOLBARBUTTON)
+			continue;	// Pegaso: removed, also from toolbar settings saved by eMule
+		if (index != 99 && (index < 0 || index >= (int)_countof(TBButtons)))
+			continue;
 		AddButtons(1, (index == 99) ? &sepButton : &TBButtons[index]);
 	}
 
@@ -477,13 +481,17 @@ void CMuleToolbarCtrl::OnTbnQueryInsert(LPNMHDR, LRESULT *pResult)
 void CMuleToolbarCtrl::OnTbnGetButtonInfo(LPNMHDR pNMHDR, LRESULT *pResult)
 {
 	LPNMTOOLBAR pNMTB = reinterpret_cast<LPNMTOOLBAR>(pNMHDR);
-	*pResult = static_cast<LRESULT>((size_t)pNMTB->iItem < _countof(TBButtons));
+	// Pegaso: the customize dialog must not offer the Messages and IRC buttons
+	int iItem = pNMTB->iItem;
+	if (iItem >= TBBTN_MESSAGES - IDC_TOOLBARBUTTON)
+		iItem += 2;
+	*pResult = static_cast<LRESULT>(iItem >= 0 && (size_t)iItem < _countof(TBButtons));
 	if (*pResult) {
-		CString strText(TBStrings[pNMTB->iItem]);
+		CString strText(TBStrings[iItem]);
 		strText.Remove(_T('&'));
 		_tcsncpy(pNMTB->pszText, strText, pNMTB->cchText - 1);
 		pNMTB->pszText[pNMTB->cchText - 1] = _T('\0');
-		pNMTB->tbButton = TBButtons[pNMTB->iItem];
+		pNMTB->tbButton = TBButtons[iItem];
 		if (m_eLabelType == LabelsRight)
 			pNMTB->tbButton.fsStyle |= TBSTYLE_AUTOSIZE;
 	}
@@ -792,6 +800,10 @@ void CMuleToolbarCtrl::OnTbnReset(LPNMHDR, LRESULT*)
 	const CString &config(strDefaultToolbar);
 	for (int i = 0; i < config.GetLength(); i += 2) {
 		int index = _tstoi(config.Mid(i, 2));
+		if (index == TBBTN_MESSAGES - IDC_TOOLBARBUTTON || index == TBBTN_IRC - IDC_TOOLBARBUTTON)
+			continue;	// Pegaso: removed, also from toolbar settings saved by eMule
+		if (index != 99 && (index < 0 || index >= (int)_countof(TBButtons)))
+			continue;
 		AddButtons(1, (index == 99) ? &sepButton : &TBButtons[index]);
 	}
 

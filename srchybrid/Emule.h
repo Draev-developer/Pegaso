@@ -135,7 +135,8 @@ public:
 	bool		IsEd2kFileLinkInClipboard();
 	bool		IsEd2kServerLinkInClipboard();
 	LPCTSTR		GetProfileFile() const							{ return m_pszProfileName; }
-	// Pegaso: text for window captions, e.g. "Pegaso v0.1 (eMule 0.72a x64)"
+	// Pegaso: text for window captions, e.g. "Pegaso v0.1"
+	CString		GetReadyMessage() const;
 	CString		GetAppTitle() const;
 
 	CString		CreateKadSourceLink(const CAbstractFile *f);

@@ -17,6 +17,7 @@
 #include "stdafx.h"
 #include "emule.h"
 #include "DownloadListCtrl.h"
+#include "TorrentQueue.h"
 #include "updownclient.h"
 #include "MenuCmds.h"
 #include "ClientDetailDialog.h"
@@ -860,6 +861,11 @@ void CDownloadListCtrl::OnLvnItemActivate(LPNMHDR pNMHDR, LRESULT *pResult)
 {
 	LPNMITEMACTIVATE pNMIA = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
 
+	const CtrlItem_Struct *pActivated = (pNMIA->iItem >= 0) ? reinterpret_cast<CtrlItem_Struct*>(GetItemData(pNMIA->iItem)) : NULL;
+	if (pActivated != NULL && pActivated->type == FILE_TYPE && static_cast<CPartFile*>(pActivated->value)->IsTorrent()) {
+		*pResult = 0;	// Pegaso: a torrent has no source list to unfold
+		return;
+	}
 	if (thePrefs.IsDoubleClickEnabled() || pNMIA->iSubItem > 0)
 		ExpandCollapseItem(pNMIA->iItem, EXPAND_COLLAPSE);
 	*pResult = 0;
@@ -873,6 +879,34 @@ void CDownloadListCtrl::OnContextMenu(CWnd*, CPoint point)
 	if (iSel >= 0) {
 		const CtrlItem_Struct *content = reinterpret_cast<CtrlItem_Struct*>(GetItemData(iSel));
 		if (content != NULL && content->type == FILE_TYPE) {
+			// Pegaso: torrents have their own, short menu; the ed2k commands do not apply to them
+			bool bTorrent = false, bCanPause = false, bCanResume = false;
+			for (POSITION pos = GetFirstSelectedItemPosition(); pos != NULL;) {
+				const CtrlItem_Struct *pItemData = reinterpret_cast<CtrlItem_Struct*>(GetItemData(GetNextSelectedItem(pos)));
+				if (pItemData == NULL || pItemData->type != FILE_TYPE || !static_cast<CPartFile*>(pItemData->value)->IsTorrent())
+					continue;
+				bTorrent = true;
+				const EPartFileStatus eStatus = static_cast<CPartFile*>(pItemData->value)->GetStatus();
+				bCanResume |= (eStatus == PS_PAUSED || eStatus == PS_ERROR);
+				bCanPause |= (eStatus == PS_READY);
+			}
+			if (bTorrent) {
+				if (point.x == -1 && point.y == -1) {	// keyboard
+					CRect rc;
+					GetItemRect(iSel, &rc, LVIR_LABEL);
+					point = rc.CenterPoint();
+					ClientToScreen(&point);
+				}
+				CMenu menu;
+				menu.CreatePopupMenu();
+				menu.AppendMenu(MF_STRING | (bCanPause ? MF_ENABLED : MF_GRAYED), MP_PAUSE, GetResString(IDS_DL_PAUSE));
+				menu.AppendMenu(MF_STRING | (bCanResume ? MF_ENABLED : MF_GRAYED), MP_RESUME, GetResString(IDS_DL_RESUME));
+				menu.AppendMenu(MF_STRING, MP_CANCEL, GetResString(IDS_MAIN_BTN_CANCEL));
+				menu.AppendMenu(MF_SEPARATOR);
+				menu.AppendMenu(MF_STRING, MP_OPENFOLDER, GetResString(IDS_OPENFOLDER));
+				menu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x, point.y, this);
+				return;
+			}
 			// get merged settings
 			int iSelectedItems = 0;
 			int iFilesNotDone = 0;
@@ -1048,7 +1082,6 @@ void CDownloadListCtrl::OnContextMenu(CWnd*, CPoint point)
 			ClientMenu.AppendMenu(MF_STRING, MP_DETAIL, GetResString(IDS_SHOWDETAILS), _T("CLIENTDETAILS"));
 			ClientMenu.SetDefaultItem(MP_DETAIL);
 			ClientMenu.AppendMenu(MF_STRING | ((is_ed2k && !client->IsFriend()) ? MF_ENABLED : MF_GRAYED), MP_ADDFRIEND, GetResString(IDS_ADDFRIEND), _T("ADDFRIEND"));
-			ClientMenu.AppendMenu(MF_STRING | (is_ed2k ? MF_ENABLED : MF_GRAYED), MP_MESSAGE, GetResString(IDS_SEND_MSG), _T("SENDMESSAGE"));
 			ClientMenu.AppendMenu(MF_STRING | ((is_ed2k && client->GetViewSharedFilesSupport()) ? MF_ENABLED : MF_GRAYED), MP_SHOWLIST, GetResString(IDS_VIEWFILES), _T("VIEWFILES"));
 			if (Kademlia::CKademlia::IsRunning() && !Kademlia::CKademlia::IsConnected())
 				ClientMenu.AppendMenu(MF_STRING | ((is_ed2k && client->GetKadPort() && client->GetKadVersion() >= KADEMLIA_VERSION2_47a) ? MF_ENABLED : MF_GRAYED), MP_BOOT, GetResString(IDS_BOOTSTRAP));
@@ -1242,6 +1275,52 @@ BOOL CDownloadListCtrl::OnCommand(WPARAM wParam, LPARAM)
 			}
 
 			CPartFile *file = static_cast<CPartFile*>(content->value);
+			// Pegaso: with a torrent in the selection only the torrents are acted upon,
+			// and only by the commands which make sense for them
+			bool bTorrentSelected = false;
+			for (POSITION pos = selectedList.GetHeadPosition(); pos != NULL && !bTorrentSelected;)
+				bTorrentSelected = selectedList.GetNext(pos)->IsTorrent();
+			if (bTorrentSelected) {
+				switch (wParam) {
+				case MP_PAUSE:
+				case MP_STOP:
+				case MP_RESUME:
+					for (POSITION pos = selectedList.GetHeadPosition(); pos != NULL;) {
+						CPartFile *pTorrent = selectedList.GetNext(pos);
+						if (pTorrent->IsTorrent()) {
+							if (wParam == MP_RESUME)
+								theTorrents.Resume(pTorrent->GetTorrentId());
+							else
+								theTorrents.Pause(pTorrent->GetTorrentId());
+						}
+					}
+					break;
+				case MP_CANCEL:
+				case MPG_DELETE:
+					{
+						CString sQuestion(GetResString(IDS_Q_CANCELDL2));
+						bool bUnfinished = false;
+						for (POSITION pos = selectedList.GetHeadPosition(); pos != NULL;) {
+							const CPartFile *pTorrent = selectedList.GetNext(pos);
+							if (pTorrent->IsTorrent()) {
+								sQuestion.AppendFormat(_T("\n%s"), (LPCTSTR)pTorrent->GetFileName());
+								bUnfinished |= pTorrent->GetStatus() != PS_COMPLETE;
+							}
+						}
+						// a finished torrent is only taken off the list (and no longer seeded): the files stay
+						if (!bUnfinished || AfxMessageBox(sQuestion, MB_DEFBUTTON2 | MB_ICONQUESTION | MB_YESNO) == IDYES)
+							for (POSITION pos = selectedList.GetHeadPosition(); pos != NULL;) {
+								const CPartFile *pTorrent = selectedList.GetNext(pos);
+								if (pTorrent->IsTorrent())
+									theTorrents.Remove(pTorrent->GetTorrentId(), pTorrent->GetStatus() != PS_COMPLETE);
+							}
+					}
+					break;
+				case MP_OPENFOLDER:
+					::ShellExecute(NULL, _T("open"), thePrefs.GetMuleDirectory(EMULE_INCOMINGDIR), NULL, NULL, SW_SHOWNORMAL);
+				}
+				return TRUE;
+			}
 			switch (wParam) {
 			case MP_CANCEL:
 			case MPG_DELETE: // keyboard del will continue to remove completed files from the screen while cancel will now also be available for complete files
@@ -1636,6 +1715,11 @@ void CDownloadListCtrl::ClearCompleted(int incat)
 		++it; // Already point to the next iterator.
 		if (cur_item->type == FILE_TYPE) {
 			CPartFile *file = static_cast<CPartFile*>(cur_item->value);
+			if (file->IsTorrent()) {	// Pegaso: a finished torrent leaves the list by removing it from the engine
+				if (!file->IsPartFile() && (file->CheckShowItemInGivenCat(incat) || incat == -1))
+					theTorrents.Remove(file->GetTorrentId(), false);
+				continue;
+			}
 			if (!file->IsPartFile() && (file->CheckShowItemInGivenCat(incat) || incat == -1))
 				if (RemoveFile(file))
 					it = m_ListItems.begin();
@@ -1647,7 +1731,7 @@ void CDownloadListCtrl::ClearCompleted(int incat)
 
 void CDownloadListCtrl::ClearCompleted(const CPartFile *pFile)
 {
-	if (pFile->IsPartFile())
+	if (pFile->IsPartFile() || pFile->IsTorrent())
 		return;
 	for (ListItems::const_iterator it = m_ListItems.begin(); it != m_ListItems.end(); ++it) {
 		const CtrlItem_Struct *cur_item = it->second;
@@ -1801,6 +1885,10 @@ void CDownloadListCtrl::OnNmDblClk(LPNMHDR, LRESULT *pResult)
 	if (iSel >= 0) {
 		const CtrlItem_Struct *content = reinterpret_cast<CtrlItem_Struct*>(GetItemData(iSel));
 		if (content && content->value) {
+			if (content->type == FILE_TYPE && static_cast<CPartFile*>(content->value)->IsTorrent()) {
+				*pResult = 0;	// Pegaso: no details dialog for torrents yet
+				return;
+			}
 			if (content->type == FILE_TYPE) {
 				CPoint pt;
 				if (!thePrefs.IsDoubleClickEnabled() && ::GetCursorPos(&pt)) {
@@ -1995,6 +2083,11 @@ CString CDownloadListCtrl::GetFileItemDisplayText(const CPartFile *lpPartFile, i
 	case 6: //sources
 		{
 // ZZ:DownloadManager -->
+			if (lpPartFile->IsTorrent()) {	// Pegaso: peers (seeds among them)
+				if (lpPartFile->GetTorrentPeers() > 0)
+					sText.Format(_T("%u (%u)"), lpPartFile->GetTorrentPeers(), lpPartFile->GetTorrentSeeds());
+				break;
+			}
 			const UINT sc = lpPartFile->GetSourceCount();
 			if ((lpPartFile->GetStatus() != PS_PAUSED || sc) && lpPartFile->GetStatus() != PS_COMPLETE) {
 				UINT ncsc = lpPartFile->GetNotCurrentSourcesCount();

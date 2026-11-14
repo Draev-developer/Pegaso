@@ -1,6 +1,7 @@
 // Pegaso: glue between the application and the BitTorrent engine (TorrentEngine.h).
 // Main thread only.
 #pragma once
+#include <map>
 #include "TorrentEngine.h"
 
 class CTorrentQueue
@@ -28,7 +29,11 @@ public:
 	void	Remove(const std::string &id, bool bDeleteFiles) { m_engine.Remove(id, bDeleteFiles); }
 
 private:
+	void	SyncDownloadList();
+	void	RemoveProxies();
+
 	CTorrentEngine m_engine;
+	std::map<std::string, class CPartFile*> m_proxies;	// the rows of the download list
 	std::vector<STorrentStatus> m_status;	// refreshed once per second
 	DWORD	m_dwLastPoll;
 	DWORD	m_dwLastReport;

@@ -727,7 +727,7 @@ void CALLBACK CemuleDlg::StartupTimer(HWND /*hwnd*/, UINT /*uiMsg*/, UINT_PTR /*
 				}
 
 				if (!bError) // show the success msg, only if we had no serious error
-					AddLogLine(true, GetResString(IDS_MAIN_READY), (LPCTSTR)theApp.m_strCurVersionLong);
+					AddLogLine(true, _T("%s"), (LPCTSTR)theApp.GetReadyMessage());
 
 				theApp.m_app_state = APP_STATE_RUNNING; //initialization completed
 				theApp.emuledlg->toolbar->EnableButton(TBBTN_CONNECT, TRUE);
@@ -1141,7 +1141,7 @@ void CemuleDlg::ShowTransferRate(bool bForceAll)
 	}
 	if (IsWindowVisible() && thePrefs.ShowRatesOnTitle()) {
 		CString szBuff;
-		szBuff.Format(_T("(U:%.1f D:%.1f) eMule v%s"), (float)m_uUpDatarate / 1024, (float)m_uDownDatarate / 1024, (LPCTSTR)theApp.m_strCurVersionLong);
+		szBuff.Format(_T("(U:%.1f D:%.1f) %s"), (float)m_uUpDatarate / 1024, (float)m_uDownDatarate / 1024, (LPCTSTR)theApp.GetAppTitle());
 		SetWindowText(szBuff);
 	}
 	InterlockedExchange8(&m_bMiniUpdate, 1);
@@ -2479,13 +2479,10 @@ BOOL CemuleDlg::OnCommand(WPARAM wParam, LPARAM lParam)
 	case MP_HM_FILES:
 		SetActiveDialog(sharedfileswnd);
 		break;
-	case TBBTN_MESSAGES:
+	case TBBTN_MESSAGES:	// Pegaso: no chat and no IRC; the commands may still come from an old toolbar setting
 	case MP_HM_MSGS:
-		SetActiveDialog(chatwnd);
-		break;
 	case TBBTN_IRC:
 	case MP_HM_IRC:
-		SetActiveDialog(ircwnd);
 		break;
 	case TBBTN_STATS:
 	case MP_HM_STATS:
@@ -2622,8 +2619,6 @@ void CemuleDlg::ShowToolPopup(bool toolsonly)
 		menu.AppendMenu(MF_STRING, MP_HM_TRANSFER, GetResString(IDS_EM_TRANS), _T("TRANSFER"));
 		menu.AppendMenu(MF_STRING, MP_HM_SEARCH, GetResString(IDS_EM_SEARCH), _T("SEARCH"));
 		menu.AppendMenu(MF_STRING, MP_HM_FILES, GetResString(IDS_EM_FILES), _T("SharedFiles"));
-		menu.AppendMenu(MF_STRING, MP_HM_MSGS, GetResString(IDS_EM_MESSAGES), _T("MESSAGES"));
-		menu.AppendMenu(MF_STRING, MP_HM_IRC, GetResString(IDS_IRC), _T("IRC"));
 		menu.AppendMenu(MF_STRING, MP_HM_STATS, GetResString(IDS_EM_STATISTIC), _T("STATISTICS"));
 		menu.AppendMenu(MF_STRING, MP_HM_PREFS, GetResString(IDS_EM_PREFS), _T("PREFERENCES"));
 		menu.AppendMenu(MF_STRING, MP_HM_HELP, GetResString(IDS_EM_HELP), _T("HELP"));

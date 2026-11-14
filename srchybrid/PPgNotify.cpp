@@ -249,7 +249,7 @@ void CPPgNotify::OnBnClickedTestNotification()
 
 	// play test notification
 	CString strTest;
-	strTest.Format(GetResString(IDS_MAIN_READY), (LPCTSTR)theApp.m_strCurVersionLong);
+	strTest = theApp.GetReadyMessage();
 	theApp.emuledlg->ShowNotifier(strTest, TBN_IMPORTANTEVENT);
 
 	// restore pref settings

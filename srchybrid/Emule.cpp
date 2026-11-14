@@ -352,9 +352,18 @@ CemuleApp::CemuleApp(LPCTSTR lpszAppName)
 
 CemuleApp theApp(PEGASO_NAME);
 
+// "Pegaso version 0.1 ready", built from the translated eMule text
+CString CemuleApp::GetReadyMessage() const
+{
+	CString s;
+	s.Format(GetResString(IDS_MAIN_READY), PEGASO_VERSION_NAME);
+	s.Replace(_T("eMule"), PEGASO_NAME);
+	return s;
+}
+
 CString CemuleApp::GetAppTitle() const
 {
-	return PEGASO_NAME _T(" v") PEGASO_VERSION_NAME _T(" (eMule ") + m_strCurVersionLong + _T(')');
+	return PEGASO_NAME _T(" v") PEGASO_VERSION_NAME;
 }
 
 
@@ -532,7 +541,7 @@ BOOL CemuleApp::InitInstance()
 		theVerboseLog.Open();
 		theVerboseLog.Log(_T("\r\n"));
 	}
-	Log(_T("Starting eMule v%s"), (LPCTSTR)m_strCurVersionLong);
+	Log(_T("Starting %s"), (LPCTSTR)GetAppTitle());
 
 	SetConsoleCtrlHandler(ConsoleCtrlHandler, TRUE);
 

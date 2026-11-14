@@ -971,4 +971,8 @@
       <UserProperties RESOURCE_FILE="emule.rc" />
     </VisualStudio>
   </ProjectExtensions>
+  <!-- Pegaso: the languages shipped with the application are built into the lang folder next to the executable -->
+  <Target Name="PegasoLanguages" AfterTargets="Build">
+    <MSBuild Projects="lang\es_ES_T.vcxproj;lang\fr_FR.vcxproj;lang\it_IT.vcxproj;lang\ru_RU.vcxproj;lang\pt_PT.vcxproj;lang\pt_BR.vcxproj;lang\de_DE.vcxproj" Properties="Configuration=Dynamic;Platform=$(Platform);SolutionDir=$(ProjectDir)lang\;OutDir=$(TargetDir)lang\" />
+  </Target>
 </Project>

@@ -13,3 +13,6 @@
 *.user
 *.aps
 .vs/
+/srchybrid/lang/x64/
+/srchybrid/lang/Win32/
+/srchybrid/lang/ARM64/

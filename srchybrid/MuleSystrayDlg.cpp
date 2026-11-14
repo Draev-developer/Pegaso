@@ -284,7 +284,7 @@ BOOL CMuleSystrayDlg::OnInitDialog()
 
 	m_ctrlSidebar.SetHorizontal(false);
 	m_ctrlSidebar.SetFont(&Font);
-	m_ctrlSidebar.SetWindowText(_T("eMule ") + theApp.m_strCurVersionLong);
+	m_ctrlSidebar.SetWindowText(theApp.GetAppTitle());
 
 	CWnd *pDesktopWnd = GetDesktopWindow();
 	RECT rDesktop;

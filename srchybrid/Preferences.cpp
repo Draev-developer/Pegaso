@@ -46,7 +46,7 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 #define SHAREDDIRS	_T("shareddir.dat")
-LPCTSTR const strDefaultToolbar = _T("0099010203040506070899091011");
+LPCTSTR const strDefaultToolbar = _T("009901020304050899091011");
 LPCTSTR const strPreferencesDat = _T("preferences.dat");
 LPCTSTR const strStatisticsIni = _T("statistics.ini");
 CPreferences thePrefs;

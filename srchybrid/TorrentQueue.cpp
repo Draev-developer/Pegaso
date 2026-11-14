@@ -6,6 +6,10 @@
 #include "Preferences.h"
 #include "OtherFunctions.h"
 #include "Log.h"
+#include "PartFile.h"
+#include "DownloadQueue.h"
+#include "emuleDlg.h"
+#include "TransferDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -79,6 +83,45 @@ void CTorrentQueue::Stop()
 	}
 	m_status.clear();
 	m_uDatarate = 0;
+	// the stand-ins belong to the download queue, which deletes them when the application closes
+	if (!theApp.IsClosing())
+		RemoveProxies();
+	m_proxies.clear();
+}
+
+void CTorrentQueue::RemoveProxies()
+{
+	for (const auto &entry : m_proxies) {
+		theApp.downloadqueue->RemoveFile(entry.second);
+		theApp.emuledlg->transferwnd->GetDownloadList().RemoveFile(entry.second);
+		delete entry.second;
+	}
+	m_proxies.clear();
+}
+
+// Keeps one row per torrent in the download list.
+void CTorrentQueue::SyncDownloadList()
+{
+	if (theApp.IsClosing() || theApp.downloadqueue == NULL || theApp.emuledlg == NULL || theApp.emuledlg->transferwnd == NULL)
+		return;
+	std::map<std::string, CPartFile*> gone(m_proxies);
+	for (const STorrentStatus &st : m_status) {
+		const auto it = m_proxies.find(st.id);
+		if (it != m_proxies.end()) {
+			it->second->UpdateFromTorrent(st);
+			gone.erase(st.id);
+		} else {
+			CPartFile *pFile = CPartFile::CreateTorrentProxy(st);
+			m_proxies[st.id] = pFile;
+			theApp.downloadqueue->AddDownload(pFile, false);
+		}
+	}
+	for (const auto &entry : gone) {
+		theApp.downloadqueue->RemoveFile(entry.second);
+		theApp.emuledlg->transferwnd->GetDownloadList().RemoveFile(entry.second);
+		delete entry.second;
+		m_proxies.erase(entry.first);
+	}
 }
 
 bool CTorrentQueue::IsTorrentLink(const CString &sLink)
@@ -149,6 +192,7 @@ void CTorrentQueue::Process()
 	}
 
 	m_status = m_engine.GetStatus();
+	SyncDownloadList();
 	uint32 uRate = 0;
 	for (const STorrentStatus &st : m_status)
 		uRate += (uint32)max(0, st.downloadRate);

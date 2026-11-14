@@ -24,6 +24,7 @@
 #include "emule.h"
 #include "PartFile.h"
 #include "WebDownload.h"
+#include "TorrentQueue.h"
 #include "UpDownClient.h"
 #include "UrlClient.h"
 #include "ED2KLink.h"
@@ -244,6 +245,9 @@ void CPartFile::Init()
 	m_bMD4HashsetNeeded = true;
 	m_pWebDownload = NULL;
 	m_bWebFile = false;
+	m_eTorrentState = 0;
+	m_uTorrentPeers = 0;
+	m_uTorrentSeeds = 0;
 
 	m_pAICHRecoveryHashSet = new CAICHRecoveryHashSet(this);
 	m_completedsize = 0ull;
@@ -428,6 +432,68 @@ void CPartFile::WriteWebData(uint64 uStart, BYTE *pData, uint32 uLen)
 			delete[] pTail;
 	} else if (!WriteToBuffer(uLen, pData, uStart, uEnd, NULL, NULL, false))
 		delete[] pData;	// nothing was taken over (data already present)
+}
+// -------------------------------------------------------------------------------------
+
+// Pegaso: torrents ----------------------------------------------------------------------
+CPartFile* CPartFile::CreateTorrentProxy(const STorrentStatus &st)
+{
+	CPartFile *pFile = new CPartFile((UINT)0);
+	pFile->m_sTorrentId = st.id;
+	pFile->m_bWebFile = true;	// keeps it out of the ed2k network: never shared, published or searched for
+	pFile->m_bMD4HashsetNeeded = false;
+	pFile->m_bAICHPartHashsetNeeded = false;
+	pFile->m_tCreated = time(NULL);
+
+	// the download queue tells files apart by their hash: use the start of the info-hash
+	uchar hash[MDX_DIGEST_SIZE] = {};
+	for (size_t i = 0; i < _countof(hash) && 2 * i + 1 < st.id.size(); ++i) {
+		unsigned uByte = 0;
+		(void)sscanf(st.id.c_str() + 2 * i, "%2x", &uByte);
+		hash[i] = (uchar)uByte;
+	}
+	pFile->m_FileIdentifier.SetMD4Hash(hash);
+	pFile->UpdateFromTorrent(st);
+	return pFile;
+}
+
+void CPartFile::UpdateFromTorrent(const STorrentStatus &st)
+{
+	const CString sName(st.name.empty() ? CString(st.id.c_str()) : CString(st.name.c_str()));
+	if (GetFileName() != sName)
+		SetFileName(sName);
+
+	// never zero: the list code divides by size and part count
+	const uint64 uSize = (st.size > 0) ? (uint64)st.size : 1;
+	const uint64 uDone = (st.done <= 0) ? 0 : min((uint64)st.done, uSize);
+	if ((uint64)m_nFileSize != uSize) {
+		SetFileSize(uSize);
+		UpdatePartsInfo();
+	}
+	if ((uint64)m_completedsize != uDone || m_gaplist.IsEmpty() != (uDone >= uSize)) {
+		// progress is shown as one block; the real piece map stays inside libtorrent
+		m_gaplist.RemoveAll();
+		if (uDone < uSize)
+			m_gaplist.AddTail(Gap_Struct{uDone, uSize - 1});
+		m_completedsize = uDone;
+		m_uTransferred = uDone;
+	}
+	m_percentcompleted = (float)(uDone * 100.0 / uSize);
+	m_datarate = (uint32)max(0, st.downloadRate);
+	m_uTorrentPeers = (UINT)max(0, st.peers);
+	m_uTorrentSeeds = (UINT)max(0, st.seeds);
+	memset(m_anStates, 0, sizeof m_anStates);
+	if (m_datarate > 0)
+		m_anStates[DS_DOWNLOADING] = m_uTorrentPeers;
+
+	const int eOldState = m_eTorrentState;
+	m_eTorrentState = st.state;
+	m_paused = (st.state == TS_PAUSED);
+	m_stopped = false;
+	status = (st.state == TS_ERROR) ? PS_ERROR : (st.state == TS_SEEDING) ? PS_COMPLETE : PS_READY;
+	if (eOldState != m_eTorrentState)
+		NotifyStatusChange();
+	UpdateDisplayedInfo(eOldState != m_eTorrentState);
 }
 // -------------------------------------------------------------------------------------
 
@@ -1237,6 +1303,8 @@ EPartFileLoadResult CPartFile::LoadPartFile(LPCTSTR in_directory, LPCTSTR in_fil
 
 bool CPartFile::SavePartFile(bool bDontOverrideBak)
 {
+	if (IsTorrent())	// Pegaso: the state of a torrent is kept by the BitTorrent engine
+		return true;
 	if (status == PS_WAITINGFORHASH || status == PS_HASHING)
 		return false;
 	// search part file
@@ -2624,7 +2692,7 @@ void CPartFile::UpdatePartsInfo()
 	// Reset part counters
 	m_SrcPartFrequency.SetSize(GetPartCount());
 	memset(&m_SrcPartFrequency[0], 0, GetPartCount() * sizeof m_SrcPartFrequency[0]);
-	if (m_pWebDownload)	// Pegaso: the web server has every part
+	if (m_pWebDownload || IsTorrent())	// Pegaso: the web server, or the swarm as far as it is known here, has every part
 		for (INT_PTR i = GetPartCount(); --i >= 0;)
 			m_SrcPartFrequency[i] = 1;
 
@@ -3126,6 +3194,10 @@ void  CPartFile::RemoveAllSources(bool bTryToSwap)
 
 void CPartFile::DeletePartFile()
 {
+	if (IsTorrent()) {	// Pegaso: the stand-in goes away when the engine reports the removal
+		theTorrents.Remove(m_sTorrentId, true);
+		return;
+	}
 	ASSERT(!m_bPreviewing);
 
 	// Barry - Need to tell any connected clients to stop sending the file
@@ -3336,6 +3408,10 @@ bool CPartFile::CanStopFile() const
 
 void CPartFile::StopFile(bool bCancel, bool resort)
 {
+	if (IsTorrent()) {	// Pegaso
+		theTorrents.Pause(m_sTorrentId);
+		return;
+	}
 	// Barry - Need to tell any connected clients to stop sending the file
 	PauseFile(false, resort);
 	m_LastSearchTimeKad = 0;
@@ -3359,6 +3435,8 @@ void CPartFile::StopFile(bool bCancel, bool resort)
 
 void CPartFile::StopPausedFile()
 {
+	if (IsTorrent())	// Pegaso
+		return;
 	//Once an hour, remove any sources for files which are no longer active downloads
 	if (inSet(GetStatus(), PS_PAUSED, PS_INSUFFICIENT, PS_ERROR) && !m_stopped && time(NULL) >= m_iLastPausePurge + HR2S(1))
 		StopFile();
@@ -3380,6 +3458,10 @@ bool CPartFile::CanPauseFile() const
 
 void CPartFile::PauseFile(bool bInsufficient, bool resort)
 {
+	if (IsTorrent()) {	// Pegaso
+		theTorrents.Pause(m_sTorrentId);
+		return;
+	}
 	// If file is already in 'insufficient' state, don't set it again to insufficient. This may happen
 	// if a disk full condition is thrown before the automatic periodic check of free disk space was done.
 	if (bInsufficient && m_insufficient)
@@ -3441,6 +3523,10 @@ bool CPartFile::CanResumeFile() const
 
 void CPartFile::ResumeFile(bool resort)
 {
+	if (IsTorrent()) {	// Pegaso
+		theTorrents.Resume(m_sTorrentId);
+		return;
+	}
 	if (status == PS_COMPLETE || status == PS_COMPLETING)
 		return;
 	if (status == PS_ERROR && m_bCompletionError) {
@@ -3467,6 +3553,8 @@ void CPartFile::ResumeFile(bool resort)
 
 void CPartFile::ResumeFileInsufficient()
 {
+	if (IsTorrent())	// Pegaso
+		return;
 	if (status != PS_COMPLETE && status != PS_COMPLETING && m_insufficient) {
 		AddLogLine(false, GetResString(IDS_DL_RESUMED), (LPCTSTR)GetFileName());
 		m_insufficient = false;
@@ -3478,6 +3566,21 @@ void CPartFile::ResumeFileInsufficient()
 
 CString CPartFile::getPartfileStatus() const
 {
+	if (IsTorrent())	// Pegaso
+		switch (m_eTorrentState) {
+		case TS_METADATA:
+			return _T("Metadata");
+		case TS_CHECKING:
+			return GetResString(IDS_HASHING);
+		case TS_DOWNLOADING:
+			return GetResString(m_datarate > 0 ? IDS_DOWNLOADING : IDS_WAITING);
+		case TS_SEEDING:
+			return GetResString(IDS_COMPLETE);
+		case TS_PAUSED:
+			return GetResString(IDS_PAUSED);
+		default:
+			return GetResString(IDS_ERRORLIKE);
+		}
 	if (GetFileOp() == PFOP_IMPORTPARTS)
 		return _T("Importing parts");
 
@@ -4106,6 +4209,8 @@ uint32 CPartFile::WriteToBuffer(uint64 transize, const BYTE *data, uint64 start,
 
 void CPartFile::FlushBuffer(bool bForceICH, bool bNoAICH)
 {
+	if (IsTorrent())	// Pegaso: no data passes through a torrent stand-in
+		return;
 	m_nLastBufferFlushTime = ::GetTickCount();
 	if (GetPartCount() <= 0) //&& m_BufferedData_list.IsEmpty())
 		return;

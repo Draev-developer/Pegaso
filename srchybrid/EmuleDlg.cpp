@@ -1318,9 +1318,10 @@ LRESULT CemuleDlg::OnWMData(WPARAM, LPARAM lParam)
 	const PCOPYDATASTRUCT data = reinterpret_cast<PCOPYDATASTRUCT>(lParam);
 	if (!data
 		|| !data->lpData
+		|| data->cbData < sizeof(TCHAR)
 		|| data->cbData % sizeof(TCHAR)
 		|| data->cbData > SHRT_MAX * sizeof(TCHAR)
-		|| ((LPCTSTR)data->lpData)[data->cbData - 1])
+		|| ((LPCTSTR)data->lpData)[data->cbData / sizeof(TCHAR) - 1]) //Pegaso: the index is in characters, not bytes
 	{
 		return TRUE; //done here
 	}

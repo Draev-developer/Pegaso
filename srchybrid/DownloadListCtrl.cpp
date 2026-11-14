@@ -915,6 +915,7 @@ void CDownloadListCtrl::OnContextMenu(CWnd*, CPoint point)
 				menu.AppendMenu(MF_SEPARATOR);
 				menu.AppendMenu(MF_STRING | (GetSelectedCount() == 1 ? MF_ENABLED : MF_GRAYED), MP_TORRENT_FILES, GetPegasoString(PS_TORRENT_FILES));
 				menu.AppendMenu(MF_STRING | (GetSelectedCount() == 1 ? MF_ENABLED : MF_GRAYED), MP_PEGASO_ADDWEBSRC, GetPegasoString(PS_SRC_ADD_WEB));
+				menu.AppendMenu(MF_STRING | (GetSelectedCount() == 1 ? MF_ENABLED : MF_GRAYED), MP_PEGASO_RATE, GetPegasoString(PS_RATE_MENU));
 				menu.AppendMenu(MF_STRING, MP_OPENFOLDER, GetResString(IDS_OPENFOLDER));
 				menu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x, point.y, this);
 				return;
@@ -1340,6 +1341,13 @@ BOOL CDownloadListCtrl::OnCommand(WPARAM wParam, LPARAM)
 				case MP_TORRENT_FILES:
 					if (file->IsTorrent())
 						ShowTorrentFiles(file);
+					break;
+				case MP_PEGASO_RATE:	// verdict on the torrent, for the other users of Pegaso
+					if (file->IsTorrent()) {
+						CPegasoRateDlg dlg(file, this);
+						dlg.DoModal();
+						UpdateItem(file);
+					}
 					break;
 				case MP_PEGASO_ADDWEBSRC:	// a web server which has the files of the torrent
 					if (file->IsTorrent()) {

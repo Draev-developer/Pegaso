@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include <map>
 #include <set>
+#include <vector>
 #include "emule.h"
 #include "emuleDlg.h"
 #include "PegasoRating.h"
@@ -16,6 +17,7 @@
 #include "Preferences.h"
 #include "Log.h"
 #include "Opcodes.h"
+#include "Ini2.h"
 #include "kademlia/kademlia/Kademlia.h"
 #include "kademlia/kademlia/Entry.h"
 #include "kademlia/kademlia/SearchManager.h"
@@ -59,8 +61,53 @@ namespace
 
 	// files already warned about / known as suspicious, by hash
 	std::map<CString, bool> s_flagged;
-	std::set<CString> s_notesAsked;
+	std::map<CString, DWORD> s_notesAsked;	// when the notes of a download were last asked for
 	DWORD s_dwLastNotes;
+
+	// verdicts of the user on torrents, by key (see PegasoRating.h)
+	struct STorrentNote
+	{
+		CString	name;
+		uint64	size;
+		UINT	rating;
+		CString	comment;
+		time_t	tGiven;
+		time_t	tNextPublish;
+	};
+	std::map<CString, STorrentNote> s_torrentNotes;
+	bool s_bTorrentNotesLoaded;
+	DWORD s_dwLastStore;
+
+	CString TorrentNotesPath()
+	{
+		return thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + _T("torrentnotes.ini");
+	}
+
+	void LoadTorrentNotes()
+	{
+		if (s_bTorrentNotesLoaded)
+			return;
+		s_bTorrentNotesLoaded = true;
+		const CString sPath(TorrentNotesPath());
+		std::vector<TCHAR> names(32 * 1024);
+		const DWORD dwLen = ::GetPrivateProfileSectionNames(names.data(), (DWORD)names.size(), sPath);
+		const time_t tNow = time(NULL);
+		for (LPCTSTR psz = names.data(); psz < names.data() + dwLen && *psz; psz += _tcslen(psz) + 1) {
+			CIni ini(sPath, psz);
+			STorrentNote note;
+			note.name = ini.GetStringUTF8(_T("Name"));
+			note.size = ini.GetUInt64(_T("Size"));
+			note.rating = (UINT)ini.GetInt(_T("Rate"));
+			note.comment = ini.GetStringUTF8(_T("Comment")).Left(MAXFILECOMMENTLEN);
+			note.tGiven = (time_t)ini.GetUInt64(_T("Time"));
+			note.tNextPublish = 0;
+			// published for 30 days
+			if (_tcslen(psz) == 32 && note.size > 0 && (note.rating > 0 || !note.comment.IsEmpty()) && tNow < note.tGiven + 30 * 24 * 3600)
+				s_torrentNotes[CString(psz).MakeUpper()] = note;
+			else
+				::WritePrivateProfileString(psz, NULL, NULL, sPath);
+		}
+	}
 
 	void Count(SPegasoVerdictCount &count, const CString &sComment, UINT uRating)
 	{
@@ -233,7 +280,8 @@ CString PegasoVerdictSummary(const SPegasoVerdictCount &count)
 
 void PegasoCheckDownloadVerdicts(CPartFile *pFile)
 {
-	if (pFile == NULL || pFile->IsWebFile() || pFile->IsTorrent() || theApp.IsClosing())
+	// a web download has nobody to ask; a torrent has the notes of other Pegaso users
+	if (pFile == NULL || (pFile->IsWebFile() && !pFile->IsTorrent()) || theApp.IsClosing())
 		return;
 	const SPegasoVerdictCount count(PegasoCountVerdicts(pFile));
 	if (!count.IsSuspicious())
@@ -258,26 +306,119 @@ bool PegasoIsFlaggedDownload(const CPartFile *pFile)
 	return it != s_flagged.end() && it->second;
 }
 
+bool PegasoNoteSize(const uchar *pHash, uint64 &ruSize)
+{
+	if (theApp.downloadqueue != NULL) {
+		const CPartFile *pFile = theApp.downloadqueue->GetFileByID(pHash);
+		if (pFile != NULL) {
+			// a torrent is known by the size of all its files, whichever are selected
+			ruSize = pFile->IsTorrent() ? pFile->GetTorrentTotalSize() : (uint64)pFile->GetFileSize();
+			return ruSize > 0;
+		}
+	}
+	LoadTorrentNotes();
+	const auto it = s_torrentNotes.find(md4str(pHash));
+	if (it == s_torrentNotes.end())
+		return false;
+	ruSize = it->second.size;
+	return true;
+}
+
+bool PegasoNoteToStore(const uchar *pHash, SPegasoNoteSubject &rNote)
+{
+	LoadTorrentNotes();
+	const auto it = s_torrentNotes.find(md4str(pHash));
+	if (it == s_torrentNotes.end())
+		return false;
+	rNote.name = it->second.name;
+	rNote.size = it->second.size;
+	rNote.rating = it->second.rating;
+	rNote.comment = it->second.comment;
+	return true;
+}
+
+void PegasoStoreTorrentVerdict(CPartFile *pTorrent)
+{
+	if (pTorrent == NULL || !pTorrent->IsTorrent())
+		return;
+	LoadTorrentNotes();
+	const CString sKey(md4str(pTorrent->GetFileHash()));
+	const CString sPath(TorrentNotesPath());
+	const UINT uRating = pTorrent->GetFileRating();
+	const CString sComment(pTorrent->GetFileComment());
+	if ((uRating == 0 && sComment.IsEmpty()) || pTorrent->GetTorrentTotalSize() == 0) {
+		// verdict taken back (what is on Kad already expires within a day), or nothing known to publish it under
+		s_torrentNotes.erase(sKey);
+		::WritePrivateProfileString(sKey, NULL, NULL, sPath);
+		return;
+	}
+	STorrentNote note;
+	note.name = pTorrent->GetFileName();
+	note.size = pTorrent->GetTorrentTotalSize();
+	note.rating = uRating;
+	note.comment = sComment;
+	note.tGiven = time(NULL);
+	note.tNextPublish = 0;	// as soon as possible
+	s_torrentNotes[sKey] = note;
+	CIni ini(sPath, sKey);
+	ini.WriteStringUTF8(_T("Name"), note.name);
+	ini.WriteUInt64(_T("Size"), note.size);
+	ini.WriteInt(_T("Rate"), (int)note.rating);
+	ini.WriteStringUTF8(_T("Comment"), note.comment);
+	ini.WriteUInt64(_T("Time"), (uint64)note.tGiven);
+	AddLogLine(false, _T("Verdict on the torrent \"%s\" will be published on Kad"), (LPCTSTR)note.name);
+}
+
 void PegasoRatingProcess()
 {
 	const DWORD dwNow = ::GetTickCount();
-	if (dwNow - s_dwLastNotes < SEC2MS(30))
-		return;
-	s_dwLastNotes = dwNow;
 	if (!Kademlia::CKademlia::IsConnected() || theApp.downloadqueue == NULL)
 		return;
+
+	// ---- publish the verdicts on torrents, one at a time
+	if (dwNow - s_dwLastStore >= SEC2MS(5)) {
+		s_dwLastStore = dwNow;
+		LoadTorrentNotes();
+		if (!s_torrentNotes.empty() && Kademlia::CKademlia::GetTotalStoreNotes() < KADEMLIATOTALSTORENOTES) {
+			const time_t tNow = time(NULL);
+			for (auto &entry : s_torrentNotes) {
+				if (tNow < entry.second.tNextPublish || tNow >= entry.second.tGiven + 30 * 24 * 3600)
+					continue;
+				uchar hash[MDX_DIGEST_SIZE];
+				if (!strmd4(entry.first, hash))
+					continue;
+				if (Kademlia::CSearchManager::PrepareLookup(Kademlia::CSearch::STORENOTES, true, Kademlia::CUInt128(hash)) != NULL) {
+					entry.second.tNextPublish = tNow + KADEMLIAREPUBLISHTIMEN;
+					AddDebugLogLine(false, _T("Publishing the verdict on the torrent \"%s\" on Kad"), (LPCTSTR)entry.second.name);
+				}
+				break;
+			}
+		}
+	}
+
+	// ---- ask for the notes of the downloads, one at a time; again every quarter of an hour,
+	// because verdicts may arrive while a download is running
+	if (dwNow - s_dwLastNotes < SEC2MS(20))
+		return;
+	s_dwLastNotes = dwNow;
 	POSITION pos = NULL;
 	for (INT_PTR i = theApp.downloadqueue->GetFileCount(); --i >= 0;) {
 		CPartFile *pFile = theApp.downloadqueue->GetFileNext(pos);
 		if (pFile == NULL)
 			break;
-		if (pFile->IsWebFile() || pFile->IsTorrent() || pFile->IsStopped() || pFile->GetStatus() == PS_COMPLETE)
+		if (pFile->IsTorrent()) {
+			if (pFile->GetTorrentTotalSize() == 0)	// magnet link without its description yet
+				continue;
+		} else if (pFile->IsWebFile() || pFile->IsStopped() || pFile->GetStatus() == PS_COMPLETE)
 			continue;
 		const CString sHash(md4str(pFile->GetFileHash()));
-		if (s_notesAsked.count(sHash))
+		const auto itAsked = s_notesAsked.find(sHash);
+		if (itAsked != s_notesAsked.end() && dwNow - itAsked->second < MIN2MS(15))
+			continue;
+		if (pFile->IsKadCommentSearchRunning())
 			continue;
 		if (Kademlia::CSearchManager::PrepareLookup(Kademlia::CSearch::NOTES, true, Kademlia::CUInt128(pFile->GetFileHash()))) {
-			s_notesAsked.insert(sHash);
+			s_notesAsked[sHash] = dwNow;
 			theApp.searchlist->SetNotesSearchStatus(pFile->GetFileHash(), true);
 			pFile->SetKadCommentSearchRunning(true);
 		}
@@ -413,5 +554,7 @@ void CPegasoRateDlg::OnOK()
 	m_pFile->SetFileComment(PegasoEncodeVerdict(v));
 	m_pFile->SetFileRating(PegasoRatingOfVerdict(v.verdict));
 	m_pFile->UpdateFileRatingCommentAvail();
+	if (m_pFile->IsKindOf(RUNTIME_CLASS(CPartFile)) && static_cast<CPartFile*>(m_pFile)->IsTorrent())
+		PegasoStoreTorrentVerdict(static_cast<CPartFile*>(m_pFile));	// torrents: published on Kad by Pegaso itself
 	CDialog::OnOK();
 }

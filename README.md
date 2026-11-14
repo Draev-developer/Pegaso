@@ -48,6 +48,8 @@ El torrent solo baja lo que a la descarga le falta. Si sus datos no pasan la com
 
 Botón derecho sobre una descarga o un archivo compartido → **Valorar este archivo…**. La valoración viaja por el sistema de comentarios de eMule, así que también la ven los usuarios de eMule.
 
+También se pueden valorar los torrents. BitTorrent no tiene nada parecido, así que Pegaso guarda esas valoraciones en la red Kad: las ven los demás usuarios de Pegaso que añadan el mismo torrent, siempre que estén conectados a Kad.
+
 ![Diálogo para valorar un archivo](docs/img/pegaso-valorar.png)
 
 ## Uso responsable

@@ -42,6 +42,7 @@ struct STorrentStatus
 	std::wstring name;
 	std::wstring error;
 	int64_t	size = 0;			// wanted bytes
+	int64_t	totalSize = 0;		// all files, whatever is selected; 0 while not known
 	int64_t	done = 0;
 	int		downloadRate = 0;	// bytes per second
 	int		uploadRate = 0;

@@ -28,6 +28,7 @@ Pegaso parte de eMule 0.72a (edición de la comunidad). El historial de eMule es
 
 ### Seguridad
 - Marcador de archivos: correcto, mala calidad, falso o no cumple la descripción, con aviso cuando varios usuarios señalan un archivo.
+- El marcador vale también para torrents: la valoración se publica en Kad y la ven los demás usuarios de Pegaso que añadan ese torrent.
 - Protección VPN: uso exclusivo de un adaptador de red y corte del tráfico si se desconecta.
 - Análisis de cada descarga terminada con el antivirus instalado (AMSI).
 - Marca de «descargado de internet» en los archivos terminados.

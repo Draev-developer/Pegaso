@@ -253,6 +253,7 @@ void CPartFile::Init()
 	m_uTorrentSeeds = 0;
 	m_uTorrentUpRate = 0;
 	m_uTorrentUploaded = 0;
+	m_uTorrentTotalSize = 0;
 	m_iTorrentPiecesDone = -1;
 	m_bTorrentFinished = false;
 	m_iHybridPeers = -1;
@@ -500,6 +501,7 @@ void CPartFile::UpdateFromTorrent(const STorrentStatus &st)
 	m_uTorrentUpRate = (uint32)max(0, st.uploadRate);
 	m_uTorrentUploaded = (uint64)max((int64_t)0, st.uploaded);
 	m_bTorrentFinished = st.finished;
+	m_uTorrentTotalSize = (uint64)max((int64_t)0, st.totalSize);
 	m_percentcompleted = (float)(uDone * 100.0 / uSize);
 	m_datarate = (uint32)max(0, st.downloadRate);
 	m_uTorrentPeers = (UINT)max(0, st.peers);

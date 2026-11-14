@@ -57,6 +57,7 @@ their client on the eMule forum.
 #include "kademlia/routing/RoutingZone.h"
 #include "kademlia/utils/KadClientSearcher.h"
 #include "kademlia/utils/LookupHistory.h"
+#include "PegasoRating.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -584,12 +585,16 @@ void CSearch::StorePacket()
 				// Find file we are storing info about.
 				uchar ucharFileid[MDX_DIGEST_SIZE];
 				m_uTarget.ToByteArray(ucharFileid);
+				// Pegaso: downloads which are not shared (yet) and torrents have notes as well
+				uint64 uNoteSize;
 				CKnownFile *pFile = theApp.sharedfiles->GetFileByID(ucharFileid);
-				if (!pFile) {
+				if (pFile)
+					uNoteSize = (uint64)pFile->GetFileSize();
+				else if (!PegasoNoteSize(ucharFileid, uNoteSize)) {
 					PrepareToStop();
 					break;
 				}
-				m_pfileSearchTerms.WriteUInt64(pFile->GetFileSize());
+				m_pfileSearchTerms.WriteUInt64(uNoteSize);
 				if (thePrefs.GetDebugClientKadUDPLevel() > 0)
 					DebugSend("KADEMLIA2_SEARCH_NOTES_REQ", pFromContact->GetIPAddress(), pFromContact->GetUDPPort());
 				if (pFromContact->GetVersion() >= KADEMLIA_VERSION6_49aBETA) {
@@ -763,8 +768,15 @@ void CSearch::StorePacket()
 			// Find file we are storing info about.
 			uchar ucharFileid[MDX_DIGEST_SIZE];
 			m_uTarget.ToByteArray(ucharFileid);
+			// Pegaso: the verdict on a torrent is stored like the note of a shared file
+			SPegasoNoteSubject note;
 			CKnownFile *pFile = theApp.sharedfiles->GetFileByID(ucharFileid);
-			if (!pFile) {
+			if (pFile) {
+				note.name = pFile->GetFileName();
+				note.size = (uint64)pFile->GetFileSize();
+				note.rating = pFile->GetFileRating();
+				note.comment = pFile->GetFileComment();
+			} else if (!PegasoNoteToStore(ucharFileid, note)) {
 				PrepareToStop();
 				break;
 			}
@@ -778,13 +790,13 @@ void CSearch::StorePacket()
 
 			// Create our taglist
 			TagList listTag;
-			listTag.push_back(new CKadTagStr(TAG_FILENAME, pFile->GetFileName()));
-			if (pFile->GetFileRating() > 0)
-				listTag.push_back(new CKadTagUInt(TAG_FILERATING, pFile->GetFileRating()));
-			if (!pFile->GetFileComment().IsEmpty())
-				listTag.push_back(new CKadTagStr(TAG_DESCRIPTION, pFile->GetFileComment()));
+			listTag.push_back(new CKadTagStr(TAG_FILENAME, note.name));
+			if (note.rating > 0)
+				listTag.push_back(new CKadTagUInt(TAG_FILERATING, note.rating));
+			if (!note.comment.IsEmpty())
+				listTag.push_back(new CKadTagStr(TAG_DESCRIPTION, note.comment));
 			if (pFromContact->GetVersion() >= KADEMLIA_VERSION2_47a)
-				listTag.push_back(new CKadTagUInt(TAG_FILESIZE, pFile->GetFileSize()));
+				listTag.push_back(new CKadTagUInt(TAG_FILESIZE, note.size));
 			byIO.WriteTagList(listTag);
 
 			// Send packet

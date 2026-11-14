@@ -617,6 +617,7 @@ std::vector<STorrentStatus> CTorrentEngine::GetStatus()
 		if (!st.name.empty())
 			m->names[s.id] = st.name;
 		s.size = st.total_wanted;
+		s.totalSize = st.has_metadata ? st.total : 0;
 		s.done = st.total_wanted_done;
 		s.downloadRate = st.download_payload_rate;
 		s.uploadRate = st.upload_payload_rate;

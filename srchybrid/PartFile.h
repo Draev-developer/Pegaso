@@ -241,6 +241,7 @@ public:
 	UINT	GetTorrentPeers() const						{ return m_uTorrentPeers; }
 	UINT	GetTorrentSeeds() const						{ return m_uTorrentSeeds; }
 	uint32	GetTorrentUpDatarate() const				{ return m_uTorrentUpRate; }
+	uint64	GetTorrentTotalSize() const					{ return m_uTorrentTotalSize; }	// all files; 0 while not known
 	// hybrid download: peers of the torrent which works as one more source; -1 = there is none
 	int		GetHybridPeers() const						{ return m_iHybridPeers; }
 	void	SetHybridPeers(int iPeers)					{ m_iHybridPeers = iPeers; }
@@ -433,6 +434,7 @@ private:
 	UINT	m_uTorrentSeeds;
 	uint32	m_uTorrentUpRate;
 	uint64	m_uTorrentUploaded;
+	uint64	m_uTorrentTotalSize;
 	int		m_iTorrentPiecesDone;
 	bool	m_bTorrentFinished;
 	int		m_iHybridPeers;

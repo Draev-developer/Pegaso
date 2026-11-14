@@ -66,6 +66,24 @@ CString	PegasoVerdictSummary(const SPegasoVerdictCount &count);	// empty if ther
 
 // Called when the ratings of a download changed: warns once if it became suspicious.
 void	PegasoCheckDownloadVerdicts(CPartFile *pFile);
+// Torrents. BitTorrent has nothing to carry verdicts, so Pegaso keeps them on Kad, as notes
+// under a key made from the identifier of the torrent (its first 16 bytes - the same value
+// the row of the torrent uses as its file hash). Only Pegaso users publish and read them.
+// A verdict is kept in config\torrentnotes.ini and published once a day for 30 days, also
+// after the torrent has left the list - a fake is usually deleted right away.
+struct SPegasoNoteSubject
+{
+	CString	name;
+	uint64	size = 0;
+	UINT	rating = 0;
+	CString	comment;
+};
+// For Kad (Search.cpp), about files which are not shared on eD2K:
+bool	PegasoNoteSize(const uchar *pHash, uint64 &ruSize);				// size to ask notes with
+bool	PegasoNoteToStore(const uchar *pHash, SPegasoNoteSubject &rNote);	// the note to publish
+// The verdict the user gave to a torrent (taken from the row) is to be published.
+void	PegasoStoreTorrentVerdict(CPartFile *pTorrent);
+
 // A download which was warned about (shown marked in the download list).
 bool	PegasoIsFlaggedDownload(const CPartFile *pFile);
 // Main thread, called regularly: asks Kad for the notes of the downloads, one at a time.

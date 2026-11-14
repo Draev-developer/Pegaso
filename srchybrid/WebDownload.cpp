@@ -879,6 +879,16 @@ bool PegasoHttpGet(const CString &sUrl, std::vector<BYTE> &data, CString &sError
 void PegasoMarkFromInternet(const CString &sPath, const CString &sSourceUrl)
 {
 	PegasoScanFile(sPath);	// every finished download is also shown to the antivirus
+	// Writing the mark changes the modification time of the file, and both eMule and the
+	// BitTorrent engine take a file with another time for a changed one (hashing it again):
+	// the time is put back afterwards.
+	FILETIME ftWrite = {};
+	bool bHaveTime = false;
+	HANDLE hData = ::CreateFile(sPath, FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, 0, NULL);
+	if (hData != INVALID_HANDLE_VALUE) {
+		bHaveTime = ::GetFileTime(hData, NULL, NULL, &ftWrite) != FALSE;
+		::CloseHandle(hData);
+	}
 	// An alternate data stream; file systems without them (FAT) simply refuse it.
 	HANDLE hFile = ::CreateFile(sPath + _T(":Zone.Identifier"), GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 	if (hFile == INVALID_HANDLE_VALUE)
@@ -889,4 +899,11 @@ void PegasoMarkFromInternet(const CString &sPath, const CString &sSourceUrl)
 	DWORD dwWritten;
 	::WriteFile(hFile, (LPCSTR)sText, (DWORD)sText.GetLength(), &dwWritten, NULL);
 	::CloseHandle(hFile);
+	if (bHaveTime) {
+		hData = ::CreateFile(sPath, FILE_WRITE_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, 0, NULL);
+		if (hData != INVALID_HANDLE_VALUE) {
+			::SetFileTime(hData, NULL, NULL, &ftWrite);
+			::CloseHandle(hData);
+		}
+	}
 }

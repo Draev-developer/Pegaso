@@ -58,7 +58,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_SOCKETS_INIT_FAILED "Errore durante l'inizializzazione dei socket di Windows."
-    IDS_ABOUTBOX            "Informazioni su &eMule..."
+    IDS_ABOUTBOX            "Informazioni su &Pegaso..."
     IDS_HTTPDOWNLOAD_FILESTATUS "%s da %s"
     IDS_HTTPDOWNLOAD_CONNECTED "Connesso a %s"
     IDS_HTTPDOWNLOAD_RESOLVING_NAME "Risoluzione nome: %s"
@@ -110,7 +110,7 @@ BEGIN
     IDS_HTTPDOWNLOAD_ABORTING_TRANSFER "Cancellazione scaricamento"
     IDS_FD_COMPR            "Compressione"
     IDS_WIZARD_NETWORK      "Scegli le reti da usare."
-    IDS_MAIN_READY          "eMule v%s è pronto"
+    IDS_MAIN_READY          "Pegaso v%s è pronto"
     IDS_WIZARD_ED2K         "Impostazioni eD2K"
     IDS_SEL_SKIN            "Scegli un tema..."
     IDS_MAIN_SOCKETERROR    "Errore fatale: impossibile creare un socket sulla porta %u"
@@ -128,7 +128,7 @@ BEGIN
     IDS_ERR_WRONGPACKETSIZE "Dimensione errata del pacchetto OP_REQUESTFILENAME"
     IDS_ERR_WRONGHPACKETSIZE "Dimensione errata del pacchetto OP_HASHSETREQUEST"
     IDS_ERR_UNKNOWNCLIENTACTION
-                            "Un utente sconosciuto ha inviato un pacchetto usando il protocollo esteso di eMule"
+                            "Un utente sconosciuto ha inviato un pacchetto usando il protocollo esteso di Pegaso"
     IDS_ERR_OPENMET         "Errore: impossibile aprire il file part.met! (%s => %s) | È possibile rigenerare il file part.met utilizzando MetMedic!"
     IDS_ERR_BADMETVERSION   "Errore: versione del file part.met non valida! (%s => %s) | È possibile rigenerare il file part.met utilizzando MetMedic!"
     IDS_ERR_METCORRUPT      "Errore: il file %s (%s) è corrotto, impossibile caricarlo"
@@ -149,7 +149,7 @@ BEGIN
     IDS_COMPLETE            "Completo"
     IDS_PAUSED              "In pausa"
     IDS_ERRORLIKE           "Errato"
-    IDS_ASSIGNED2K          "eMule non è il gestore predefinito degli indirizzi eD2K. Vuoi che lo sia (raccomandato)?"
+    IDS_ASSIGNED2K          "Pegaso non è il gestore predefinito degli indirizzi eD2K. Vuoi che lo sia (raccomandato)?"
     IDS_ERR_EMPTYADDRESSESDAT
                             "Non è stato trovato nessun indirizzo di liste server nel file ""addresses.dat"". Per favore, incollaci un indirizzo valido per aggiornare automaticamente la tua lista ad ogni avvio"
     IDS_ERR_BADSERVERMETVERSION "Formato del file server.met non valido (0x%X)!"
@@ -190,7 +190,7 @@ BEGIN
     IDS_UPDOWN              "Inv: %.1f (%.1f) | Ric: %.1f (%.1f)"//we need abbreviations here
     IDS_CONNECTED           "Connesso"
     IDS_LINKNOTADDED        "Impossibile aggiungere l'indirizzo"
-    IDS_MAIN_EXIT           "Vuoi veramente uscire da eMule?"
+    IDS_MAIN_EXIT           "Vuoi veramente uscire da Pegaso?"
     IDS_MAIN_POPUP_RESTORE  "Ripristina"
     IDS_CONNECTTOANYSERVER  "Connettiti ad un server"
     IDS_EXIT                "E&sci"
@@ -215,7 +215,7 @@ BEGIN
     IDS_SE                  "Scambio fonte"
     IDS_ERR_WRITEERROR      "Errore inaspettato nel file durante la scrittura di ""%s"" : %s"
     IDS_ERR_COMPLETIONFAILED
-                            "Errore inaspettato nel file durante il completamento di ""%s"". File in pausa, riavvia eMule per riprovare a completarlo"
+                            "Errore inaspettato nel file durante il completamento di ""%s"". File in pausa, riavvia Pegaso per riprovare a completarlo"
     IDS_ERR_DELETEFAILED    "Impossibile cancellare ""%s"", dovrai farlo manualmente"
     IDS_DOWNLOADDONE        "Scaricamento di ""%s"" completato :)"
     IDS_ERR_DELETE          "Impossibile cancellare ""%s"""
@@ -307,7 +307,7 @@ BEGIN
     IDS_SHAREDFILES         "File condivisi"
     IDS_PRIOVERYLOW         "Molto bassa"
     IDS_PRIORELEASE         "*Release*"
-    IDS_TRAYDLG_SPEED       "Velocità di eMule"
+    IDS_TRAYDLG_SPEED       "Velocità di Pegaso"
     IDS_FSTATUS_FRIENDSONLY "Solo agli amici"
     IDS_VIAPASSIVE          "Passivamente"
     IDS_ERR_RENAMESF        "Impossibile rinominare\r\n    ""%s""\r\nin\r\n    ""%s""\r\n\r\n%s"
@@ -398,7 +398,7 @@ BEGIN
     IDS_TBN_NOMESSAGEHISTORY "Nessun messaggio presente nella cronologia!"
     IDS_PW_DAP              "Dai priorità automatica ai nuovi scaricamenti"
     IDS_FD_LASTCHANGE       "Ultima ricezione:"
-    IDS_STATS_RUNTIME       "eMule è aperto da"
+    IDS_STATS_RUNTIME       "Pegaso è aperto da"
     IDS_ALL                 "Tutti i file"
     IDS_CAT_ADD             "Aggiungi categoria..."
 END
@@ -469,7 +469,7 @@ BEGIN
 //***IDS_SV_PORT             "Port"
     IDS_SV_ADD              "Aggiungi server"
     IDS_SV_MET              "Aggiorna server.met da indirizzo"
-    IDS_SV_UPDATE           "Aggiorna"//used in \eMule0.50a-sources\srchybrid\TransferWnd.CPP line 685 too, but there it looks ugly because the button is too small
+    IDS_SV_UPDATE           "Aggiorna"//used in \Pegaso0.50a-sources\srchybrid\TransferWnd.CPP line 685 too, but there it looks ugly because the button is too small
     IDS_SF_FILES            "File condivisi"
     IDS_SF_STATISTICS       "Statistiche"
     IDS_SF_RELOAD           "Aggiorna"
@@ -569,7 +569,7 @@ BEGIN
     IDS_PW_SPLASH           "Mostra la schermata di caricamento"
     IDS_PW_DBLCLICK         "Doppio clic per espandere la lista delle fonti"
     IDS_PW_TOOL             "Attesa prima del suggerimento a comparsa [sec.]:"
-    IDS_PW_FRONT            "Ripristina eMule al clic su un indirizzo eD2K"
+    IDS_PW_FRONT            "Ripristina Pegaso al clic su un indirizzo eD2K"
     IDS_PW_LANG             "Lingua"
     IDS_PW_FILES            "File"
     IDS_PW_SHARE            "Mostra i miei file condivisi"
@@ -721,7 +721,7 @@ BEGIN
     IDS_MINS                "min"
 //    IDS_HOURS               "h"
     IDS_DAYS                "g"
-    IDS_ED2KLINKFIX         "Apri gli indirizzi eD2K con eMule"
+    IDS_ED2KLINKFIX         "Apri gli indirizzi eD2K con Pegaso"
 END
 
 STRINGTABLE
@@ -770,7 +770,7 @@ BEGIN
     IDS_DELETEIPFILTERS     "Vuoi veramente eliminare i filtri IP selezionati?"
     IDS_TOTAL_IPFILTER_LABEL "Filtri IP totali:"
     IDS_TOTAL_IPS_LABEL     "IP totali:"
-    IDS_RAU_WARNING         "Questa impostazione darà ad eMule una maggiore sicurezza contro gli attacchi ed è consigliabile usarla.\nÈ tuttavia caldamente consigliato di leggere il manuale prima di attivarla!\n\nLe modifiche avranno effetto al prossimo avvio di eMule."
+    IDS_RAU_WARNING         "Questa impostazione darà ad Pegaso una maggiore sicurezza contro gli attacchi ed è consigliabile usarla.\nÈ tuttavia caldamente consigliato di leggere il manuale prima di attivarla!\n\nLe modifiche avranno effetto al prossimo avvio di Pegaso."
     IDS_APPEND              "Aggiungi..."
     IDS_SAVE                "Salva"
     IDS_IP_START            "Inizio"
@@ -788,8 +788,8 @@ STRINGTABLE
 BEGIN
     IDS_IRC_IGNOREMISCMESSAGE "Ignora i messaggi di informazioni varie"
     IDS_KNOWN               "Conosciuto"
-    IDS_RAU_RUNNING         "eMule è in esecuzione come utente non privilegiato ""%s"""
-    IDS_RAU_FAILED          "Impossibile eseguire eMule come utente ""eMule_Secure"" non privilegiato. Verranno mantenuti i privilegi dell'utente corrente (""%s"")."
+    IDS_RAU_RUNNING         "Pegaso è in esecuzione come utente non privilegiato ""%s"""
+    IDS_RAU_FAILED          "Impossibile eseguire Pegaso come utente ""eMule_Secure"" non privilegiato. Verranno mantenuti i privilegi dell'utente corrente (""%s"")."
     IDS_KADCONTACTSREAD     "Letti %u contatti dal file."
     IDS_ERR_KADCONTACTS     "Nessun contatto trovato, clicca su Bootstrap in Kad o scarica un file ""nodes.dat"""
     IDS_METATAGS            "Conteggio meta tag:"
@@ -819,7 +819,7 @@ BEGIN
     IDS_SMARTLOWIDCHECK     "Controllo ID basso alla connessione"
     IDS_SF_SRVOCC           "Occupazione server: %.2f%%"
     IDS_3DDEP               "Stile barra del progresso"
-    IDS_AUTOTAKEED2KLINKS   "Aggiungi gli indirizzi eD2K in automatico solo quando eMule è in esecuzione"
+    IDS_AUTOTAKEED2KLINKS   "Aggiungi gli indirizzi eD2K in automatico solo quando Pegaso è in esecuzione"
     IDS_ADDNEWFILESPAUSED   "Aggiungi i nuovi file in pausa"
     IDS_DOWNLOADMOVIECHUNKS "Prova a scaricare prima le parti necessarie all'anteprima"
 END
@@ -886,24 +886,24 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_INSTALL_SKIN        "Installa il tema per eMule"
-    IDS_INSTALL_SKIN_NODIR  "Nessuna cartella selezionata per il tema di eMule o la cartella è inaccessibile!"
+    IDS_INSTALL_SKIN        "Installa il tema per Pegaso"
+    IDS_INSTALL_SKIN_NODIR  "Nessuna cartella selezionata per il tema di Pegaso o la cartella è inaccessibile!"
     IDS_INSTALL_SKIN_DIR_ERROR
-                            "Tentativo fallito nella creazione della cartella ""%s"" per il tema di eMule - %s"
+                            "Tentativo fallito nella creazione della cartella ""%s"" per il tema di Pegaso - %s"
     IDS_INSTALL_SKIN_FILE_ERROR
-                            "Tentativo di estrazione fallito del file ""%s"" dal tema di eMule al file ""%s"" - %s"
-    IDS_INSTALL_SKIN_PKG_ERROR "Questa non è un tema valido per eMule."
+                            "Tentativo di estrazione fallito del file ""%s"" dal tema di Pegaso al file ""%s"" - %s"
+    IDS_INSTALL_SKIN_PKG_ERROR "Questa non è un tema valido per Pegaso."
     IDS_NEXT_REASK          "Richiesta successiva"
     IDS_A4AF_FILES          "File con fonti in comune a questo"
-    IDS_FO_TEMPTCP_S        "Porta %u (TCP) aperta sul firewall interno di Windows XP per questa sessione di eMule"
-    IDS_FO_TEMPTCP_F        "Tentativo di aprire la porta %u (TCP) sul firewall interno di Windows XP fallito per questa sessione di eMule"
-    IDS_FO_TEMPUDP_S        "Porta %u (UDP) aperta sul firewall interno di Windows XP per questa sessione di eMule"
-    IDS_FO_TEMPUDP_F        "Tentativo di aprire la porta %u (UDP) sul firewall interno di Windows XP fallito per questa sessione di eMule"
+    IDS_FO_TEMPTCP_S        "Porta %u (TCP) aperta sul firewall interno di Windows XP per questa sessione di Pegaso"
+    IDS_FO_TEMPTCP_F        "Tentativo di aprire la porta %u (TCP) sul firewall interno di Windows XP fallito per questa sessione di Pegaso"
+    IDS_FO_TEMPUDP_S        "Porta %u (UDP) aperta sul firewall interno di Windows XP per questa sessione di Pegaso"
+    IDS_FO_TEMPUDP_F        "Tentativo di aprire la porta %u (UDP) sul firewall interno di Windows XP fallito per questa sessione di Pegaso"
     IDS_FO_PREFBUTTON       "Apri queste porte sul firewall interno di Windows XP"
     IDS_FO_PREF_SUCCCEEDED  "Le porte selezionate sono state aperte sul firewall interno di Windows XP.\nDa notare che i firewall di terze parti o i router non sono influenzati da queste modifiche!"
-    IDS_FO_PREF_EXISTED     "eMule ha rilevato l'esistenza di regole per le porte selezionate che non saranno sovrascritte o sostituite. Le regole mancanti sono state aggiunte con successo.\nNota che i firewall di terze parti o i router non sono influenzati da queste modifiche!"
+    IDS_FO_PREF_EXISTED     "Pegaso ha rilevato l'esistenza di regole per le porte selezionate che non saranno sovrascritte o sostituite. Le regole mancanti sono state aggiunte con successo.\nNota che i firewall di terze parti o i router non sono influenzati da queste modifiche!"
     IDS_FO_PREF_FAILED      "Impossibile configurare il firewall interno di Windows XP per le porte selezionate!"
-    IDS_FO_PREF_STARTUP     "Apri e chiudi le porte sul firewall di Windows XP (solo fino al service pack 1) quando avvii o chiudi eMule."
+    IDS_FO_PREF_STARTUP     "Apri e chiudi le porte sul firewall di Windows XP (solo fino al service pack 1) quando avvii o chiudi Pegaso."
 END
 
 STRINGTABLE
@@ -921,7 +921,7 @@ BEGIN
     IDS_IMP_ERR_BADFORMAT   "Formato file temporaneo sconosciuto o danneggiato."
     IDS_SEARCH_INVALIDCHAR  "L'espressione di ricerca contiene caratteri non validi. Non puoi usare un '?' o un carattere che non può essere usato in questa rete."
     IDS_PORTSCON            "Porte e connessione"
-    IDS_PORTINFO            "eMule usa due porte per comunicare con i server e gli utenti. Queste porte devono essere libere e disponibili per gli utenti remoti. Cambiale solo se sai quello che stai facendo, normalmente non è necessario.\n\nQui è possibile cambiare le porte se non sei connesso né a Kad né ad un server."
+    IDS_PORTINFO            "Pegaso usa due porte per comunicare con i server e gli utenti. Queste porte devono essere libere e disponibili per gli utenti remoti. Cambiale solo se sai quello che stai facendo, normalmente non è necessario.\n\nQui è possibile cambiare le porte se non sei connesso né a Kad né ad un server."
 END
 
 STRINGTABLE
@@ -1043,7 +1043,7 @@ BEGIN
     IDS_PW_UAP              "Dai priorità automatica ai nuovi file condivisi"
     IDS_MAXCLIENT           "Utenti massimi"
     IDS_PW_TWEAK            "Opzioni avanzate"
-    IDS_TWEAKS_WARNING      "Attenzione: non cambiare queste impostazioni se non sai cosa stai facendo, potresti peggiorare le cose. eMule andrà comunque bene anche senza cambiare nessuno di questi valori."
+    IDS_TWEAKS_WARNING      "Attenzione: non cambiare queste impostazioni se non sai cosa stai facendo, potresti peggiorare le cose. Pegaso andrà comunque bene anche senza cambiare nessuno di questi valori."
 END
 
 STRINGTABLE
@@ -1080,11 +1080,11 @@ BEGIN
                             "Ignora i messaggi di indirizzi eD2K"
     IDS_CHECK4UPDATE        "Controlla aggiornamenti"
     IDS_STARTUP             "Avvio"
-    IDS_NEWVERSIONAVL       "È disponibile una nuova versione di eMule! Per maggiori informazioni vai sul sito di eMule."
-    IDS_NEWVERSIONAVLPOPUP  "È disponibile una nuova versione di eMule! Per maggiori informazioni clicca qui!"
+    IDS_NEWVERSIONAVL       "È disponibile una nuova versione di Pegaso! Per maggiori informazioni vai sul sito di Pegaso."
+    IDS_NEWVERSIONAVLPOPUP  "È disponibile una nuova versione di Pegaso! Per maggiori informazioni clicca qui!"
     IDS_NEWVERSIONFAILED    "Impossibile controllare la presenza di aggiornamenti."
-    IDS_CB_TBN_ONNEWVERSION "È disponibile una nuova versione di eMule"
-    IDS_NONEWERVERSION      "Non è stata trovata una versione di eMule più recente di quella in uso."
+    IDS_CB_TBN_ONNEWVERSION "È disponibile una nuova versione di Pegaso"
+    IDS_NONEWERVERSION      "Non è stata trovata una versione di Pegaso più recente di quella in uso."
 END
 
 STRINGTABLE
@@ -1111,13 +1111,13 @@ STRINGTABLE
 BEGIN
     IDS_DISABLEQUEUELIST    "Disattiva la lista degli utenti in coda"
     IDS_USECREDITSYSTEM     "Usa il sistema dei crediti (favorirai chi ti fa scaricare)"
-    IDS_FIRSTAUTODOWN       "Vuoi che eMule gestisca le priorità dei file in scaricamento?\n\nAttivando quest'opzione permetterai ad eMule di controllare che i file con molte fonti non interferiscano con quelli con poche fonti. Quest'opzione avrà effetto solo sugli scaricamenti futuri."
-    IDS_FIRSTAUTOUP         "Vuoi che eMule gestisca le priorità dei file in invio?\n\nAttivando quest'opzione consentirai ad eMule di accelerare la diffusione dei file più rari, inviando di meno i file popolari. Disattivando quest'opzione consentirai ad eMule di inviare con la stessa intensità i file rari e quelli popolari. Quest'opzione avrà effetto solo sui file condivisi in futuro."
+    IDS_FIRSTAUTODOWN       "Vuoi che Pegaso gestisca le priorità dei file in scaricamento?\n\nAttivando quest'opzione permetterai ad Pegaso di controllare che i file con molte fonti non interferiscano con quelli con poche fonti. Quest'opzione avrà effetto solo sugli scaricamenti futuri."
+    IDS_FIRSTAUTOUP         "Vuoi che Pegaso gestisca le priorità dei file in invio?\n\nAttivando quest'opzione consentirai ad Pegaso di accelerare la diffusione dei file più rari, inviando di meno i file popolari. Disattivando quest'opzione consentirai ad Pegaso di inviare con la stessa intensità i file rari e quelli popolari. Quest'opzione avrà effetto solo sui file condivisi in futuro."
     IDS_AUTOMATIC           "Automatico"
-    IDS_FIRSTSAFECON        "Vuoi che eMule si connetta ai server utilizzando una connessione sicura?\n\nDisattivando questa funzione, permetterai ad eMule di connettersi ai server più velocemente, ma sarà maggiore la possibilità di ottenere falsi ID bassi."
-    IDS_FIRSTAUTOCON        "Connetti automaticamente eMule al suo avvio."
-    IDS_FIRSTCOMPLETE       "Hai completato la procedura guidata del primo avvio.\n\nTutte queste ed altre opzioni possono essere modificate cliccando sul pulsante 'Opzioni'. Per spiegazioni e supporto controlla la guida premendo F1 in eMule!"
-    IDS_ENTERUSERNAME       "Inserisci il tuo alias per eMule, puoi usare al massimo 50 caratteri"
+    IDS_FIRSTSAFECON        "Vuoi che Pegaso si connetta ai server utilizzando una connessione sicura?\n\nDisattivando questa funzione, permetterai ad Pegaso di connettersi ai server più velocemente, ma sarà maggiore la possibilità di ottenere falsi ID bassi."
+    IDS_FIRSTAUTOCON        "Connetti automaticamente Pegaso al suo avvio."
+    IDS_FIRSTCOMPLETE       "Hai completato la procedura guidata del primo avvio.\n\nTutte queste ed altre opzioni possono essere modificate cliccando sul pulsante 'Opzioni'. Per spiegazioni e supporto controlla la guida premendo F1 in Pegaso!"
+    IDS_ENTERUSERNAME       "Inserisci il tuo alias per Pegaso, puoi usare al massimo 50 caratteri"
     IDS_STATIC_CPUMEM       "Risparmio processore e memoria"
     IDS_KAD_SEARCH_KEYWORD_TOO_SHORT
                             "Parola chiave troppo corta!\r\n\r\nLe parole chiave per la ricerca sulla rete Kad devono avere un minimo di 3 caratteri."
@@ -1211,12 +1211,12 @@ END
 STRINGTABLE
 BEGIN
     IDS_AUTOSCROLL          "Autoscorrimento"
-    IDS_WIZ1_WELCOME_TITLE  "Benvenuto su eMule"
+    IDS_WIZ1_WELCOME_TITLE  "Benvenuto su Pegaso"
     IDS_WIZ1_WELCOME_ACTIONS
-                            "Questa procedura guidata ti aiuterà a fare i primi passi nella configurazione di eMule."
+                            "Questa procedura guidata ti aiuterà a fare i primi passi nella configurazione di Pegaso."
     IDS_WIZ1_WELCOME_BTN_HINT "Per continuare, clicca su Avanti."
     IDS_WIZ1_END_TITLE      "Completamento procedura guidata"
-    IDS_WIZ1                "Procedura guidata per il primo avvio di eMule"
+    IDS_WIZ1                "Procedura guidata per il primo avvio di Pegaso"
     IDS_WIZ1_END_BTN_HINT   "Per chiudere questa procedura guidata, clicca su Fine."
     IDS_WIZ1_UPLOAD_SUBTITLE "Invio parti complete"//not used anymore
     IDS_DL_RESUMENEXT       "Ripristina il successivo scaricamento in pausa"
@@ -1360,11 +1360,11 @@ BEGIN
     IDS_STORENOTES          "Memorizza note"
     IDS_NOTES               "Note"
     IDS_KADSEARCHALREADY    "È già in corso un'altra ricerca. Riprovare più tardi!"
-    IDS_WEB_SHUTDOWN        "Chiudi eMule"
+    IDS_WEB_SHUTDOWN        "Chiudi Pegaso"
     IDS_WEB_REBOOT          "Riavvia il sistema"
     IDS_WEB_SHUTDOWNSYSTEM  "Arresta il sistema"
     IDS_WEB_ADMINMENU       "Menu amministrativo"
-    IDS_WEB_MAIN_CLOSE      "Vuoi davvero chiudere eMule?"
+    IDS_WEB_MAIN_CLOSE      "Vuoi davvero chiudere Pegaso?"
     IDS_WEB_MAIN_REBOOT     "Vuoi davvero riavviare il sistema?"
     IDS_WEB_MAIN_SHUTDOWN   "Vuoi davvero arrestare il sistema?"
     IDS_WEB_SHOW_UPLOAD_QUEUE_BANNED "Mostra gli utenti bloccati in coda"
@@ -1374,7 +1374,7 @@ STRINGTABLE
 BEGIN
     IDS_WEB_SHOW_UPLOAD_QUEUE_FRIEND "Mostra gli amici in coda"
     IDS_WEB_SESSIONTIMEOUT  "Scadenza sessione"//it has to be short
-    IDS_WEB_ALLOWHILEVFUNC  "Permetti la chiusura di eMule, il riavvio e l'arresto del sistema"
+    IDS_WEB_ALLOWHILEVFUNC  "Permetti la chiusura di Pegaso, il riavvio e l'arresto del sistema"
     IDS_SETPFSLIMIT         "Limite fonti..."
     IDS_SETPFSLIMITEXPLAINED
                             "Inserire il nuovo limite fonti per i file selezionati! \n(usare 0 per l'impostazione generale)"
@@ -1445,9 +1445,9 @@ BEGIN
     IDS_KBYTESSEC           "kB/s"
     IDS_ERR_CREATE_DIR      "Impossibile creare la cartella %s ""%s"" - %s"
     IDS_WRN_INCFILE_RESERVED
-                            "La cartella dei file scaricati non può corrispondere ad una cartella di installazione di eMule."
+                            "La cartella dei file scaricati non può corrispondere ad una cartella di installazione di Pegaso."
     IDS_WRN_TEMPFILES_RESERVED
-                            "La cartella dei file temporanei non può corrispondere ad una cartella di installazione di eMule."
+                            "La cartella dei file temporanei non può corrispondere ad una cartella di installazione di Pegaso."
     IDS_WRN_INCTEMP_SAME    "La cartella dei file temporanei e dei file scaricati non possono coincidere."
     IDS_SHOWDWLPERCENTAGE   "Percentuale di completamento nella barra del progresso"
     IDS_TBN_ONNEWDOWNLOAD   "Viene aggiunto uno scaricamento"
@@ -1460,7 +1460,7 @@ BEGIN
     IDS_AUTHMETHOD          "Metodo d'autenticazione"
     IDS_CD_UPLOADREQ        "Tu hai richiesto:"
     IDS_SETTINGCHANGED_RESTART
-                            "Riavviare eMule affinché i cambiamenti abbiano effetto!"
+                            "Riavviare Pegaso affinché i cambiamenti abbiano effetto!"
     IDS_CREDITSEXPIRED      ", %u utenti eliminati (non sono stati contattati entro 5 mesi)"
     IDS_SOURCESINFO         "%u (utili: %u, parti non necessarie: %u, richieste per un altro file: %u)"
     IDS_META_DATA           "Meta dati"
@@ -1503,7 +1503,7 @@ BEGIN
     IDS_INSUFFICIENT        "Spazio su disco insufficiente"
     IDS_MINFREEDISKSPACE    "Spazio su disco minimo [MB]"
     IDS_WARNING             "Attenzione"
-    IDS_IMPORTSPLPF         "Importa i file temporanei (eMule, eDonkey, OverNet)"
+    IDS_IMPORTSPLPF         "Importa i file temporanei (Pegaso, eDonkey, OverNet)"
     IDS_IMP_STEPREADPF      "Lettura cartella file .part"
     IDS_IMP_STEPBASICINF    "Ricevimento informazioni base dai file .part"
     IDS_IMP_STEPCRDESTFILE  "Creazione file .part di destinazione"
@@ -1545,7 +1545,7 @@ BEGIN
     IDS_TRANSFER_RATE_LABEL "Velocità di scaricamento:"
     IDS_SAVELOG             "Salva registro"
     IDS_CMT_COPYCLIPBOARD   "Copia commenti negli appunti"
-    IDS_ASKDOWNLOADLANG     "La lingua che hai selezionato non è installata nel tuo sistema. Vuoi che eMule la scarichi da https://emule-project.net?"
+    IDS_ASKDOWNLOADLANG     "La lingua che hai selezionato non è installata nel tuo sistema. Vuoi che Pegaso la scarichi da https://emule-project.net?"
     IDS_ASKDOWNLOADLANGCAP  "Scarica il file della lingua"
     IDS_DELETESELECTED      "Elimina"
     IDS_ERR_FAILEDDOWNLOADLANG
@@ -1598,10 +1598,10 @@ END
 STRINGTABLE
 BEGIN
     IDS_RADCLIENTS          "Dagli utenti conosciuti"
-    IDS_KADUDPPORTERR       "La porta UDP usata dalla rete Kad è in conflitto con quella usata da eMule per il protocollo esteso o per la connessione ai server. La porta è stata cambiata con la %u."
+    IDS_KADUDPPORTERR       "La porta UDP usata dalla rete Kad è in conflitto con quella usata da Pegaso per il protocollo esteso o per la connessione ai server. La porta è stata cambiata con la %u."
     IDS_CONFIRM_FILEDELETE  "Vuoi davvero rimuovere tutti i file selezionati?"
     IDS_OPENFOLDER          "Apri cartella"
-    IDS_RUNASUSER           "Esegui eMule come utente non privilegiato"
+    IDS_RUNASUSER           "Esegui Pegaso come utente non privilegiato"
     IDS_DELETE              "Cancella dal disco"
 //    IDS_BOOTSTRAP           "Bootstrap"
     IDS_VIAED2KSQ           "Tramite server"
@@ -1621,7 +1621,7 @@ BEGIN
     IDS_TESTINFO            "Qui è possibile verificare se le tue porte TCP e UDP possono comunicare con l'esterno. Il superamento di questa verifica è necessaria affinché i server e gli utenti possano connettersi a te. La porta TCP deve superare il test!"
     IDS_CONNECTIONTEST      "Verifica la connessione"
     IDS_NOPORTCHANGEPOSSIBLE
-                            "Il cambio delle porte non è possibile dopo che è stata effettuata la connessione con gli altri utenti o mentre sei connesso ad un server o a Kad!\n\nRiavvia eMule con le nuove impostazioni delle porte."
+                            "Il cambio delle porte non è possibile dopo che è stata effettuata la connessione con gli altri utenti o mentre sei connesso ad un server o a Kad!\n\nRiavvia Pegaso con le nuove impostazioni delle porte."
     IDS_NETWORK_INFO        "Informazioni rete"
     IDS_SP_TOTALUL          "Invio totale"
     IDS_SP_ULFRIENDS        "Banda riservata all'amico"
@@ -1641,7 +1641,7 @@ BEGIN
     IDS_CHAT_IDENT          "Identificazione:"
     IDS_MAXHALFOPENCONS     "Numero massimo di connessioni parziali aperte"
     IDS_WIZ_STARTWITHWINDOWS
-                            "Esegui eMule all'avvio di Windows."
+                            "Esegui Pegaso all'avvio di Windows."
     IDS_KAD_WAITCBK         "Attendi il richiamo in Kad"
     IDS_KAD_TOOMANDYKADLKPS "Troppe analisi in Kad"
     IDS_INDEXED             "Indicizzato"
@@ -1742,7 +1742,7 @@ BEGIN
     IDS_NOSOUND             "Nessun suono"
     IDS_PW_RECEIVERADDRESS  "Indirizzo destinatario:"
     IDS_PW_ENABLEEMAIL      "Attiva"
-    IDS_EMULENOTIFICATION   "Notifica eMule"
+    IDS_EMULENOTIFICATION   "Notifica Pegaso"
     IDS_PW_SHOWTRANSTOOLBAR "Barra degli strumenti aggiuntiva nella finestra Trasferimenti"
     IDS_SHARED_STATUS       "Parti condivise"
     IDS_SEARCH_EMULECOLLECTION "Collezione"
@@ -1776,7 +1776,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_COLL_TEXTFORMAT     "Salva la collezione in formato testo"
-    IDS_RUNNINGRESTRICTED   "eMule è in esecuzione con privilegi limitati"
+    IDS_RUNNINGRESTRICTED   "Pegaso è in esecuzione con privilegi limitati"
     IDS_USS_MANUALUPLOADLIMITDETECTED
                             "UploadSpeedSense: rilevato un incremento del limite di invio nelle opzioni. Avviata la modalità di reazione veloce per i primi 60 secondi."
     IDS_USS_STATE_PREPARING "Preparazione..."
@@ -1844,7 +1844,7 @@ BEGIN
     IDS_SUPPORTED           "Supportato"
     IDS_ESTIMATED           "Stimato"
     IDS_MEDIAINFO_DLLMISSING
-                            "Non è presente alcuna libreria MediaInfo. Se vuoi ricevere più informazioni sui file audio/video in questa finestra,\r\nscarica la libreria MediaInfo da https://mediaarea.net/it/MediaInfo e copia il file MediaInfo.dll nella\r\ncartella di installazione di eMule ""%s"".\r\n"
+                            "Non è presente alcuna libreria MediaInfo. Se vuoi ricevere più informazioni sui file audio/video in questa finestra,\r\nscarica la libreria MediaInfo da https://mediaarea.net/it/MediaInfo e copia il file MediaInfo.dll nella\r\ncartella di installazione di Pegaso ""%s"".\r\n"
     IDS_WARNING_WRONGFILEEXTENTION
                             "Attenzione: l'estensione del file ""%s"" non corrisponde con l'estensione\r\nusata tipicamente per questo formato file. Potresti voler rinominare il file \r\nusando una di queste estensioni ""%s""\r\nper poter usare o vedere correttamente questo formato file.\r\n"
     IDS_MEDIAINFO_DRMWARNING
@@ -1885,17 +1885,17 @@ STRINGTABLE
 BEGIN
     IDS_UPNPSTART           "Usa l'UPnP per configurare il router"
     IDS_UPNPSETUP           "Sto provando a configurare automaticamente il router con l'UPnP..."
-    IDS_UPNPFAILED          "L'UPnP non è riuscito a configurare automaticamente il router per eMule, provare a configurarlo manualmente se necessario!"
+    IDS_UPNPFAILED          "L'UPnP non è riuscito a configurare automaticamente il router per Pegaso, provare a configurarlo manualmente se necessario!"
     IDS_UPNPSUCCESS         "L'UPnP ha configurato il router con le porte %u (TCP) e %u (UDP)"
     IDS_FO_PREFBUTTON_NEW   "Apri le porte sul firewall di Windows XP Service Pack 1"
     IDS_UPNP_NOSERVICE      "Il servizio host dell'UPnP non è in esecuzione, l'UPnP non verrà utilizzato"
     IDS_DELAYEDBYUPNP       "La connessione alla rete è stata ritardata poiché l'UPnP è occupato nel configurare il router."
-    IDS_DELAYEDBYUPNP2      "Attendere alcuni secondi, eMule si connetterà non appena l'UPnP avrà terminato."
+    IDS_DELAYEDBYUPNP2      "Attendere alcuni secondi, Pegaso si connetterà non appena l'UPnP avrà terminato."
 //    IDS_UPNP                "UPnP"
-    IDS_UPNPCLOSEONEXIT     "Rimuovi la configurazione delle porte tramite UPnP all'uscita da eMule"
+    IDS_UPNPCLOSEONEXIT     "Rimuovi la configurazione delle porte tramite UPnP all'uscita da Pegaso"
     IDS_UPNPSKIPWANIP       "Non usare il servizio WANIPConnection"//Windows service only!
     IDS_UPNPSKIPWANPPP      "Non usare il servizio WANPPPConnection"//Windows service only!
-    IDS_SHAREEMULELABEL     "Condividi eMule con gli altri utenti del sistema"
+    IDS_SHAREEMULELABEL     "Condividi Pegaso con gli altri utenti del sistema"
     IDS_SHAREEMULEMULTI     "Ogni utente ha la propria configurazione e i propri file in scaricamento"
     IDS_SHAREEMULEPUBLIC    "Ogni utente ha la stessa configurazione e gli stessi file in scaricamento"
     IDS_SHAREEMULEOLD       "Metti i file di configurazione e i file scaricati nella cartella del programma"
@@ -1903,7 +1903,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SHAREEMULEWARNING   "Cambiando questa opzione farai in modo che eMule utilizzi un'altra configurazione. Le tue impostazioni correnti verranno ignorate e gli scaricamenti già iniziati potrebbero non essere più visibili. Potrai tornare alla tua configurazione attuale cambiando sempre questa opzione.\n\nDevi riavviare eMule affichè le modifiche abbiano effetto."
+    IDS_SHAREEMULEWARNING   "Cambiando questa opzione farai in modo che Pegaso utilizzi un'altra configurazione. Le tue impostazioni correnti verranno ignorate e gli scaricamenti già iniziati potrebbero non essere più visibili. Potrai tornare alla tua configurazione attuale cambiando sempre questa opzione.\n\nDevi riavviare Pegaso affichè le modifiche abbiano effetto."
 //    IDS_SPAM                "Spam"
     IDS_MARKSPAM            "Segna come spam"
     IDS_MARKNOTSPAM         "Segna come non spam"
@@ -1917,7 +1917,7 @@ BEGIN
     IDS_DOWNLOADING_NODESDAT_FROM "Scaricamento del file 'nodes.dat' da %s"
     IDS_DOWNLOADING_NODESDAT "Scaricamento del file 'nodes.dat' in corso..."
     IDS_ERR_FAILEDDOWNLOADNODES "Si è verificato un errore nello scaricare il file 'nodes.dat' da %s"
-    IDS_PREVENTSTANDBY      "Previeni la modalità di attesa quando eMule è in esecuzione"
+    IDS_PREVENTSTANDBY      "Previeni la modalità di attesa quando Pegaso è in esecuzione"
     IDS_KADID               "ID Kad"
 END
 
@@ -1926,11 +1926,11 @@ BEGIN
     IDS_SEARCHINGFRIENDKAD  "Ricerca di amici nella rete Kad in corso..."
     IDS_FOUND               "trovato"
     IDS_EXTERNUDPPORT       "Porta UDP esterna"
-    IDS_STORESEARCHES       "Ricorda le ricerche aperte tra i riavvii di eMule"
-    IDS_WRN_INCFILE_EXISTS  "Hai selezionato una nuova cartella per i tuoi file scaricati che non è vuota. Tutti i file esistenti in questa cartella verranno automaticamente condivisi da eMule."
+    IDS_STORESEARCHES       "Ricorda le ricerche aperte tra i riavvii di Pegaso"
+    IDS_WRN_INCFILE_EXISTS  "Hai selezionato una nuova cartella per i tuoi file scaricati che non è vuota. Tutti i file esistenti in questa cartella verranno automaticamente condivisi da Pegaso."
     IDS_EDITSPAMFILTER      "Modifica il filtro antispam..."
     IDS_EDITSPAMFILTERCOMMENTS "Modifica il filtro antispam per i commenti"
-    IDS_WIZZARDOBFUSCATION  "Abilita questa funzione se vuoi attivare l'offuscamento del protocollo.\n\nSe il tuo gestore tenta di limitare o bloccare eMule, l'attivazione\ndell'offuscamento aiuterà ad aggirare alcune restrizioni."
+    IDS_WIZZARDOBFUSCATION  "Abilita questa funzione se vuoi attivare l'offuscamento del protocollo.\n\nSe il tuo gestore tenta di limitare o bloccare Pegaso, l'attivazione\ndell'offuscamento aiuterà ad aggirare alcune restrizioni."
     IDS_BETANAG             "Questa è una versione beta di eMule. Riferisci i problemi e controlla regolarmente la presenza di aggiornamenti nel nostro forum (https://forum.emule-project.net)."
     IDS_CONFIRMNODESDOWNLOAD
                             "Vuoi scaricare ed usare i contatti Kad (nodes.dat) da questo indirizzo:\n%s ?"
@@ -1968,7 +1968,7 @@ BEGIN
     IDS_NOTASKED            "Non chiesto"
     IDS_LOOKUPGRAPH         "Dettagli di ricerca"
     IDS_AUTOKADLOOKUPGRAPH  "Visualizza automaticamente le ricerche attive"
-    IDS_CLOSEEMULE          "Chiudi eMule"
+    IDS_CLOSEEMULE          "Chiudi Pegaso"
     IDS_DONOTASKAGAIN       "Non chiedermelo nuovamente"
     IDS_POPULARITY          "Livello di popolarità"
     IDS_SHOWWIN7TASKBARGOODIES "Abilita gli effetti della barra strumenti di Windows 7"

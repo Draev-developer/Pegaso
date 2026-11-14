@@ -18,8 +18,8 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 //
 
 VS_VERSION_INFO VERSIONINFO
-        FILEVERSION         VERSION_MJR,VERSION_MIN,VERSION_UPDATE,VERSION_BUILD
-        PRODUCTVERSION      VERSION_MJR,VERSION_MIN,VERSION_UPDATE,VERSION_BUILD
+        FILEVERSION         PEGASO_VERSION_MJR,PEGASO_VERSION_MIN,0,0
+        PRODUCTVERSION      PEGASO_VERSION_MJR,PEGASO_VERSION_MIN,0,0
         FILEFLAGSMASK       VS_FFI_FILEFLAGSMASK
 #ifdef _DEBUG
         FILEFLAGS           VS_FF_DEBUG | VS_FF_PRIVATEBUILD | VS_FF_PRERELEASE
@@ -38,12 +38,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "https://www.emule-project.net"
             VALUE "FileDescription", "Pegaso"
-            VALUE "FileVersion", SZ_VERSION_NAME " Unicode"
+            VALUE "FileVersion", PEGASO_VERSION_NAME
             VALUE "InternalName", "Pegaso.exe"
             VALUE "LegalCopyright", "Copyright © 2002-2026 Merkur - Read license.txt for more infos."
             VALUE "OriginalFilename", "Pegaso.exe"
             VALUE "ProductName", "Pegaso"
-            VALUE "ProductVersion", SZ_VERSION_NAME " Unicode"
+            VALUE "ProductVersion", PEGASO_VERSION_NAME
         END
     END
     BLOCK "VarFileInfo"

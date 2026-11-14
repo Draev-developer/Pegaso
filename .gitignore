@@ -18,3 +18,6 @@
 /srchybrid/lang/ARM64/
 tools/webtest/__pycache__/
 tools/webtest/shot_*.png
+tools/installer/output/
+tools/webtest/*.torrent
+tools/webtest/server.log

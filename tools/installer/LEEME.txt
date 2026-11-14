@@ -1,0 +1,38 @@
+﻿Pegaso 0.1
+==========
+
+Pegaso descarga de las redes eMule (servidores ed2k y Kad), de BitTorrent y de
+la web (HTTP y HTTPS) desde una sola lista de descargas.
+
+Pegaso es software libre: deriva de eMule 0.72a (edición de la comunidad) y se
+distribuye bajo la Licencia Pública General de GNU, versión 2 (license.txt).
+Quien recibe este programa tiene derecho a recibir también su código fuente.
+
+Dónde guarda las cosas
+----------------------
+  Configuración:  %LOCALAPPDATA%\Pegaso
+  Descargas:      carpeta Descargas del usuario, subcarpeta Pegaso
+
+Desinstalar Pegaso no borra ni la configuración ni lo descargado.
+
+Primeros pasos
+--------------
+  - Pulsa "Conectar": Pegaso entra en un servidor eMule y en la red Kad.
+  - Pega un enlace ed2k, un enlace magnet, un archivo .torrent o una dirección
+    web para empezar una descarga.
+  - Preferencias > Web y BitTorrent: puerto de BitTorrent, conexiones por
+    descarga web y protección VPN.
+
+Úsalo solo para contenidos que tengas derecho a descargar y compartir.
+
+----------------------------------------------------------------------------
+
+Pegaso downloads from the eMule networks (ed2k servers and Kad), from
+BitTorrent and from the web (HTTP and HTTPS) in a single download list.
+
+Pegaso is free software derived from eMule 0.72a (community edition), under
+the GNU General Public License, version 2 (license.txt). Whoever receives this
+program is entitled to its source code as well.
+
+Settings are kept in %LOCALAPPDATA%\Pegaso and downloads in the Pegaso folder
+inside the user's Downloads folder; uninstalling does not remove them.

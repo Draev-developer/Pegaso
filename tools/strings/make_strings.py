@@ -56,6 +56,18 @@ STRINGS = [
                             'Завершено (раздача)', 'Completo (a partilhar)', 'Fertig (wird verteilt)']),
     ('PS_SELECT_ALL', ['Select all', 'Marcar todos', 'Tout cocher', 'Seleziona tutti', 'Отметить все', 'Marcar todos', 'Alle auswählen']),
     ('PS_SELECT_NONE', ['Select none', 'Desmarcar todos', 'Tout décocher', 'Deseleziona tutti', 'Снять все', 'Desmarcar todos', 'Keine auswählen']),
+    ('PS_OPT_VPN_GROUP', ['VPN protection', 'Protección VPN', 'Protection VPN', 'Protezione VPN', 'Защита VPN', 'Proteção VPN', 'VPN-Schutz']),
+    ('PS_OPT_VPN_ADAPTER', ['Use only this network adapter', 'Usar solo este adaptador de red', 'Utiliser uniquement cette carte réseau',
+                            'Usa solo questa scheda di rete', 'Использовать только этот сетевой адаптер',
+                            'Usar apenas este adaptador de rede', 'Nur diesen Netzwerkadapter verwenden']),
+    ('PS_OPT_VPN_NONE', ['(any adapter - no protection)', '(cualquier adaptador - sin protección)', "(n'importe quelle carte - sans protection)",
+                         '(qualsiasi scheda - nessuna protezione)', '(любой адаптер - без защиты)',
+                         '(qualquer adaptador - sem proteção)', '(beliebiger Adapter - kein Schutz)']),
+    ('PS_OPT_VPN_KILL', ['Stop all transfers while it is disconnected', 'Detener todas las transferencias mientras esté desconectado',
+                         'Arrêter tous les transferts tant qu\'elle est déconnectée', 'Ferma tutti i trasferimenti mentre è disconnessa',
+                         'Останавливать все передачи, пока он отключён', 'Parar todas as transferências enquanto estiver desligado',
+                         'Alle Übertragungen anhalten, solange er getrennt ist']),
+    ('PS_OPT_VPN_DOWN', ['not connected', 'no conectado', 'non connectée', 'non connessa', 'не подключён', 'não ligado', 'nicht verbunden']),
 ]
 
 

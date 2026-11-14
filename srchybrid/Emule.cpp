@@ -27,6 +27,7 @@
 #include "emule.h"
 #include "WebDownload.h"
 #include "TorrentQueue.h"
+#include "NetGuard.h"
 #include "opcodes.h"
 #include "ini2.h"
 #include "mdump.h"
@@ -508,6 +509,7 @@ BOOL CemuleApp::InitInstance()
 
 	// create & initialize all the important stuff
 	thePrefs.Init();
+	theNetGuard.Init();	// Pegaso: VPN protection decides the bind address before any socket exists
 	theStats.Init();
 
 	// check if we have to restart eMule as Secure user

@@ -24,6 +24,10 @@ protected:
 	DECLARE_MESSAGE_MAP()
 	afx_msg void OnChanged()					{ SetModified(TRUE); }
 	afx_msg void OnBnClickedEnable();
+	afx_msg void OnCbnSelChangeAdapter();
+
+private:
+	CStringArray m_asAdapters;	// adapter names, in the order of the combo box entries after the first
 };
 
 // Pegaso: lets the user choose which files of a torrent are downloaded.

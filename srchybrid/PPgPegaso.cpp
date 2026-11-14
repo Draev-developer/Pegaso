@@ -5,6 +5,7 @@
 #include "PegasoStrings.h"
 #include "TorrentQueue.h"
 #include "WebDownload.h"
+#include "NetGuard.h"
 #include "OtherFunctions.h"
 
 #ifdef _DEBUG
@@ -22,6 +23,8 @@ BEGIN_MESSAGE_MAP(CPPgPegaso, CPropertyPage)
 	ON_BN_CLICKED(IDC_PG_BT_ENCRYPT, OnChanged)
 	ON_EN_CHANGE(IDC_PG_BT_PORT, OnChanged)
 	ON_EN_CHANGE(IDC_PG_WEB_CONN, OnChanged)
+	ON_CBN_SELCHANGE(IDC_PG_VPN_ADAPTER, OnCbnSelChangeAdapter)
+	ON_BN_CLICKED(IDC_PG_VPN_KILL, OnChanged)
 END_MESSAGE_MAP()
 
 CPPgPegaso::CPPgPegaso()
@@ -41,10 +44,43 @@ BOOL CPPgPegaso::OnInitDialog()
 	SetDlgItemInt(IDC_PG_BT_PORT, CTorrentQueue::PortInPrefs(), FALSE);
 	SetDlgItemInt(IDC_PG_WEB_CONN, theWebDownloads.GetMaxConnections(), FALSE);
 	OnBnClickedEnable();
+
+	// VPN protection: the adapters of this computer, plus the configured one if it does not
+	// exist right now (the adapter of a VPN often disappears while the VPN is off)
+	CComboBox *pCombo = static_cast<CComboBox*>(GetDlgItem(IDC_PG_VPN_ADAPTER));
+	const CString sCurrent(CNetGuard::AdapterInPrefs());
+	pCombo->AddString(GetPegasoString(PS_OPT_VPN_NONE));
+	int iSel = 0;
+	bool bFound = sCurrent.IsEmpty();
+	for (const SNetAdapter &adapter : CNetGuard::ListAdapters()) {
+		CString sText;
+		sText.Format(_T("%s  -  %s"), (LPCTSTR)adapter.name
+			, (adapter.up && !adapter.ipv4.IsEmpty()) ? (LPCTSTR)adapter.ipv4 : GetPegasoString(PS_OPT_VPN_DOWN));
+		pCombo->AddString(sText);
+		m_asAdapters.Add(adapter.name);
+		if (adapter.name.CompareNoCase(sCurrent) == 0) {
+			iSel = (int)m_asAdapters.GetCount();
+			bFound = true;
+		}
+	}
+	if (!bFound) {
+		pCombo->AddString(sCurrent + _T("  -  ") + GetPegasoString(PS_OPT_VPN_DOWN));
+		m_asAdapters.Add(sCurrent);
+		iSel = (int)m_asAdapters.GetCount();
+	}
+	pCombo->SetCurSel(iSel);
+	CheckDlgButton(IDC_PG_VPN_KILL, CNetGuard::KillSwitchInPrefs() ? BST_CHECKED : BST_UNCHECKED);
+	OnCbnSelChangeAdapter();
 	SetModified(FALSE);
 
 	Localize();
 	return TRUE;
+}
+
+void CPPgPegaso::OnCbnSelChangeAdapter()
+{
+	GetDlgItem(IDC_PG_VPN_KILL)->EnableWindow(static_cast<CComboBox*>(GetDlgItem(IDC_PG_VPN_ADAPTER))->GetCurSel() > 0);
+	SetModified(TRUE);
 }
 
 void CPPgPegaso::OnBnClickedEnable()
@@ -66,6 +102,9 @@ BOOL CPPgPegaso::OnApply()
 	uConnections = max(1u, min(16u, uConnections));
 	SetDlgItemInt(IDC_PG_WEB_CONN, uConnections, FALSE);
 
+	const int iAdapter = static_cast<CComboBox*>(GetDlgItem(IDC_PG_VPN_ADAPTER))->GetCurSel();
+	theNetGuard.ApplyPrefs((iAdapter > 0 && iAdapter <= m_asAdapters.GetCount()) ? m_asAdapters[iAdapter - 1] : CString()
+		, IsDlgButtonChecked(IDC_PG_VPN_KILL) == BST_CHECKED);
 	theWebDownloads.SetMaxConnections(uConnections);
 	theTorrents.ApplyPrefs(IsDlgButtonChecked(IDC_PG_BT_ENABLE) == BST_CHECKED, uPort, IsDlgButtonChecked(IDC_PG_BT_ENCRYPT) == BST_CHECKED);
 
@@ -83,6 +122,9 @@ void CPPgPegaso::Localize()
 		SetDlgItemText(IDC_PG_BT_ENCRYPT, GetPegasoString(PS_OPT_BT_ENCRYPT));
 		SetDlgItemText(IDC_PG_WEB_GROUP, GetPegasoString(PS_OPT_WEB_GROUP));
 		SetDlgItemText(IDC_PG_WEB_CONN_LBL, GetPegasoString(PS_OPT_WEB_CONN));
+		SetDlgItemText(IDC_PG_VPN_GROUP, GetPegasoString(PS_OPT_VPN_GROUP));
+		SetDlgItemText(IDC_PG_VPN_ADAPTER_LBL, GetPegasoString(PS_OPT_VPN_ADAPTER));
+		SetDlgItemText(IDC_PG_VPN_KILL, GetPegasoString(PS_OPT_VPN_KILL));
 	}
 }
 

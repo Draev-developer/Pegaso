@@ -696,6 +696,8 @@ public:
 
 	static LPCSTR	GetBindAddrA()						{ return m_pszBindAddrA; }
 	static LPCWSTR	GetBindAddrW()						{ return m_pszBindAddrW; }
+	// Pegaso: address new sockets are bound to, set by the VPN protection (empty = any)
+	static void		SetBindAddrOverride(const CString &sAddr);
 #ifdef UNICODE
 #define GetBindAddr  GetBindAddrW
 #else

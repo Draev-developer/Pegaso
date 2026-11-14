@@ -2398,6 +2398,10 @@
 #define IDC_PG_FILES_HINT               5019
 #define IDC_PG_FILES_ALL                5020
 #define IDC_PG_FILES_NONE               5021
+#define IDC_PG_VPN_GROUP                5022
+#define IDC_PG_VPN_ADAPTER_LBL          5023
+#define IDC_PG_VPN_ADAPTER              5024
+#define IDC_PG_VPN_KILL                 5025
 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS

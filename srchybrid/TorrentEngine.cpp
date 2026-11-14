@@ -312,7 +312,13 @@ bool CTorrentEngine::Start(const STorrentSettings &settings, std::wstring &error
 		pack.set_str(lt::settings_pack::user_agent, m->settings.userAgent);
 		pack.set_str(lt::settings_pack::peer_fingerprint, "-PG0100-");
 		const std::string port(std::to_string(m->settings.listenPort));
-		pack.set_str(lt::settings_pack::listen_interfaces, "0.0.0.0:" + port + ",[::]:" + port);
+		if (m->settings.bindAddress.empty())
+			pack.set_str(lt::settings_pack::listen_interfaces, "0.0.0.0:" + port + ",[::]:" + port);
+		else {
+			// tied to one adapter: listen there and send from there, nowhere else
+			pack.set_str(lt::settings_pack::listen_interfaces, m->settings.bindAddress + ":" + port);
+			pack.set_str(lt::settings_pack::outgoing_interfaces, m->settings.bindAddress);
+		}
 		pack.set_int(lt::settings_pack::alert_mask, lt::alert_category::status | lt::alert_category::error | lt::alert_category::storage);
 		pack.set_bool(lt::settings_pack::enable_dht, true);
 		pack.set_bool(lt::settings_pack::enable_lsd, true);
@@ -441,6 +447,16 @@ void CTorrentEngine::Remove(const std::string &id, bool deleteFiles)
 	lt::torrent_handle h = m->Find(id);
 	if (h.is_valid())
 		m->ses->remove_torrent(h, deleteFiles ? lt::session::delete_files : lt::remove_flags_t{});
+}
+
+void CTorrentEngine::PauseSession(bool pause)
+{
+	if (!m->ses)
+		return;
+	if (pause)
+		m->ses->pause();
+	else
+		m->ses->resume();
 }
 
 void CTorrentEngine::SetLimits(int downloadLimit, int uploadLimit)

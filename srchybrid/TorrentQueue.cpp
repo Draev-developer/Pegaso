@@ -6,6 +6,7 @@
 #include "Preferences.h"
 #include "OtherFunctions.h"
 #include "Log.h"
+#include "NetGuard.h"
 #include "PartFile.h"
 #include "DownloadQueue.h"
 #include "emuleDlg.h"
@@ -50,6 +51,7 @@ CTorrentQueue::CTorrentQueue()
 	, m_dwLastReport()
 	, m_uDatarate()
 	, m_bStartTried()
+	, m_bNetPaused()
 {
 }
 
@@ -105,6 +107,9 @@ void CTorrentQueue::Start()
 	settings.userAgent = CStringA(PEGASO_NAME _T("/") PEGASO_VERSION_NAME);
 	settings.listenPort = (int)PortInPrefs();
 	settings.requireEncryption = RequireEncryptionInPrefs();
+	m_sBoundTo = theNetGuard.GetBindAddress();	// VPN protection
+	settings.bindAddress = CStringA(m_sBoundTo);
+	m_bNetPaused = false;
 	settings.downloadLimit = LimitFromPrefs(thePrefs.GetMaxDownloadInBytesPerSec(false));
 	settings.uploadLimit = LimitFromPrefs(thePrefs.GetMaxUpload() == UNLIMITED ? UNLIMITED * 1024ull : thePrefs.GetMaxUpload() * 1024ull);
 
@@ -199,6 +204,17 @@ void CTorrentQueue::Process()
 		Start();
 	if (!m_engine.IsRunning())
 		return;
+	// VPN protection: the adapter address changed (connected, reconnected, dropped) -> bind again
+	if (theNetGuard.GetBindAddress() != m_sBoundTo) {
+		Stop();
+		Start();
+		if (!m_engine.IsRunning())
+			return;
+	}
+	if (theNetGuard.IsBlocked() != m_bNetPaused) {
+		m_bNetPaused = theNetGuard.IsBlocked();
+		m_engine.PauseSession(m_bNetPaused);
+	}
 	const DWORD dwNow = ::GetTickCount();
 	if (dwNow - m_dwLastPoll < 1000)
 		return;

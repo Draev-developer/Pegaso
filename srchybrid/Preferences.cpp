@@ -691,6 +691,14 @@ bool CPreferences::IsTempFile(const CString &rstrDirectory, const CString &rstrN
 	return false;
 }
 
+void CPreferences::SetBindAddrOverride(const CString &sAddr)
+{
+	m_strBindAddrW = sAddr;
+	m_pszBindAddrW = m_strBindAddrW.IsEmpty() ? NULL : (LPCWSTR)m_strBindAddrW;
+	m_strBindAddrA = m_strBindAddrW;
+	m_pszBindAddrA = m_strBindAddrA.IsEmpty() ? NULL : (LPCSTR)m_strBindAddrA;
+}
+
 uint64 CPreferences::GetMaxDownloadInBytesPerSec(bool bDynamic)
 {
 	//don't be a Lam3r :)

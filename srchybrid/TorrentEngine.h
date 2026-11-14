@@ -19,6 +19,7 @@ struct STorrentSettings
 	std::wstring savePath;			// where finished and running downloads are stored
 	std::wstring stateDir;			// session state and resume data
 	std::string	userAgent;
+	std::string	bindAddress;			// IPv4 address of the only adapter to use; empty = any
 	int		listenPort = 6881;
 	int		downloadLimit = 0;		// bytes per second, 0 = unlimited
 	int		uploadLimit = 0;
@@ -95,6 +96,7 @@ public:
 	void	Resume(const std::string &id);
 	void	Remove(const std::string &id, bool deleteFiles);
 	void	SetLimits(int downloadLimit, int uploadLimit);	// bytes per second, 0 = unlimited
+	void	PauseSession(bool pause);	// stops all network activity without touching the torrents
 
 	// The files of a torrent; empty while the description of a magnet link has not arrived.
 	// Link files (*.url) are deselected by default when a torrent is added.

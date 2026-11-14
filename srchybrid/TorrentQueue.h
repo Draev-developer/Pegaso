@@ -48,6 +48,8 @@ private:
 	DWORD	m_dwLastReport;
 	uint32	m_uDatarate;
 	bool	m_bStartTried;
+	bool	m_bNetPaused;		// VPN protection has stopped the engine's traffic
+	CString	m_sBoundTo;			// bind address the engine was started with
 };
 
 extern CTorrentQueue theTorrents;

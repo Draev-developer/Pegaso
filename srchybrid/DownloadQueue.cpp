@@ -21,6 +21,7 @@
 #include "DownloadQueue.h"
 #include "WebDownload.h"
 #include "TorrentQueue.h"
+#include "NetGuard.h"
 #include "PartFile.h"
 #include "ed2kLink.h"
 #include "SearchFile.h"
@@ -361,6 +362,7 @@ bool CDownloadQueue::IsFileExisting(const uchar *fileid, bool bLogWarnings) cons
 //This method is called every 100 ms
 void CDownloadQueue::Process()
 {
+	theNetGuard.Process();		// Pegaso: VPN protection
 	theWebDownloads.Process();	// Pegaso: turn pending web addresses into downloads
 	theTorrents.Process();		// Pegaso: BitTorrent engine
 	ProcessLocalRequests(); // send src requests to local server
@@ -409,7 +411,7 @@ void CDownloadQueue::Process()
 
 		if (cur_file->IsTorrent())	// Pegaso: driven by the BitTorrent engine, see CTorrentQueue::Process
 			continue;
-		cur_file->ProcessWeb(inSet(cur_file->GetStatus(), PS_READY, PS_EMPTY));	// Pegaso
+		cur_file->ProcessWeb(inSet(cur_file->GetStatus(), PS_READY, PS_EMPTY) && !theNetGuard.IsBlocked());	// Pegaso
 		datarateWeb += cur_file->GetWebDatarate();
 		if (inSet(cur_file->GetStatus(), PS_READY, PS_EMPTY))
 			datarateX += cur_file->Process(factor, m_udcounter);

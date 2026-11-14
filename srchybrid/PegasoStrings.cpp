@@ -38,6 +38,16 @@ namespace
 		{L"Select all", L"Marcar todos", L"Tout cocher", L"Seleziona tutti", L"\u041e\u0442\u043c\u0435\u0442\u0438\u0442\u044c \u0432\u0441\u0435", L"Marcar todos", L"Alle ausw\u00e4hlen"},
 		// PS_SELECT_NONE
 		{L"Select none", L"Desmarcar todos", L"Tout d\u00e9cocher", L"Deseleziona tutti", L"\u0421\u043d\u044f\u0442\u044c \u0432\u0441\u0435", L"Desmarcar todos", L"Keine ausw\u00e4hlen"},
+		// PS_OPT_VPN_GROUP
+		{L"VPN protection", L"Protecci\u00f3n VPN", L"Protection VPN", L"Protezione VPN", L"\u0417\u0430\u0449\u0438\u0442\u0430 VPN", L"Prote\u00e7\u00e3o VPN", L"VPN-Schutz"},
+		// PS_OPT_VPN_ADAPTER
+		{L"Use only this network adapter", L"Usar solo este adaptador de red", L"Utiliser uniquement cette carte r\u00e9seau", L"Usa solo questa scheda di rete", L"\u0418\u0441\u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u044c \u0442\u043e\u043b\u044c\u043a\u043e \u044d\u0442\u043e\u0442 \u0441\u0435\u0442\u0435\u0432\u043e\u0439 \u0430\u0434\u0430\u043f\u0442\u0435\u0440", L"Usar apenas este adaptador de rede", L"Nur diesen Netzwerkadapter verwenden"},
+		// PS_OPT_VPN_NONE
+		{L"(any adapter - no protection)", L"(cualquier adaptador - sin protecci\u00f3n)", L"(n'importe quelle carte - sans protection)", L"(qualsiasi scheda - nessuna protezione)", L"(\u043b\u044e\u0431\u043e\u0439 \u0430\u0434\u0430\u043f\u0442\u0435\u0440 - \u0431\u0435\u0437 \u0437\u0430\u0449\u0438\u0442\u044b)", L"(qualquer adaptador - sem prote\u00e7\u00e3o)", L"(beliebiger Adapter - kein Schutz)"},
+		// PS_OPT_VPN_KILL
+		{L"Stop all transfers while it is disconnected", L"Detener todas las transferencias mientras est\u00e9 desconectado", L"Arr\u00eater tous les transferts tant qu'elle est d\u00e9connect\u00e9e", L"Ferma tutti i trasferimenti mentre \u00e8 disconnessa", L"\u041e\u0441\u0442\u0430\u043d\u0430\u0432\u043b\u0438\u0432\u0430\u0442\u044c \u0432\u0441\u0435 \u043f\u0435\u0440\u0435\u0434\u0430\u0447\u0438, \u043f\u043e\u043a\u0430 \u043e\u043d \u043e\u0442\u043a\u043b\u044e\u0447\u0451\u043d", L"Parar todas as transfer\u00eancias enquanto estiver desligado", L"Alle \u00dcbertragungen anhalten, solange er getrennt ist"},
+		// PS_OPT_VPN_DOWN
+		{L"not connected", L"no conectado", L"non connect\u00e9e", L"non connessa", L"\u043d\u0435 \u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0451\u043d", L"n\u00e3o ligado", L"nicht verbunden"},
 	};
 }
 

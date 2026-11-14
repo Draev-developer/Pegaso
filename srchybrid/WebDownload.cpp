@@ -15,6 +15,7 @@
 #include "StringConversion.h"
 #include "MD4.h"
 #include "Log.h"
+#include "NetGuard.h"
 
 #pragma comment(lib, "winhttp.lib")
 
@@ -796,7 +797,7 @@ void CWebDownloadQueue::Process()
 	for (size_t i = 0; i < m_probes.size();) {
 		const std::shared_ptr<SWebProbe> pProbe = m_probes[i];
 		if (!pProbe->started) {
-			if (uRunning < WEB_MAX_PROBES) {
+			if (uRunning < WEB_MAX_PROBES && !theNetGuard.IsBlocked()) {
 				pProbe->started = true;
 				try {
 					std::thread(ProbeWorker, pProbe).detach();

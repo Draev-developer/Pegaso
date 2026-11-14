@@ -2,10 +2,10 @@
 
 usage: python -I hybridtest.py
 
-  A1 (pegaso-run-a1) shares two files on eMule, slowly (40 KB/s)
-  A2 (pegaso-run-a2) seeds two torrents: one with the first file, and one with a file of
+  A1 (pegaso-test-a1) shares two files on eMule, slowly (40 KB/s)
+  A2 (pegaso-test-a2) seeds two torrents: one with the first file, and one with a file of
                      the same size as the second but other content (the "wrong" torrent)
-  B  (pegaso-run)    downloads both files from A1 and is given the torrents as sources
+  B  (pegaso-test)    downloads both files from A1 and is given the torrents as sources
 
 Expected: the first file arrives quickly and correct (most of it through the torrent,
 checked with the ed2k hashes B got from A1); the wrong torrent is detected and dropped.

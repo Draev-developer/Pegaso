@@ -2,8 +2,8 @@
 
 usage: python -I btseedtest.py
 
-  A (pegaso-run-a1) has the file and seeds it, seed ratio 100 %
-  B (pegaso-run)    downloads it
+  A (pegaso-test-a1) has the file and seeds it, seed ratio 100 %
+  B (pegaso-test)    downloads it
 
 A fake tracker on 127.0.0.1:8770 introduces them; no outside network is used.
 """

@@ -30,6 +30,8 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 
+#include "PegasoStrings.h"
+
 #define	PREF_INI_SECTION	_T("DirectDownloadDlg")
 
 IMPLEMENT_DYNAMIC(CDirectDownloadDlg, CDialog)
@@ -41,8 +43,53 @@ END_MESSAGE_MAP()
 
 CDirectDownloadDlg::CDirectDownloadDlg(CWnd *pParent /*=NULL*/)
 	: CResizableDialog(CDirectDownloadDlg::IDD, pParent)
+	, m_bFromClipboard()
 	, m_icoWnd()
 {
+}
+
+CString CDirectDownloadDlg::ExtractLinks(const CString &sText)
+{
+	CString sOut;
+	if (sText.GetLength() > 64 * 1024)	// not a list of links somebody copied
+		return sOut;
+	for (int iPos = 0; iPos >= 0;) {
+		const CString &sToken(sText.Tokenize(_T(" \t\r\n"), iPos));
+		if (sToken.IsEmpty())
+			break;
+		const bool bLink = _tcsnicmp(sToken, _T("ed2k://|file|"), 13) == 0
+			|| (_tcsnicmp(sToken, _T("magnet:?"), 8) == 0 && CTorrentQueue::IsTorrentLink(sToken))
+			|| CWebDownloadQueue::LooksLikeFileUrl(sToken);
+		if (bLink && (_T("\r\n") + sOut).Find(_T("\r\n") + sToken + _T("\r\n")) < 0)
+			sOut += sToken + _T("\r\n");
+	}
+	return sOut;
+}
+
+void CDirectDownloadDlg::AppendLinks(const CString &sLinks)
+{
+	if (m_hWnd == NULL)
+		return;
+	CString sHave;
+	GetDlgItemText(IDC_ELINK, sHave);
+	if (!sHave.IsEmpty() && sHave.Right(1) != _T("\n"))
+		sHave += _T("\r\n");
+	bool bAdded = false;
+	for (int iPos = 0; iPos >= 0;) {
+		const CString &sToken(sLinks.Tokenize(_T("\r\n"), iPos));
+		if (sToken.IsEmpty())
+			break;
+		if ((_T("\r\n") + sHave).Find(_T("\r\n") + sToken + _T("\r\n")) < 0) {
+			sHave += sToken + _T("\r\n");
+			bAdded = true;
+		}
+	}
+	if (bAdded) {
+		SetDlgItemText(IDC_ELINK, sHave);
+		static_cast<CEdit*>(GetDlgItem(IDC_ELINK))->LineScroll(0x7FFF);
+		UpdateControls();
+		FlashWindow(TRUE);
+	}
 }
 
 CDirectDownloadDlg::~CDirectDownloadDlg()
@@ -137,11 +184,21 @@ BOOL CDirectDownloadDlg::OnInitDialog()
 
 	EnableSaveRestore(PREF_INI_SECTION);
 
-	SetWindowText(GetResString(IDS_SW_DIRECTDOWNLOAD));
+	SetWindowText(GetPegasoString(PS_ADD_LINKS));
 	m_ctrlDirectDlFrm.SetIcon(_T("Download"));
-	m_ctrlDirectDlFrm.SetWindowText(GetResString(IDS_SW_DIRECTDOWNLOAD));
+	m_ctrlDirectDlFrm.SetWindowText(GetPegasoString(PS_ADD_LINKS));
 	SetDlgItemText(IDOK, GetResString(IDS_DOWNLOAD));
-	SetDlgItemText(IDC_FSTATIC2, GetResString(IDS_SW_LINK));
+	SetDlgItemText(IDC_FSTATIC2, GetPegasoString(PS_ADD_LINKS_HINT));
+	if (!m_sInitialLinks.IsEmpty()) {
+		SetDlgItemText(IDC_ELINK, m_sInitialLinks);
+		// the caret goes to the end once the dialog has given the focus to the box (which
+		// selects everything): what is typed next is added, not put in place of the links
+		GetDlgItem(IDC_ELINK)->PostMessage(EM_SETSEL, 0x7FFF, 0x7FFF);
+	}
+	if (m_bFromClipboard) {	// the user is in another program, e.g. the browser
+		SetWindowPos(&wndTopMost, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+		SetForegroundWindow();
+	}
 	SetDlgItemText(IDC_CATLABEL, GetResString(IDS_CAT) + _T(':'));
 
 	SetDlgItemText(IDOK, GetResString(IDS_DOWNLOAD));

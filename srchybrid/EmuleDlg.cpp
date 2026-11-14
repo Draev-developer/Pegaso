@@ -212,6 +212,7 @@ END_MESSAGE_MAP()
 CemuleDlg::CemuleDlg(CWnd *pParent /*=NULL*/)
 	: CTrayDialog(CemuleDlg::IDD, pParent)
 	, m_hNextViewer()
+	, m_pLinksDlg()
 	, m_pSplashWnd()
 	, activewnd()
 	, status()
@@ -2357,8 +2358,12 @@ bool CemuleDlg::CopyTextToClipboard(const CString &strText)
 
 void CemuleDlg::WatchClipboard(bool bWatch)
 {
-	if (bWatch)
+	if (bWatch) {
+		// Pegaso: what is in the clipboard right now was not copied for us
+		if (m_strLastClipboardContents.IsEmpty())
+			m_strLastClipboardContents = CopyTextFromClipboard();
 		m_hNextViewer = SetClipboardViewer();
+	}
 	else if (m_hNextViewer) {
 		ChangeClipboardChain(m_hNextViewer);
 		m_hNextViewer = 0;
@@ -2567,9 +2572,11 @@ BOOL CemuleDlg::OnCommand(WPARAM wParam, LPARAM lParam)
 		}
 		break;
 	case MP_HM_DIRECT_DOWNLOAD:
-		{
+		if (m_pLinksDlg == NULL) {
 			CDirectDownloadDlg dlg;
+			m_pLinksDlg = &dlg;	// links copied meanwhile go into this window
 			dlg.DoModal();
+			m_pLinksDlg = NULL;
 		}
 		break;
 	case MP_PEGASO_WEBSEARCH:	// Pegaso: torrent search through the providers of the user
@@ -2661,7 +2668,7 @@ void CemuleDlg::ShowToolPopup(bool toolsonly)
 	menu.AppendMenu(MF_STRING, MP_HM_CONVERTPF, GetResString(IDS_IMPORTSPLPF) + _T("..."), _T("CONVERT"));
 	menu.AppendMenu(MF_STRING, MP_HM_1STSWIZARD, GetResString(IDS_WIZ1) + _T("..."), _T("WIZARD"));
 	menu.AppendMenu(MF_STRING, MP_HM_IPFILTER, GetResString(IDS_IPFILTER) + _T("..."), _T("IPFILTER"));
-	menu.AppendMenu(MF_STRING, MP_HM_DIRECT_DOWNLOAD, GetResString(IDS_SW_DIRECTDOWNLOAD) + _T("..."), _T("PASTELINK"));
+	menu.AppendMenu(MF_STRING, MP_HM_DIRECT_DOWNLOAD, GetPegasoString(PS_ADD_LINKS) + CString(_T("...")), _T("PASTELINK"));
 	menu.AppendMenu(MF_STRING, MP_PEGASO_WEBSEARCH, GetPegasoString(PS_WS_MENU), _T("SEARCH"));	// Pegaso
 
 	menu.AppendMenu(MF_SEPARATOR);
@@ -3593,35 +3600,33 @@ void CemuleDlg::OnChangeCbChain(HWND hWndRemove, HWND hWndAfter)
 	CDialog::OnChangeCbChain(hWndRemove, hWndAfter);
 }
 
+// Pegaso: download links copied anywhere (web addresses of files, magnet links, ed2k links)
+// open the "add links" window with them. Links copied while that window is open are added to
+// it, so several downloads can be collected before accepting.
 void CemuleDlg::OnDrawClipboard()
 {
-	static CHAR bGuard = 0;
 	CDialog::OnDrawClipboard();
-	if (InterlockedExchange8(&bGuard, 1))
+	if (theApp.IsClosing())
 		return;
-
 	const CString &strLinks(CopyTextFromClipboard());
 	// Do not alter (trim) 'strLinks' and then copy back to 'm_strLastClipboardContents',
 	// or comparison with the modified string would fail!
-	if (!strLinks.IsEmpty() && strLinks != m_strLastClipboardContents) {
-		LPCTSTR pszTrimmedLinks = strLinks;
-		while (_istspace(*pszTrimmedLinks)) // Skip leading white space
-			++pszTrimmedLinks;
-		if (_tcsnicmp(pszTrimmedLinks, _T("ed2k://|file|"), 13) == 0
-			|| CWebDownloadQueue::LooksLikeFileUrl(pszTrimmedLinks))	// Pegaso: also addresses of downloadable files
-		{
-			// Don't feed too long strings into the MessageBox function, it may freak out.
-			CString strLinksDisplay(GetResString(IDS_ADDDOWNLOADSFROMCB));
-			if (strLinks.GetLength() > 512)
-				strLinksDisplay.AppendFormat(_T("\r\n%s..."), (LPCTSTR)strLinks.Left(509));
-			else
-				strLinksDisplay.AppendFormat(_T("\r\n%s"), (LPCTSTR)strLinks);
-			if (AfxMessageBox(strLinksDisplay, MB_YESNO | MB_TOPMOST) == IDYES)
-				theApp.AddEd2kLinksToDownload(pszTrimmedLinks, 0);
-		}
-		m_strLastClipboardContents = strLinks; // Save the unmodified(!) clipboard contents
+	if (strLinks.IsEmpty() || strLinks == m_strLastClipboardContents)
+		return;
+	m_strLastClipboardContents = strLinks; // Save the unmodified(!) clipboard contents
+	const CString &sFound(CDirectDownloadDlg::ExtractLinks(strLinks));
+	if (sFound.IsEmpty())
+		return;
+	if (m_pLinksDlg != NULL) {
+		m_pLinksDlg->AppendLinks(sFound);
+		return;
 	}
-	InterlockedExchange8(&bGuard, 0);
+	CDirectDownloadDlg dlg;
+	dlg.m_sInitialLinks = sFound;
+	dlg.m_bFromClipboard = true;
+	m_pLinksDlg = &dlg;
+	dlg.DoModal();
+	m_pLinksDlg = NULL;
 }
 
 

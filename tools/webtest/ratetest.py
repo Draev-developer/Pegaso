@@ -2,8 +2,8 @@
 
 usage: python -I ratetest.py
 
-  B  (pegaso-run)     downloads a file and rates it through the dialog
-  A1, A2 (pegaso-run-a1 / -a2) share that file, each with the verdict "fake"
+  B  (pegaso-test)     downloads a file and rates it through the dialog
+  A1, A2 (pegaso-test-a1 / -a2) share that file, each with the verdict "fake"
 
 B gets the file from A1 and A2 (direct connections over the LAN address, no server, no
 Kad), receives their verdicts and has to warn about the file. No outside network is used.

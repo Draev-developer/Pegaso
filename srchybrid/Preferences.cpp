@@ -1603,7 +1603,7 @@ void CPreferences::SavePreferences()
 	ini.WriteBool(_T("SafeServerConnect"), m_bSafeServerConnect);
 	ini.WriteBool(_T("ShowRatesOnTitle"), showRatesInTitle);
 	ini.WriteBool(_T("IndicateRatings"), indicateratings);
-	ini.WriteBool(_T("WatchClipboard4ED2kFilelinks"), watchclipboard);
+	ini.WriteBool(_T("PegasoWatchClipboard"), watchclipboard);	// Pegaso: on by default, hence a key of its own
 	ini.WriteInt(_T("SearchMethod"), m_iSearchMethod);
 	ini.WriteBool(_T("CheckDiskspace"), checkDiskspace);
 	ini.WriteInt(_T("MinFreeDiskSpace"), m_uMinFreeDiskSpace);
@@ -2208,7 +2208,7 @@ void CPreferences::LoadPreferences()
 	m_bPreviewOnIconDblClk = ini.GetBool(_T("PreviewOnIconDblClk"), false);
 	m_bCheckFileOpen = ini.GetBool(_T("CheckFileOpen"), true);
 	indicateratings = ini.GetBool(_T("IndicateRatings"), true);
-	watchclipboard = ini.GetBool(_T("WatchClipboard4ED2kFilelinks"), false);
+	watchclipboard = ini.GetBool(_T("PegasoWatchClipboard"), true);
 	m_iSearchMethod = ini.GetInt(_T("SearchMethod"), 0);
 
 	showCatTabInfos = ini.GetBool(_T("ShowInfoOnCatTabs"), false);

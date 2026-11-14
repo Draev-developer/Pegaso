@@ -19,7 +19,8 @@ Pegaso parte de eMule 0.72a (edición de la comunidad). El historial de eMule es
 
 ### Descargas web
 - HTTP y HTTPS con varias conexiones por archivo, pausa, reanudación tras reiniciar y límite de velocidad compartido con el resto de descargas.
-- Los enlaces llegan por el portapapeles, por el diálogo de pegar enlaces o por la línea de órdenes.
+- Al copiar un enlace de descarga (dirección web de un archivo, magnet o ed2k) se abre la ventana «Añadir enlaces de descarga»; lo que se copie mientras está abierta se suma a la lista.
+- Herramientas → «Añadir enlaces de descarga…» para escribirlos o pegarlos a mano.
 
 ### Enjambre híbrido
 - Una descarga de eMule puede recibir además una fuente web y un torrent del mismo archivo.

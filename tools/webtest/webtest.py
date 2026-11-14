@@ -11,7 +11,7 @@ import sys
 import time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-RUN = r'C:\xampp\htdocs\Emule\pegaso-run'
+RUN = r'C:\xampp\htdocs\Emule\pegaso-test'
 EXE = os.path.join(RUN, 'Pegaso.exe')
 BASE = 'http://127.0.0.1:8765'
 SERVER_LOG = os.path.join(HERE, 'server.log')

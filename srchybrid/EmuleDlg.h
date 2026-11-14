@@ -71,6 +71,7 @@ class CemuleDlg : public CTrayDialog
 	void SetClientIconList();
 	CString	m_strLastClipboardContents;
 	HWND	m_hNextViewer;
+	class CDirectDownloadDlg *m_pLinksDlg;	// Pegaso: the "add links" window while it is open
 public:
 	explicit CemuleDlg(CWnd *pParent = NULL);
 	~CemuleDlg();

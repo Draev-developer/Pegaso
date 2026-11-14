@@ -33,6 +33,15 @@ public:
 	explicit CDirectDownloadDlg(CWnd *pParent = NULL);	// standard constructor
 	virtual	~CDirectDownloadDlg();
 
+	// Pegaso: links found in the clipboard
+	CString	m_sInitialLinks;	// shown when the window opens
+	bool	m_bFromClipboard;	// opened by a copied link: comes to the front even if Pegaso is in the background
+	// More links for a window which is open already; those it has are not repeated.
+	void	AppendLinks(const CString &sLinks);
+	// The download links in a text (ed2k file links, magnet links of torrents, web addresses
+	// of files), one per line; empty if there is none.
+	static CString ExtractLinks(const CString &sText);
+
 protected:
 	HICON m_icoWnd;
 	CIconStatic m_ctrlDirectDlFrm;

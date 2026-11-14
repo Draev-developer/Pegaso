@@ -2889,7 +2889,7 @@ CString CPreferences::GetDefaultDirectory(EDefaultDirectory eDirectory, bool bCr
 		// 0 = Multiuser, 1 = Publicuser, 2 = ExecutableDir. (on Winver < Vista 1 has the same effect as 2)
 		DWORD nRegistrySetting = _UI32_MAX;
 		CRegKey rkEMuleRegKey;
-		if (rkEMuleRegKey.Open(HKEY_CURRENT_USER, _T("Software\\eMule"), KEY_READ) == ERROR_SUCCESS) {
+		if (rkEMuleRegKey.Open(HKEY_CURRENT_USER, _T("Software\\") PEGASO_NAME, KEY_READ) == ERROR_SUCCESS) {
 			rkEMuleRegKey.QueryDWORDValue(_T("UsePublicUserDirectories"), nRegistrySetting);
 			rkEMuleRegKey.Close();
 		}
@@ -2933,9 +2933,9 @@ CString CPreferences::GetDefaultDirectory(EDefaultDirectory eDirectory, bool bCr
 
 							if (nRegistrySetting == _UI32_MAX) {
 								// no registry default, check if we find a preferences.ini to use
-								if (::PathFileExists(strLocalAppData + _T("eMule\\") CONFIGFOLDER PREFINIFILE))
+								if (::PathFileExists(strLocalAppData + PEGASO_NAME _T("\\") CONFIGFOLDER PREFINIFILE))
 									m_nCurrentUserDirMode = 0;
-								else if (::PathFileExists(strProgramData + _T("eMule\\") CONFIGFOLDER PREFINIFILE))
+								else if (::PathFileExists(strProgramData + PEGASO_NAME _T("\\") CONFIGFOLDER PREFINIFILE))
 									m_nCurrentUserDirMode = 1;
 								else if (bConfigAvailableExecutable)
 									m_nCurrentUserDirMode = 2;
@@ -2946,14 +2946,14 @@ CString CPreferences::GetDefaultDirectory(EDefaultDirectory eDirectory, bool bCr
 
 							switch (m_nCurrentUserDirMode) {
 							case 0: //multiuser
-								strSelectedDataBaseDirectory = strPersonalDownloads + _T("eMule\\");
-								strSelectedConfigBaseDirectory = strLocalAppData + _T("eMule\\");
-								strSelectedExpansionBaseDirectory = strProgramData + _T("eMule\\");
+								strSelectedDataBaseDirectory = strPersonalDownloads + PEGASO_NAME _T("\\");
+								strSelectedConfigBaseDirectory = strLocalAppData + PEGASO_NAME _T("\\");
+								strSelectedExpansionBaseDirectory = strProgramData + PEGASO_NAME _T("\\");
 								break;
 							case 1: //public user
-								strSelectedDataBaseDirectory = strPublicDownloads + _T("eMule\\");
-								strSelectedConfigBaseDirectory = strProgramData + _T("eMule\\");
-								strSelectedExpansionBaseDirectory = strProgramData + _T("eMule\\");
+								strSelectedDataBaseDirectory = strPublicDownloads + PEGASO_NAME _T("\\");
+								strSelectedConfigBaseDirectory = strProgramData + PEGASO_NAME _T("\\");
+								strSelectedExpansionBaseDirectory = strProgramData + PEGASO_NAME _T("\\");
 							case 2: //program directory
 								break;
 							default:
@@ -2978,12 +2978,12 @@ CString CPreferences::GetDefaultDirectory(EDefaultDirectory eDirectory, bool bCr
 						if (nRegistrySetting == 0	// registry setting overwrites, use these folders
 							|| (nRegistrySetting == _UI32_MAX
 								&& !bConfigAvailableExecutable
-								&& ::PathFileExists(strAppData + _T("eMule\\") CONFIGFOLDER PREFINIFILE)))
+								&& ::PathFileExists(strAppData + PEGASO_NAME _T("\\") CONFIGFOLDER PREFINIFILE)))
 						{
 							slosh(const_cast<CString&>(strAppData));
 							slosh(const_cast<CString&>(strPersonal));
 							strSelectedDataBaseDirectory = strPersonal + _T("eMule Downloads\\");
-							strSelectedConfigBaseDirectory = strAppData + _T("eMule\\");
+							strSelectedConfigBaseDirectory = strAppData + PEGASO_NAME _T("\\");
 							// strSelectedExpansionBaseDirectory stays unchanged
 							m_nCurrentUserDirMode = 0;
 						} else
@@ -3082,7 +3082,7 @@ void CPreferences::ChangeUserDirMode(int nNewMode)
 	// and lets us ignore other defaults
 	// 0 = Multiuser, 1 = Public user, 2 = ExecutableDir.
 	CRegKey rkEMuleRegKey;
-	if (rkEMuleRegKey.Create(HKEY_CURRENT_USER, _T("Software\\eMule")) == ERROR_SUCCESS) {
+	if (rkEMuleRegKey.Create(HKEY_CURRENT_USER, _T("Software\\") PEGASO_NAME) == ERROR_SUCCESS) {
 		if (rkEMuleRegKey.SetDWORDValue(_T("UsePublicUserDirectories"), nNewMode) != ERROR_SUCCESS)
 			DebugLogError(_T("Failed to write registry key to switch UserDirMode"));
 		else

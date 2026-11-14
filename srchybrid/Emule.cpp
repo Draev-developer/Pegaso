@@ -348,7 +348,12 @@ CemuleApp::CemuleApp(LPCTSTR lpszAppName)
 }
 
 
-CemuleApp theApp(_T("eMule"));
+CemuleApp theApp(PEGASO_NAME);
+
+CString CemuleApp::GetAppTitle() const
+{
+	return PEGASO_NAME _T(" v") PEGASO_VERSION_NAME _T(" (eMule ") + m_strCurVersionLong + _T(')');
+}
 
 
 // Workaround for bugged 'AfxSocketTerm' (needed at least for MFC 7.0 - 14.14)

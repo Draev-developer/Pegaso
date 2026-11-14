@@ -209,7 +209,7 @@ BOOL CMiniMule::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
-	SetWindowText(_T("eMule v") + theApp.m_strCurVersionLong);
+	SetWindowText(theApp.GetAppTitle());
 	m_bAutoClose = (theApp.GetProfileInt(_T("eMule"), _T("MiniMuleAutoClose"), 0) != 0);
 	m_uWndTransparency = theApp.GetProfileInt(_T("eMule"), _T("MiniMuleTransparency"), 0);
 	::InitializeCriticalSection(&m_cs);

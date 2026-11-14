@@ -917,7 +917,7 @@ void CUpDownClient::SendHelloTypePacket(CSafeMemFile &data)
 	data.WriteUInt32(theApp.GetID());
 	data.WriteUInt16(thePrefs.GetPort());
 
-	uint32 tagcount = 6;
+	uint32 tagcount = 7;
 
 	if (theApp.clientlist->GetBuddy() && theApp.IsFirewalled())
 		tagcount += 2;
@@ -1033,6 +1033,10 @@ void CUpDownClient::SendHelloTypePacket(CSafeMemFile &data)
 				//(RESERVED					   )
 				);
 	tagMuleVersion.WriteTagToFile(data);
+
+	// Pegaso: announce the mod name, the usual way for eMule based clients
+	CTag tagModVersion(CT_MOD_VERSION, PEGASO_MOD_VERSION);
+	tagModVersion.WriteTagToFile(data, UTF8strRaw);
 
 	uint32 dwIP;
 	uint16 nPort;

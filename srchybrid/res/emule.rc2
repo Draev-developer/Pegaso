@@ -37,12 +37,12 @@ BEGIN
         BLOCK "040904B0" // Lang=US English, CharSet=Unicode
         BEGIN
             VALUE "CompanyName", "https://www.emule-project.net"
-            VALUE "FileDescription", "eMule"
+            VALUE "FileDescription", "Pegaso"
             VALUE "FileVersion", SZ_VERSION_NAME " Unicode"
-            VALUE "InternalName", "emule.exe"
+            VALUE "InternalName", "Pegaso.exe"
             VALUE "LegalCopyright", "Copyright © 2002-2026 Merkur - Read license.txt for more infos."
-            VALUE "OriginalFilename", "emule.exe"
-            VALUE "ProductName", "eMule"
+            VALUE "OriginalFilename", "Pegaso.exe"
+            VALUE "ProductName", "Pegaso"
             VALUE "ProductVersion", SZ_VERSION_NAME " Unicode"
         END
     END

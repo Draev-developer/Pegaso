@@ -19,6 +19,7 @@
 #error include 'stdafx.h' before including this file for PCH
 #endif
 #include "resource.h"
+#include "Version.h"
 
 #define	DEFAULT_NICK			thePrefs.GetHomepageBaseURL()
 #define	DEFAULT_TCP_PORT_OLD	4662
@@ -134,6 +135,8 @@ public:
 	bool		IsEd2kFileLinkInClipboard();
 	bool		IsEd2kServerLinkInClipboard();
 	LPCTSTR		GetProfileFile() const							{ return m_pszProfileName; }
+	// Pegaso: text for window captions, e.g. "Pegaso v0.1 (eMule 0.72a x64)"
+	CString		GetAppTitle() const;
 
 	CString		CreateKadSourceLink(const CAbstractFile *f);
 

@@ -63,10 +63,12 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)'=='Debug' or '$(Configuration)'=='Release'">
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
+    <TargetName>Pegaso</TargetName>
     <OutDir>$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)'=='_SpecialBootstrapNodes'">
     <IntDir>$(Platform)\Debug\</IntDir>
+    <TargetName>Pegaso</TargetName>
     <OutDir>$(Platform)\Debug\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
@@ -91,7 +93,7 @@
       <SubSystem>Windows</SubSystem>
     </Link>
     <Manifest>
-      <AdditionalManifestFiles>res/$(TargetName)$(Platform).manifest %(AdditionalManifestFiles)</AdditionalManifestFiles>
+      <AdditionalManifestFiles>res/emule$(Platform).manifest %(AdditionalManifestFiles)</AdditionalManifestFiles>
       <EnableDpiAwareness>false</EnableDpiAwareness>
     </Manifest>
     <ResourceCompile>
@@ -120,7 +122,7 @@
       <SubSystem>Windows</SubSystem>
     </Link>
     <Manifest>
-      <AdditionalManifestFiles>res/$(TargetName)$(Platform).manifest %(AdditionalManifestFiles)</AdditionalManifestFiles>
+      <AdditionalManifestFiles>res/emule$(Platform).manifest %(AdditionalManifestFiles)</AdditionalManifestFiles>
       <EnableDpiAwareness>false</EnableDpiAwareness>
     </Manifest>
   </ItemDefinitionGroup>
@@ -146,7 +148,7 @@
       <SubSystem>Windows</SubSystem>
     </Link>
     <Manifest>
-      <AdditionalManifestFiles>res/$(TargetName)$(Platform).manifest %(AdditionalManifestFiles)</AdditionalManifestFiles>
+      <AdditionalManifestFiles>res/emule$(Platform).manifest %(AdditionalManifestFiles)</AdditionalManifestFiles>
       <EnableDpiAwareness>false</EnableDpiAwareness>
     </Manifest>
     <ResourceCompile>

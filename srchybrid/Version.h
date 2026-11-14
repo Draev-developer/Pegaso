@@ -46,4 +46,13 @@
 // NOTE: This version string is also used by the language DLLs!
 #define	SZ_VERSION_NAME		chSTR(VERSION_MJR) _T(".") chSTR(VERSION_MIN) _T(".") chSTR(VERSION_UPDATE)
 
+// Pegaso: product identity.
+// The eMule version above is the protocol version announced to the ed2k/Kad network and
+// must keep tracking the eMule release this code is based on; Pegaso is announced as a mod.
+#define PEGASO_NAME			_T("Pegaso")
+#define PEGASO_VERSION_MJR	0
+#define PEGASO_VERSION_MIN	1
+#define PEGASO_VERSION_NAME	chSTR(PEGASO_VERSION_MJR) _T(".") chSTR(PEGASO_VERSION_MIN)
+#define PEGASO_MOD_VERSION	PEGASO_NAME _T(" ") PEGASO_VERSION_NAME
+
 #endif /* !__VERSION_H__ */

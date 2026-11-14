@@ -446,7 +446,7 @@ BOOL CemuleDlg::OnInitDialog()
 	}
 
 	// set title
-	SetWindowText(_T("eMule v") + theApp.m_strCurVersionLong);
+	SetWindowText(theApp.GetAppTitle());
 
 	// Init taskbar notifier
 	m_wndTaskbarNotifier.CreateWnd(this);
@@ -1125,8 +1125,8 @@ void CemuleDlg::ShowTransferRate(bool bForceAll)
 		UpdateTrayIcon(min(iDownRatePercent, 100));
 
 		CString buffer;
-		buffer.Format(_T("eMule v%s (%s)\r\n%s")
-			, (LPCTSTR)theApp.m_strCurVersionLong
+		buffer.Format(_T("%s (%s)\r\n%s")
+			, PEGASO_NAME _T(" v") PEGASO_VERSION_NAME
 			, (LPCTSTR)GetResString(theApp.IsConnected() ? IDS_CONNECTED : IDS_DISCONNECTED)
 			, (LPCTSTR)strTransferRate);
 
@@ -3141,7 +3141,7 @@ BOOL CemuleDlg::OnChevronPushed(UINT id, LPNMHDR pNMHDR, LRESULT *plResult)
 	BOOL bLastMenuItemIsSep = TRUE;
 	CTitledMenu menu;
 	menu.CreatePopupMenu();
-	menu.AddMenuTitle(_T("eMule"), true);
+	menu.AddMenuTitle(PEGASO_NAME, true);
 
 	TCHAR szString[256];
 	TBBUTTONINFO tbbi;

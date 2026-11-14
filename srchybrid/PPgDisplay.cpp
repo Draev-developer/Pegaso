@@ -178,7 +178,7 @@ BOOL CPPgDisplay::OnApply()
 	if (mintotray_old != thePrefs.mintotray)
 		theApp.emuledlg->TrayMinimizeToTrayChange();
 	if (!thePrefs.ShowRatesOnTitle())
-		theApp.emuledlg->SetWindowText(_T("eMule v") + theApp.m_strCurVersionLong);
+		theApp.emuledlg->SetWindowText(theApp.GetAppTitle());
 
 	SetModified(FALSE);
 	return CPropertyPage::OnApply();

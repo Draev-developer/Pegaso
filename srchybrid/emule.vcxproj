@@ -316,6 +316,7 @@
     <ClCompile Include="PPgIRC.cpp" />
     <ClCompile Include="PPgMessages.cpp" />
     <ClCompile Include="PPgNotify.cpp" />
+    <ClCompile Include="HybridSwarm.cpp" />
     <ClCompile Include="NetGuard.cpp" />
     <ClCompile Include="PegasoDefaults.cpp" />
     <ClCompile Include="PegasoRating.cpp" />
@@ -621,6 +622,7 @@
     <ClInclude Include="PPgIRC.h" />
     <ClInclude Include="PPgMessages.h" />
     <ClInclude Include="PPgNotify.h" />
+    <ClInclude Include="HybridSwarm.h" />
     <ClInclude Include="NetGuard.h" />
     <ClInclude Include="PegasoDefaults.h" />
     <ClInclude Include="PegasoRating.h" />

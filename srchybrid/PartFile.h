@@ -241,6 +241,9 @@ public:
 	UINT	GetTorrentPeers() const						{ return m_uTorrentPeers; }
 	UINT	GetTorrentSeeds() const						{ return m_uTorrentSeeds; }
 	uint32	GetTorrentUpDatarate() const				{ return m_uTorrentUpRate; }
+	// hybrid download: peers of the torrent which works as one more source; -1 = there is none
+	int		GetHybridPeers() const						{ return m_iHybridPeers; }
+	void	SetHybridPeers(int iPeers)					{ m_iHybridPeers = iPeers; }
 	uint32	GetDatarate() const							{ return m_datarate; }
 	float	GetPercentCompleted() const					{ return m_percentcompleted; }
 	UINT	GetNotCurrentSourcesCount() const;
@@ -432,6 +435,7 @@ private:
 	uint64	m_uTorrentUploaded;
 	int		m_iTorrentPiecesDone;
 	bool	m_bTorrentFinished;
+	int		m_iHybridPeers;
 	bool	m_bWebFile;					// Pegaso: web file whose final hash is not known yet
 	float	m_percentcompleted;
 	EPartFileStatus	status;

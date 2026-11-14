@@ -11,6 +11,8 @@
 #include "PartFile.h"
 #include "DownloadQueue.h"
 #include "SharedFileList.h"
+#include "HybridSwarm.h"
+#include "StringConversion.h"
 #include "emuleDlg.h"
 #include "TransferDlg.h"
 
@@ -159,6 +161,8 @@ void CTorrentQueue::SyncDownloadList()
 		return;
 	std::map<std::string, CPartFile*> gone(m_proxies);
 	for (const STorrentStatus &st : m_status) {
+		if (theHybrid.IsHelper(st.id))	// a source of another download: no row of its own
+			continue;
 		const auto it = m_proxies.find(st.id);
 		if (it != m_proxies.end()) {
 			it->second->UpdateFromTorrent(st);
@@ -175,6 +179,20 @@ void CTorrentQueue::SyncDownloadList()
 		delete entry.second;
 		m_proxies.erase(entry.first);
 	}
+}
+
+bool CTorrentQueue::AddWebSeed(const std::string &id, const CString &sUrl)
+{
+	CString s(sUrl);
+	s.Trim();
+	if (!CWebDownloadQueue::IsWebUrl(s)) {
+		LogError(LOG_STATUSBAR, _T("Not a web address: %s"), (LPCTSTR)s);
+		return false;
+	}
+	if (!m_engine.AddWebSeed(id, std::string(CStringA(EncodeUrlUtf8(s)))))
+		return false;
+	AddLogLine(true, _T("Web source added to the torrent: %s"), (LPCTSTR)s);
+	return true;
 }
 
 bool CTorrentQueue::IsTorrentLink(const CString &sLink)
@@ -251,6 +269,8 @@ void CTorrentQueue::Process()
 			AddLogLine(false, _T("Torrent metadata received: %s"), ev.name.c_str());
 			break;
 		case TE_FINISHED:
+			if (theHybrid.IsHelper(ev.id))	// not a download of its own, see HybridSwarm.h
+				break;
 			AddLogLine(true, _T("Torrent finished: %s"), ev.name.c_str());
 			// mark what was downloaded as coming from the Internet, like any other download
 			for (const STorrentFile &file : m_engine.GetFiles(ev.id))
@@ -272,6 +292,7 @@ void CTorrentQueue::Process()
 	}
 
 	m_status = m_engine.GetStatus();
+	theHybrid.Process(m_engine, m_status);
 	SyncDownloadList();
 	uint32 uRate = 0;
 	uint32 uUpRate = 0;
@@ -280,7 +301,7 @@ void CTorrentQueue::Process()
 		uRate += (uint32)max(0, st.downloadRate);
 		uUpRate += (uint32)max(0, st.uploadRate);
 		// enough given back: stop seeding (once; the user may resume it)
-		if (uSeedRatio > 0 && st.state == TS_SEEDING && st.size > 0
+		if (uSeedRatio > 0 && st.state == TS_SEEDING && st.size > 0 && !theHybrid.IsHelper(st.id)
 			&& (double)st.uploaded * 100.0 >= (double)st.size * uSeedRatio && m_ratioStopped.insert(st.id).second)
 		{
 			m_engine.Pause(st.id);

@@ -146,6 +146,8 @@ struct CTorrentEngine::Impl
 	int pendingSaves = 0;	// save_resume_data requests without an answer yet
 	std::map<std::string, std::string> names;	// id -> name, also for torrents which are gone already
 	std::set<std::string> fresh;	// torrents added by the user in this session, as opposed to restored ones
+	std::set<std::string> deliver;	// hybrid downloads: torrents whose finished pieces are read back
+	std::vector<STorrentPiece> pieces;	// read back, waiting for PollPieces()
 
 	// Name of a torrent; libtorrent 2.1 alerts do not carry it any more.
 	std::string NameOf(const lt::torrent_handle &h)
@@ -183,16 +185,18 @@ struct CTorrentEngine::Impl
 		pack.set_int(lt::settings_pack::upload_rate_limit, settings.uploadLimit);
 	}
 
-	bool Add(lt::add_torrent_params atp, std::wstring &error)
+	bool Add(lt::add_torrent_params atp, std::wstring &error, const std::wstring &savePath, std::string *pId)
 	{
 		const lt::sha1_hash best = atp.info_hashes.get_best();
+		if (pId)
+			*pId = Hex(best);
 		for (const lt::torrent_handle &h : ses->get_torrents())
 			if (h.info_hashes().get_best() == best) {
 				error = L"this torrent is already in the list";
 				return false;
 			}
 		fresh.insert(Hex(best));
-		atp.save_path = ToUtf8(settings.savePath);
+		atp.save_path = ToUtf8(savePath.empty() ? settings.savePath : savePath);
 		atp.flags |= lt::torrent_flags::auto_managed;
 		atp.flags &= ~lt::torrent_flags::paused;
 		ses->async_add_torrent(std::move(atp));
@@ -243,6 +247,21 @@ struct CTorrentEngine::Impl
 			SkipLinkFiles(p->handle);
 			p->handle.save_resume_data(lt::torrent_handle::save_info_dict);
 			++pendingSaves;
+		} else if (auto *p = lt::alert_cast<lt::piece_finished_alert>(a)) {
+			if (deliver.count(IdOf(p->handle)) != 0)
+				p->handle.read_piece(p->piece_index);
+		} else if (auto *p = lt::alert_cast<lt::read_piece_alert>(a)) {
+			const std::string id(IdOf(p->handle));
+			if (!p->error && p->size > 0 && deliver.count(id) != 0) {
+				const std::shared_ptr<const lt::torrent_info> ti = p->handle.torrent_file();
+				if (ti) {
+					STorrentPiece piece;
+					piece.id = id;
+					piece.offset = (int64_t)static_cast<int>(p->piece) * ti->piece_length();
+					piece.data.assign(p->buffer.get(), p->buffer.get() + p->size);
+					pieces.push_back(std::move(piece));
+				}
+			}
 		} else if (auto *p = lt::alert_cast<lt::torrent_finished_alert>(a)) {
 			push(TE_FINISHED, IdOf(p->handle), NameOf(p->handle), std::string());
 			p->handle.save_resume_data(lt::torrent_handle::save_info_dict);
@@ -319,7 +338,7 @@ bool CTorrentEngine::Start(const STorrentSettings &settings, std::wstring &error
 			pack.set_str(lt::settings_pack::listen_interfaces, m->settings.bindAddress + ":" + port);
 			pack.set_str(lt::settings_pack::outgoing_interfaces, m->settings.bindAddress);
 		}
-		pack.set_int(lt::settings_pack::alert_mask, lt::alert_category::status | lt::alert_category::error | lt::alert_category::storage);
+		pack.set_int(lt::settings_pack::alert_mask, lt::alert_category::status | lt::alert_category::error | lt::alert_category::storage | lt::alert_category::piece_progress);
 		pack.set_bool(lt::settings_pack::enable_dht, true);
 		pack.set_bool(lt::settings_pack::enable_lsd, true);
 		pack.set_bool(lt::settings_pack::enable_upnp, true);
@@ -387,7 +406,7 @@ bool CTorrentEngine::IsTorrentMagnet(const std::string &uri)
 	return s.compare(0, 8, "magnet:?") == 0 && (s.find("urn:btih:") != std::string::npos || s.find("urn:btmh:") != std::string::npos);
 }
 
-bool CTorrentEngine::AddMagnet(const std::string &uri, std::wstring &error)
+bool CTorrentEngine::AddMagnet(const std::string &uri, std::wstring &error, const std::wstring &savePath, std::string *pId)
 {
 	if (!m->ses) {
 		error = L"the BitTorrent engine is not running";
@@ -399,10 +418,62 @@ bool CTorrentEngine::AddMagnet(const std::string &uri, std::wstring &error)
 		error = FromUtf8(ec.message());
 		return false;
 	}
-	return m->Add(std::move(atp), error);
+	return m->Add(std::move(atp), error, savePath, pId);
 }
 
-bool CTorrentEngine::AddTorrentFile(const std::wstring &path, std::wstring &error)
+bool CTorrentEngine::AddWebSeed(const std::string &id, const std::string &url)
+{
+	const lt::torrent_handle h = m->Find(id);
+	if (!h.is_valid())
+		return false;
+	h.add_url_seed(url);
+	h.save_resume_data(lt::torrent_handle::save_info_dict);
+	++m->pendingSaves;
+	return true;
+}
+
+void CTorrentEngine::DeliverPieces(const std::string &id, bool deliver)
+{
+	if (deliver)
+		m->deliver.insert(id);
+	else
+		m->deliver.erase(id);
+}
+
+void CTorrentEngine::SetWantedRanges(const std::string &id, const std::vector<std::pair<int64_t, int64_t> > &ranges, bool redeliver)
+{
+	const lt::torrent_handle h = m->Find(id);
+	if (!h.is_valid())
+		return;
+	const std::shared_ptr<const lt::torrent_info> ti = h.torrent_file();
+	if (!ti || ti->piece_length() <= 0)
+		return;
+	const int64_t pieceLen = ti->piece_length();
+	const int count = ti->num_pieces();
+	std::vector<lt::download_priority_t> prio((size_t)count, lt::dont_download);
+	for (const std::pair<int64_t, int64_t> &range : ranges) {
+		if (range.second <= range.first)
+			continue;
+		const int64_t first = std::max<int64_t>(0, range.first / pieceLen);
+		const int64_t last = std::min<int64_t>(count - 1, (range.second - 1) / pieceLen);
+		for (int64_t i = first; i <= last; ++i)
+			prio[(size_t)i] = lt::default_priority;
+	}
+	if (prio != h.get_piece_priorities())
+		h.prioritize_pieces(prio);
+	if (redeliver && m->deliver.count(id) != 0)
+		for (int i = 0; i < count; ++i)
+			if (prio[(size_t)i] != lt::dont_download && h.have_piece(lt::piece_index_t(i)))
+				h.read_piece(lt::piece_index_t(i));
+}
+
+void CTorrentEngine::PollPieces(std::vector<STorrentPiece> &pieces)
+{
+	pieces.clear();
+	pieces.swap(m->pieces);
+}
+
+bool CTorrentEngine::AddTorrentFile(const std::wstring &path, std::wstring &error, const std::wstring &savePath, std::string *pId)
 {
 	if (!m->ses) {
 		error = L"the BitTorrent engine is not running";
@@ -414,7 +485,7 @@ bool CTorrentEngine::AddTorrentFile(const std::wstring &path, std::wstring &erro
 		return false;
 	}
 	try {
-		return m->Add(lt::load_torrent_buffer(data), error);
+		return m->Add(lt::load_torrent_buffer(data), error, savePath, pId);
 	} catch (const std::exception &e) {
 		error = FromUtf8(e.what());
 		return false;
@@ -490,6 +561,7 @@ std::vector<STorrentFile> CTorrentEngine::GetFiles(const std::string &id)
 		f.index = static_cast<int>(i);
 		f.path = FromUtf8(fs.file_path(i));
 		f.size = fs.file_size(i);
+		f.offset = fs.file_offset(i);
 		f.wanted = (size_t)f.index >= prio.size() || prio[(size_t)f.index] != lt::dont_download;
 		out.push_back(std::move(f));
 	}

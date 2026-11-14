@@ -651,6 +651,11 @@ BOOL CemuleDlg::OnInitDialog()
 // modders: don't remove or change the original version check! (additional are OK)
 void CemuleDlg::DoVersioncheck(bool manual)
 {
+	// Pegaso: eMule's check asks the eMule project about eMule versions, which says nothing
+	// about Pegaso. Asked by the user, the releases page of the project is opened instead.
+	if (manual)
+		BrowserOpen(thePrefs.GetVersionCheckURL(), thePrefs.GetMuleDirectory(EMULE_EXECUTABLEDIR));
+#if 0
 #ifndef _DEVBUILD
 	if (!manual && thePrefs.GetLastVC() != 0) {
 		CTime last(thePrefs.GetLastVC());
@@ -674,6 +679,7 @@ void CemuleDlg::DoVersioncheck(bool manual)
 	{
 		AddLogLine(true, GetResString(IDS_NEWVERSIONFAILED));
 	}
+#endif
 #endif
 }
 
@@ -1964,6 +1970,11 @@ void CemuleDlg::StartConnection()
 		}
 		AddLogLine(true, GetResString(IDS_CONNECTING));
 
+		// Pegaso: "Connect" always means both networks. A network switched off in an older
+		// configuration is switched on again (Kad still needs a UDP port).
+		thePrefs.SetNetworkED2K(true);
+		thePrefs.SetNetworkKademlia(true);
+
 		// ed2k
 		if ((thePrefs.GetNetworkED2K() || m_bEd2kSuspendDisconnect) && !theApp.serverconnect->IsConnecting() && !theApp.serverconnect->IsConnected()) {
 			if (theApp.serverlist->GetServerCount() == 0)	// Pegaso: never left without servers
@@ -2519,11 +2530,11 @@ BOOL CemuleDlg::OnCommand(WPARAM wParam, LPARAM lParam)
 	case MP_HM_EXIT:
 		OnClose();
 		break;
-	case MP_HM_LINK1: // MOD: don't remove!
-		BrowserOpen(thePrefs.GetHomepageBaseURL(), thePrefs.GetMuleDirectory(EMULE_EXECUTABLEDIR));
+	case MP_HM_LINK1:	// Pegaso: the project page
+		BrowserOpen(PEGASO_URL, thePrefs.GetMuleDirectory(EMULE_EXECUTABLEDIR));
 		break;
 	case MP_HM_LINK2:
-		BrowserOpen(thePrefs.GetHomepageBaseURL() + _T("/faq/"), thePrefs.GetMuleDirectory(EMULE_EXECUTABLEDIR));
+		BrowserOpen(PEGASO_URL _T("/issues"), thePrefs.GetMuleDirectory(EMULE_EXECUTABLEDIR));
 		break;
 	case MP_HM_LINK3:
 		BrowserOpen(thePrefs.GetVersionCheckURL(), thePrefs.GetMuleDirectory(EMULE_EXECUTABLEDIR));
@@ -2601,9 +2612,9 @@ void CemuleDlg::ShowToolPopup(bool toolsonly)
 	CTitledMenu Links;
 	Links.CreateMenu();
 	Links.AddMenuTitle(NULL, true);
-	Links.AppendMenu(MF_STRING, MP_HM_LINK1, GetResString(IDS_HM_LINKHP), _T("WEB"));
-	Links.AppendMenu(MF_STRING, MP_HM_LINK2, GetResString(IDS_HM_LINKFAQ), _T("WEB"));
-	Links.AppendMenu(MF_STRING, MP_HM_LINK3, GetResString(IDS_HM_LINKVC), _T("WEB"));
+	Links.AppendMenu(MF_STRING, MP_HM_LINK1, GetPegasoString(PS_LINK_HOME), _T("WEB"));
+	Links.AppendMenu(MF_STRING, MP_HM_LINK2, GetPegasoString(PS_LINK_HELP), _T("WEB"));
+	Links.AppendMenu(MF_STRING, MP_HM_LINK3, GetPegasoString(PS_LINK_VC), _T("WEB"));
 	theWebServices.GetGeneralMenuEntries(&Links);
 	Links.InsertMenu(3, MF_BYPOSITION | MF_SEPARATOR);
 	Links.AppendMenu(MF_STRING, MP_WEBSVC_EDIT, GetResString(IDS_WEBSVEDIT));
@@ -3103,7 +3114,7 @@ void CemuleDlg::HtmlHelp(DWORD_PTR dwData, UINT nCmd)
 		CString msg;
 		msg.Format(_T("%s\n\n%s\n\n%s"), pApp->m_pszHelpFilePath, (LPCTSTR)strHelpError, (LPCTSTR)GetResString(IDS_ERR_NOHELP));
 		if (AfxMessageBox(msg, MB_YESNO | MB_ICONERROR) == IDYES)
-			BrowserOpen(thePrefs.GetHomepageBaseURL() + _T("/home/perl/help.cgi"), thePrefs.GetMuleDirectory(EMULE_EXECUTABLEDIR));
+			BrowserOpen(PEGASO_URL, thePrefs.GetMuleDirectory(EMULE_EXECUTABLEDIR));
 	}
 }
 

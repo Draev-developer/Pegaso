@@ -21,6 +21,7 @@
 #include "PegasoStrings.h"
 #include "PegasoRating.h"
 #include "InputBox.h"
+#include "HybridSwarm.h"
 #include "PPgPegaso.h"
 #include "updownclient.h"
 #include "MenuCmds.h"
@@ -913,6 +914,7 @@ void CDownloadListCtrl::OnContextMenu(CWnd*, CPoint point)
 				menu.AppendMenu(MF_STRING, MP_CANCEL, GetResString(IDS_MAIN_BTN_CANCEL));
 				menu.AppendMenu(MF_SEPARATOR);
 				menu.AppendMenu(MF_STRING | (GetSelectedCount() == 1 ? MF_ENABLED : MF_GRAYED), MP_TORRENT_FILES, GetPegasoString(PS_TORRENT_FILES));
+				menu.AppendMenu(MF_STRING | (GetSelectedCount() == 1 ? MF_ENABLED : MF_GRAYED), MP_PEGASO_ADDWEBSRC, GetPegasoString(PS_SRC_ADD_WEB));
 				menu.AppendMenu(MF_STRING, MP_OPENFOLDER, GetResString(IDS_OPENFOLDER));
 				menu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x, point.y, this);
 				return;
@@ -1034,6 +1036,7 @@ void CDownloadListCtrl::OnContextMenu(CWnd*, CPoint point)
 			// Pegaso: verdict on an ed2k file; a web address as one more source of a running download
 			m_FileMenu.EnableMenuItem(MP_PEGASO_RATE, (iSelectedItems == 1 && !bWebSelected) ? MF_ENABLED : MF_GRAYED);
 			m_FileMenu.EnableMenuItem(MP_PEGASO_ADDWEBSRC, (iSelectedItems == 1 && iFilesNotDone == 1 && !bWebSelected) ? MF_ENABLED : MF_GRAYED);
+			m_FileMenu.EnableMenuItem(MP_PEGASO_ADDTORRENT, (iSelectedItems == 1 && iFilesNotDone == 1) ? MF_ENABLED : MF_GRAYED);
 			if (thePrefs.m_bImportParts) {
 				m_FileMenu.RenameMenu(MP_IMPORTPARTS, MF_BYCOMMAND, GetResString(iFilesToImport > 0 ? IDS_IMPORTPARTS_STOP : IDS_IMPORTPARTS), _T("FILEIMPORTPARTS"));
 				m_FileMenu.EnableMenuItem(MP_IMPORTPARTS, (thePrefs.m_bImportParts && iSelectedItems == 1 && iFilesNotDone == 1) ? MF_ENABLED : MF_GRAYED);
@@ -1145,6 +1148,7 @@ void CDownloadListCtrl::OnContextMenu(CWnd*, CPoint point)
 		m_FileMenu.EnableMenuItem(MP_VIEWFILECOMMENTS, MF_GRAYED);
 		m_FileMenu.EnableMenuItem(MP_PEGASO_RATE, MF_GRAYED);
 		m_FileMenu.EnableMenuItem(MP_PEGASO_ADDWEBSRC, MF_GRAYED);
+		m_FileMenu.EnableMenuItem(MP_PEGASO_ADDTORRENT, MF_GRAYED);
 		if (thePrefs.m_bImportParts)
 			m_FileMenu.EnableMenuItem(MP_IMPORTPARTS, MF_GRAYED);
 
@@ -1336,6 +1340,14 @@ BOOL CDownloadListCtrl::OnCommand(WPARAM wParam, LPARAM)
 				case MP_TORRENT_FILES:
 					if (file->IsTorrent())
 						ShowTorrentFiles(file);
+					break;
+				case MP_PEGASO_ADDWEBSRC:	// a web server which has the files of the torrent
+					if (file->IsTorrent()) {
+						InputBox inputbox;
+						inputbox.SetLabels(GetPegasoString(PS_SRC_ADD_WEB), GetPegasoString(PS_SRC_ADD_WEB_HINT), _T("http://"));
+						if (inputbox.DoModal() == IDOK && !inputbox.WasCancelled())
+							theTorrents.AddWebSeed(file->GetTorrentId(), inputbox.GetInput());
+					}
 					break;
 				case MP_OPENFOLDER:
 					::ShellExecute(NULL, _T("open"), thePrefs.GetMuleDirectory(EMULE_INCOMINGDIR), NULL, NULL, SW_SHOWNORMAL);
@@ -1551,6 +1563,14 @@ BOOL CDownloadListCtrl::OnCommand(WPARAM wParam, LPARAM)
 					CPegasoRateDlg dlg(file, this);
 					dlg.DoModal();
 					UpdateItem(file);
+				}
+				break;
+			case MP_PEGASO_ADDTORRENT:	// hybrid download: a torrent with the same file as one more source
+				if (file->IsPartFile()) {
+					InputBox inputbox;
+					inputbox.SetLabels(GetPegasoString(PS_HYB_ADD), GetPegasoString(PS_HYB_HINT), _T(""));
+					if (inputbox.DoModal() == IDOK && !inputbox.WasCancelled())
+						theHybrid.Link(file, inputbox.GetInput());
 				}
 				break;
 			case MP_PEGASO_ADDWEBSRC:
@@ -2028,6 +2048,7 @@ void CDownloadListCtrl::CreateMenus()
 	m_FileMenu.AppendMenu(MF_STRING, MP_VIEWFILECOMMENTS, GetResString(IDS_CMT_SHOWALL), _T("FILECOMMENTS"));
 	m_FileMenu.AppendMenu(MF_STRING, MP_PEGASO_RATE, GetPegasoString(PS_RATE_MENU), _T("FILECOMMENTS"));	// Pegaso
 	m_FileMenu.AppendMenu(MF_STRING, MP_PEGASO_ADDWEBSRC, GetPegasoString(PS_SRC_ADD_WEB), _T("WEB"));	// Pegaso
+	m_FileMenu.AppendMenu(MF_STRING, MP_PEGASO_ADDTORRENT, GetPegasoString(PS_HYB_ADD), _T("WEB"));	// Pegaso
 	if (thePrefs.m_bImportParts)
 		m_FileMenu.AppendMenu(MF_STRING | MF_GRAYED, MP_IMPORTPARTS, GetResString(IDS_IMPORTPARTS), _T("FILEIMPORTPARTS"));
 	m_FileMenu.AppendMenu(MF_SEPARATOR);
@@ -2148,6 +2169,8 @@ CString CDownloadListCtrl::GetFileItemDisplayText(const CPartFile *lpPartFile, i
 					sText.AppendFormat(_T("+%u"), lpPartFile->GetSrcA4AFCount());
 				if (lpPartFile->GetTransferringSrcCount() > 0)
 					sText.AppendFormat(_T(" (%u)"), lpPartFile->GetTransferringSrcCount());
+				if (lpPartFile->GetHybridPeers() >= 0)	// Pegaso: hybrid download, peers of its torrent
+					sText.AppendFormat(_T(" + BT %d"), lpPartFile->GetHybridPeers());
 			}
 // <-- ZZ:DownloadManager
 			if (thePrefs.IsExtControlsEnabled() && lpPartFile->GetPrivateMaxSources() > 0)

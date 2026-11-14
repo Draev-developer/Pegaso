@@ -255,6 +255,7 @@ void CPartFile::Init()
 	m_uTorrentUploaded = 0;
 	m_iTorrentPiecesDone = -1;
 	m_bTorrentFinished = false;
+	m_iHybridPeers = -1;
 
 	m_pAICHRecoveryHashSet = new CAICHRecoveryHashSet(this);
 	m_completedsize = 0ull;

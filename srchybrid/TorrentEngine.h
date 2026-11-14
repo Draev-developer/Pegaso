@@ -62,7 +62,16 @@ struct STorrentFile
 	int		index = 0;			// position inside the torrent
 	std::wstring path;
 	int64_t	size = 0;
+	int64_t	offset = 0;			// where the file starts inside the torrent
 	bool	wanted = true;
+};
+
+// A finished piece, read back from disk (hybrid downloads).
+struct STorrentPiece
+{
+	std::string	id;
+	int64_t	offset = 0;			// position inside the torrent
+	std::vector<char> data;
 };
 
 enum ETorrentEvent
@@ -96,8 +105,20 @@ public:
 	bool	IsRunning() const;
 
 	static bool IsTorrentMagnet(const std::string &uri);	// magnet link with a BitTorrent hash
-	bool	AddMagnet(const std::string &uri, std::wstring &error);
-	bool	AddTorrentFile(const std::wstring &path, std::wstring &error);
+	// savePath: where this torrent keeps its data, if not the common folder.
+	// pId: receives the identifier - also when the torrent is refused for being in the list already.
+	bool	AddMagnet(const std::string &uri, std::wstring &error, const std::wstring &savePath = std::wstring(), std::string *pId = nullptr);
+	bool	AddTorrentFile(const std::wstring &path, std::wstring &error, const std::wstring &savePath = std::wstring(), std::string *pId = nullptr);
+	// A web server which has the files of the torrent (BEP 19 web seed).
+	bool	AddWebSeed(const std::string &id, const std::string &url);
+
+	// Hybrid downloads: a torrent as one more source of a download which is managed elsewhere.
+	// Its finished pieces are read back and handed out by PollPieces().
+	void	DeliverPieces(const std::string &id, bool deliver);
+	// Only the pieces which touch these [start, end) ranges (positions inside the torrent) are
+	// downloaded; with redeliver, the ones which are there already are handed out again.
+	void	SetWantedRanges(const std::string &id, const std::vector<std::pair<int64_t, int64_t> > &ranges, bool redeliver);
+	void	PollPieces(std::vector<STorrentPiece> &pieces);
 
 	void	Pause(const std::string &id);
 	void	Resume(const std::string &id);

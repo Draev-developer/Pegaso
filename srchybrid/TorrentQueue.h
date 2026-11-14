@@ -38,6 +38,8 @@ public:
 	static UINT SeedRatioInPrefs();
 	const std::vector<STorrentStatus>& GetStatus() const { return m_status; }
 
+	CTorrentEngine& Engine()							{ return m_engine; }
+	bool	AddWebSeed(const std::string &id, const CString &sUrl);
 	void	Pause(const std::string &id)				{ m_engine.Pause(id); }
 	void	Resume(const std::string &id)				{ m_engine.Resume(id); }
 	void	Remove(const std::string &id, bool bDeleteFiles) { m_engine.Remove(id, bDeleteFiles); }

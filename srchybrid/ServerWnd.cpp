@@ -17,6 +17,7 @@
 #include "stdafx.h"
 #include "emule.h"
 #include "ServerWnd.h"
+#include "PegasoStrings.h"
 #include "HttpDownloadDlg.h"
 #include "HTRichEditCtrl.h"
 #include "ED2KLink.h"
@@ -126,7 +127,7 @@ BOOL CServerWnd::OnInitDialog()
 		servermsgbox->AppendText(theApp.GetAppTitle());
 		servermsgbox->AppendText(_T("\n"));
 		// MOD Note: Do not remove this part - Merkur
-		m_strClickNewVersion.Format(_T("%s %s %s"), (LPCTSTR)GetResString(IDS_EMULEW), (LPCTSTR)GetResString(IDS_EMULEW3), (LPCTSTR)GetResString(IDS_EMULEW2));
+		m_strClickNewVersion = GetPegasoString(PS_LINK_VC);	// Pegaso: leads to the releases of the project
 		servermsgbox->SetAutoURLDetect(TRUE);
 		servermsgbox->AppendHyperLink(m_strClickNewVersion, NULL, thePrefs.GetVersionCheckURL(), NULL);
 		// MOD Note: end

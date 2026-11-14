@@ -1,6 +1,6 @@
 """Fresh profile: built-in servers, and "Connect" bringing up an ed2k server and Kad.
 
-usage: python -I nettest.py
+usage: python -I nettest.py [off]
 
 Uses the real ed2k and Kad networks: Pegaso connects to one of its built-in servers and
 fetches a Kad contact list. Nothing is downloaded.
@@ -34,7 +34,12 @@ def main():
     btuitest.deploy()
     w.reset_profile()
     ini = os.path.join(w.RUN, 'config', 'preferences.ini')
-    text = open(ini).read().replace('NetworkED2K=0\n', '').replace('NetworkKademlia=0\n', '')
+    text = open(ini).read()
+    if sys.argv[1:] == ['off']:
+        # a configuration which has both networks switched off: "Connect" must bring them up anyway
+        print('both networks are switched off in preferences.ini')
+    else:
+        text = text.replace('NetworkED2K=0\n', '').replace('NetworkKademlia=0\n', '')
     open(ini, 'w', encoding='ascii', newline='\r\n').write(text)
     for name in ('server.met', 'nodes.dat', 'addresses.dat'):
         assert not os.path.exists(os.path.join(w.RUN, 'config', name))

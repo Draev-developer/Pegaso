@@ -2692,11 +2692,14 @@ CString CPreferences::GetVersionCheckBaseURL()
 
 CString CPreferences::GetVersionCheckURL()
 {
+	return PEGASO_URL _T("/releases");	// Pegaso: new versions are published on the project page
+#if 0
 	CString theUrl(thePrefs.GetVersionCheckBaseURL());
 	theUrl.AppendFormat(_T("/en/version_check.php?version=%u&language=%u") _T("&mod=1") //this suffix for community version only
 						, theApp.m_uCurVersionCheck
 						, thePrefs.GetLanguageID());
 	return theUrl;
+#endif
 }
 
 bool CPreferences::IsDefaultNick(const CString &strCheck)

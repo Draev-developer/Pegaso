@@ -54,6 +54,10 @@ def make_instance(folder, port, extra=''):
     text = w.PREFS.replace('Language=1033', 'Language=1034')
     text += 'Port=%d\nUDPPort=%d\nFilterBadIPs=0\nTorrentEnabled=0\n%s' % (port, port + 10, extra)
     open(os.path.join(folder, 'config', 'preferences.ini'), 'w', encoding='ascii', newline='\r\n').write(text)
+    # "Connect" brings up a server and Kad. Logged in to a server with a low ID, eMule drops
+    # sources which have its own local address (all instances here share one): the server
+    # list holds one dead entry, so that only Kad comes up.
+    open(os.path.join(folder, 'config', 'staticservers.dat'), 'w', encoding='ascii').write('%s:9,0,Nadie\n' % lan_ip())
 
 
 def start(folder):

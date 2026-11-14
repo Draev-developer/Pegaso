@@ -140,6 +140,16 @@ namespace
 		{L"Address (http://) where this same file can be downloaded", L"Direcci\u00f3n (http://) donde se puede descargar este mismo archivo", L"Adresse (http://) o\u00f9 ce m\u00eame fichier peut \u00eatre t\u00e9l\u00e9charg\u00e9", L"Indirizzo (http://) da cui scaricare questo stesso file", L"\u0410\u0434\u0440\u0435\u0441 (http://), \u043f\u043e \u043a\u043e\u0442\u043e\u0440\u043e\u043c\u0443 \u0434\u043e\u0441\u0442\u0443\u043f\u0435\u043d \u044d\u0442\u043e\u0442 \u0436\u0435 \u0444\u0430\u0439\u043b", L"Endere\u00e7o (http://) onde este mesmo ficheiro pode ser transferido", L"Adresse (http://), unter der dieselbe Datei geladen werden kann"},
 		// PS_TORRENT_UPLOAD
 		{L"upload %s/s", L"subida %s/s", L"envoi %s/s", L"invio %s/s", L"\u043e\u0442\u0434\u0430\u0447\u0430 %s/\u0441", L"envio %s/s", L"Upload %s/s"},
+		// PS_HYB_ADD
+		{L"Add a torrent of this same file...", L"A\u00f1adir un torrent de este mismo archivo...", L"Ajouter un torrent de ce m\u00eame fichier...", L"Aggiungi un torrent di questo stesso file...", L"\u0414\u043e\u0431\u0430\u0432\u0438\u0442\u044c \u0442\u043e\u0440\u0440\u0435\u043d\u0442 \u044d\u0442\u043e\u0433\u043e \u0436\u0435 \u0444\u0430\u0439\u043b\u0430...", L"Adicionar um torrent deste mesmo ficheiro...", L"Torrent derselben Datei hinzuf\u00fcgen..."},
+		// PS_HYB_HINT
+		{L"Magnet link, or path of a .torrent file, which contains this same file", L"Enlace magnet, o ruta de un archivo .torrent, que contenga este mismo archivo", L"Lien magnet, ou chemin d'un fichier .torrent, contenant ce m\u00eame fichier", L"Link magnet, o percorso di un file .torrent, che contiene questo stesso file", L"Magnet-\u0441\u0441\u044b\u043b\u043a\u0430 \u0438\u043b\u0438 \u043f\u0443\u0442\u044c \u043a \u0444\u0430\u0439\u043b\u0443 .torrent, \u0441\u043e\u0434\u0435\u0440\u0436\u0430\u0449\u0435\u043c\u0443 \u044d\u0442\u043e\u0442 \u0436\u0435 \u0444\u0430\u0439\u043b", L"Liga\u00e7\u00e3o magnet, ou caminho de um ficheiro .torrent, que contenha este mesmo ficheiro", L"Magnet-Link oder Pfad einer .torrent-Datei, die dieselbe Datei enth\u00e4lt"},
+		// PS_LINK_HOME
+		{L"Pegaso on GitHub", L"Pegaso en GitHub", L"Pegaso sur GitHub", L"Pegaso su GitHub", L"Pegaso \u043d\u0430 GitHub", L"Pegaso no GitHub", L"Pegaso auf GitHub"},
+		// PS_LINK_HELP
+		{L"Help and problems", L"Ayuda y problemas", L"Aide et probl\u00e8mes", L"Aiuto e problemi", L"\u041f\u043e\u043c\u043e\u0449\u044c \u0438 \u043f\u0440\u043e\u0431\u043b\u0435\u043c\u044b", L"Ajuda e problemas", L"Hilfe und Probleme"},
+		// PS_LINK_VC
+		{L"Check for new versions of Pegaso", L"Comprobar si hay versiones nuevas de Pegaso", L"Rechercher de nouvelles versions de Pegaso", L"Controlla se ci sono nuove versioni di Pegaso", L"\u041f\u0440\u043e\u0432\u0435\u0440\u0438\u0442\u044c \u043d\u0430\u043b\u0438\u0447\u0438\u0435 \u043d\u043e\u0432\u044b\u0445 \u0432\u0435\u0440\u0441\u0438\u0439 Pegaso", L"Verificar se h\u00e1 novas vers\u00f5es do Pegaso", L"Nach neuen Versionen von Pegaso suchen"},
 		// PS_TORRENT_SHARED
 		{L"shared %s", L"compartido %s", L"partag\u00e9 %s", L"condiviso %s", L"\u043e\u0442\u0434\u0430\u043d\u043e %s", L"partilhado %s", L"verteilt %s"},
 	};

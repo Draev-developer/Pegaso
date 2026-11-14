@@ -157,7 +157,7 @@ def save_ico(path, sizes, palette=BLUE):
     images[-1].save(path, format='ICO', sizes=[(s, s) for s in sizes], append_images=images[:-1], bitmap_format='bmp')
 
 
-UPSTREAM = 'aac023b'   # commit with the unmodified eMule artwork
+UPSTREAM = 'c27f42f'   # commit with the unmodified eMule artwork
 
 # Toolbar icons which carry a small mule: (file, corner the mule sits in, badge size relative to the icon)
 BADGED = [('Kad.ico', 'br', 0.62), ('Server.ico', 'br', 0.62), ('Search.ico', 'bl', 0.62), ('Messages.ico', 'bl', 0.62),

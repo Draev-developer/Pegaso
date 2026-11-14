@@ -6,6 +6,8 @@
 #include "StringConversion.h"
 #include "Log.h"
 
+#include <io.h>
+#include <share.h>
 #include "mbedtls/net_sockets.h"
 #include "mbedtls/ssl_cache.h"
 #include "mbedtls/ssl_ticket.h"
@@ -487,6 +489,27 @@ UINT AFX_CDECL WebSocketListeningFunc(LPVOID pThis)
 	return 0;
 }
 
+// Pegaso: load a PEM/DER file through the Unicode file API, so paths with characters
+// outside of the ANSI code page work with the stock Mbed TLS library.
+// The buffer is NUL terminated, as the PEM parsers require; 'len' includes the terminator.
+static bool ReadTlsFile(const CString &sPath, CByteArray &buf, size_t &len)
+{
+	len = 0;
+	FILE *f = _tfsopen(sPath, _T("rb"), _SH_DENYWR);
+	if (f == NULL)
+		return false;
+	const __int64 iSize = _filelengthi64(_fileno(f));
+	bool bOk = iSize > 0 && iSize < 1024 * 1024; //certificates and keys are small
+	if (bOk) {
+		buf.SetSize((INT_PTR)iSize + 1);
+		bOk = fread(buf.GetData(), 1, (size_t)iSize, f) == (size_t)iSize;
+		buf[(INT_PTR)iSize] = 0;
+		len = (size_t)iSize + 1;
+	}
+	fclose(f);
+	return bOk;
+}
+
 int StartSSL()
 {
 	if (!thePrefs.GetWebUseHttps())
@@ -500,9 +523,17 @@ int StartSSL()
 	mbedtls_ssl_ticket_init(&ticket_ctx);
 	int ret = (int)psa_crypto_init();
 	if (!ret) { // PSA_SUCCESS is 0
-		ret = mbedtls_x509_crt_parse_file(&srvcert, thePrefs.GetWebCertPath());
+		CByteArray buf;
+		size_t len;
+		ret = ReadTlsFile(thePrefs.GetWebCertPath(), buf, len)
+			? mbedtls_x509_crt_parse(&srvcert, buf.GetData(), len)
+			: MBEDTLS_ERR_X509_FILE_IO_ERROR;
 		if (!ret) {
-			ret = mbedtls_pk_parse_keyfile(&pkey, thePrefs.GetWebKeyPath(), NULL);
+			ret = ReadTlsFile(thePrefs.GetWebKeyPath(), buf, len)
+				? mbedtls_pk_parse_key(&pkey, buf.GetData(), len, NULL, 0)
+				: MBEDTLS_ERR_PK_FILE_IO_ERROR;
+			if (len > 0)
+				SecureZeroMemory(buf.GetData(), len); //do not leave the private key in freed memory
 			if (!ret) {
 				ret = mbedtls_ssl_config_defaults(&conf, MBEDTLS_SSL_IS_SERVER, MBEDTLS_SSL_TRANSPORT_STREAM, MBEDTLS_SSL_PRESET_DEFAULT);
 				if (!ret) {
@@ -522,8 +553,9 @@ int StartSSL()
 		DebugLogError(_T("Web Interface start failed: %s"), (LPCTSTR)SSLerror(ret));
 	else {
 		unsigned char fingerprint[PSA_HASH_LENGTH(PSA_ALG_SHA_1)];
-		mbedtls_sha1(srvcert.raw.p, srvcert.raw.len, fingerprint);
-		DebugLog(_T("Loaded certificate: %s"), (LPCTSTR)GetCertHash(fingerprint, (int)(sizeof fingerprint)));
+		size_t hashlen;
+		if (psa_hash_compute(PSA_ALG_SHA_1, srvcert.raw.p, srvcert.raw.len, fingerprint, sizeof fingerprint, &hashlen) == PSA_SUCCESS)
+			DebugLog(_T("Loaded certificate: %s"), (LPCTSTR)GetCertHash(fingerprint, (int)hashlen));
 	}
 	return ret;
 }

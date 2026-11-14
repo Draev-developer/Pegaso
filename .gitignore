@@ -1,0 +1,15 @@
+# Third-party libraries: fetched and built by tools/build-deps.ps1, not versioned here
+/cryptopp/
+/id3lib/
+/mbedtls/
+/miniupnpc/
+/ResizableLib/
+/zlib/
+
+# Build output
+/srchybrid/x64/
+/srchybrid/Win32/
+/srchybrid/ARM64/
+*.user
+*.aps
+.vs/

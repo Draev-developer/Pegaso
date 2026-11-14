@@ -16,6 +16,7 @@
 #include "MD4.h"
 #include "Log.h"
 #include "NetGuard.h"
+#include "PegasoScan.h"
 
 #pragma comment(lib, "winhttp.lib")
 
@@ -877,6 +878,7 @@ bool PegasoHttpGet(const CString &sUrl, std::vector<BYTE> &data, CString &sError
 
 void PegasoMarkFromInternet(const CString &sPath, const CString &sSourceUrl)
 {
+	PegasoScanFile(sPath);	// every finished download is also shown to the antivirus
 	// An alternate data stream; file systems without them (FAT) simply refuse it.
 	HANDLE hFile = ::CreateFile(sPath + _T(":Zone.Identifier"), GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 	if (hFile == INVALID_HANDLE_VALUE)

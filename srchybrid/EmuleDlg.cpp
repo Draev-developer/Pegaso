@@ -37,6 +37,7 @@
 #include "TorrentQueue.h"
 #include "WebSearch.h"
 #include "PegasoStrings.h"
+#include "PegasoDefaults.h"
 #include "otherfunctions.h"
 #include "ServerWnd.h"
 #include "KademliaWnd.h"
@@ -1083,7 +1084,7 @@ void CemuleDlg::ShowTransferStateIcon()
 
 CString CemuleDlg::GetUpDatarateString(UINT uUpDatarate)
 {
-	m_uUpDatarate = (uUpDatarate != UINT_MAX) ? uUpDatarate : theApp.uploadqueue->GetDatarate();
+	m_uUpDatarate = (uUpDatarate != UINT_MAX) ? uUpDatarate : theApp.uploadqueue->GetDatarate() + theTorrents.GetUpDatarate();
 	CString szBuff;
 	szBuff.Format(_T("%.1f"), (float)m_uUpDatarate / 1024);
 	if (thePrefs.ShowOverhead())
@@ -1119,7 +1120,7 @@ void CemuleDlg::ShowTransferRate(bool bForceAll)
 		m_uLastSysTrayIconCookie = SYS_TRAY_ICON_COOKIE_FORCE_UPDATE;
 
 	m_uDownDatarate = theApp.downloadqueue->GetDatarate();
-	m_uUpDatarate = theApp.uploadqueue->GetDatarate();
+	m_uUpDatarate = theApp.uploadqueue->GetDatarate() + theTorrents.GetUpDatarate();
 
 	const CString &strTransferRate(GetTransferRateString());
 	if (TrayIconVisible() || bForceAll) {
@@ -1964,12 +1965,16 @@ void CemuleDlg::StartConnection()
 		AddLogLine(true, GetResString(IDS_CONNECTING));
 
 		// ed2k
-		if ((thePrefs.GetNetworkED2K() || m_bEd2kSuspendDisconnect) && !theApp.serverconnect->IsConnecting() && !theApp.serverconnect->IsConnected())
+		if ((thePrefs.GetNetworkED2K() || m_bEd2kSuspendDisconnect) && !theApp.serverconnect->IsConnecting() && !theApp.serverconnect->IsConnected()) {
+			if (theApp.serverlist->GetServerCount() == 0)	// Pegaso: never left without servers
+				PegasoAddDefaultServers();
 			theApp.serverconnect->ConnectToAnyServer();
+		}
 
 		// kad
 		if ((thePrefs.GetNetworkKademlia() || m_bKadSuspendDisconnect) && !Kademlia::CKademlia::IsRunning())
 			Kademlia::CKademlia::Start();
+		PegasoBootstrapKad();	// Pegaso: without known contacts, fetch some
 
 		ShowConnectionState();
 	}

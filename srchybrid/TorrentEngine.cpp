@@ -538,7 +538,7 @@ std::vector<STorrentStatus> CTorrentEngine::GetStatus()
 	for (const lt::torrent_handle &h : m->ses->get_torrents()) {
 		if (!h.is_valid())
 			continue;
-		const lt::torrent_status st = h.status(lt::torrent_handle::query_name);
+		const lt::torrent_status st = h.status(lt::torrent_handle::query_name | lt::torrent_handle::query_pieces);
 		STorrentStatus s;
 		s.id = Hex(st.info_hashes.get_best());
 		s.name = FromUtf8(st.name);
@@ -571,6 +571,30 @@ std::vector<STorrentStatus> CTorrentEngine::GetStatus()
 			default:
 				s.state = TS_DOWNLOADING;
 			}
+		s.finished = st.has_metadata && (st.is_finished || st.is_seeding);
+		s.uploaded = st.all_time_upload;
+		s.piecesDone = st.num_pieces;
+		// the piece map, for the progress bar
+		if (st.has_metadata && !s.finished && !st.pieces.empty()) {
+			const std::shared_ptr<const lt::torrent_info> ti = h.torrent_file();
+			if (ti && ti->num_pieces() == st.pieces.size()) {
+				const std::vector<lt::download_priority_t> prio = h.get_piece_priorities();
+				int64_t pos = 0;
+				for (int i = 0; i < ti->num_pieces(); ++i) {
+					if ((size_t)i < prio.size() && prio[(size_t)i] == lt::dont_download)
+						continue;
+					const int64_t len = ti->piece_size(lt::piece_index_t(i));
+					if (!st.pieces.get_bit(lt::piece_index_t(i))) {
+						if (!s.gaps.empty() && s.gaps.back().second == pos)
+							s.gaps.back().second = pos + len;
+						else
+							s.gaps.emplace_back(pos, pos + len);
+					}
+					pos += len;
+				}
+				s.mapSize = pos;
+			}
+		}
 		out.push_back(std::move(s));
 	}
 	return out;

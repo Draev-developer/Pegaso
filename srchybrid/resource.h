@@ -2419,6 +2419,21 @@
 #define IDC_WP_KEY                      5046
 #define IDC_WP_SAVE                     5047
 #define IDC_WP_REMOVE                   5048
+#define IDD_PEGASO_RATE                 5005
+#define IDC_RT_FILE                     5050
+#define IDC_RT_OK                       5051
+#define IDC_RT_BAD                      5052
+#define IDC_RT_FAKE                     5053
+#define IDC_RT_MISMATCH                 5054
+#define IDC_RT_NONE                     5055
+#define IDC_RT_WHAT_LBL                 5056
+#define IDC_RT_WHAT                     5057
+#define IDC_RT_LANG_LBL                 5058
+#define IDC_RT_LANG                     5059
+#define IDC_RT_TEXT_LBL                 5060
+#define IDC_RT_TEXT                     5061
+#define IDC_RT_OTHERS                   5062
+#define IDC_RT_HINT                     5063
 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS

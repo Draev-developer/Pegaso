@@ -195,6 +195,7 @@ public:
 	void	WriteCompleteSourcesCount(CSafeMemFile &file) const;
 	void	AddSources(CSafeMemFile *sources, uint32 serverip, uint16 serverport, bool bWithObfuscationAndHash);
 	void	AddSource(LPCTSTR pszURL, uint32 nIP);
+	void	AddWebSource(const CString &sUrl);	// Pegaso
 	static bool CanAddSource(uint32 userid, uint16 port, uint32 serverip, uint16 serverport, UINT *pdebug_lowiddropped = NULL, bool ed2kID = true);
 
 	EPartFileStatus	GetStatus(bool ignorepause = false) const;
@@ -239,6 +240,7 @@ public:
 	void	UpdateFromTorrent(const struct STorrentStatus &st);
 	UINT	GetTorrentPeers() const						{ return m_uTorrentPeers; }
 	UINT	GetTorrentSeeds() const						{ return m_uTorrentSeeds; }
+	uint32	GetTorrentUpDatarate() const				{ return m_uTorrentUpRate; }
 	uint32	GetDatarate() const							{ return m_datarate; }
 	float	GetPercentCompleted() const					{ return m_percentcompleted; }
 	UINT	GetNotCurrentSourcesCount() const;
@@ -426,6 +428,10 @@ private:
 	int		m_eTorrentState;
 	UINT	m_uTorrentPeers;
 	UINT	m_uTorrentSeeds;
+	uint32	m_uTorrentUpRate;
+	uint64	m_uTorrentUploaded;
+	int		m_iTorrentPiecesDone;
+	bool	m_bTorrentFinished;
 	bool	m_bWebFile;					// Pegaso: web file whose final hash is not known yet
 	float	m_percentcompleted;
 	EPartFileStatus	status;

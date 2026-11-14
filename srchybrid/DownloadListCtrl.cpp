@@ -19,6 +19,8 @@
 #include "DownloadListCtrl.h"
 #include "TorrentQueue.h"
 #include "PegasoStrings.h"
+#include "PegasoRating.h"
+#include "InputBox.h"
 #include "PPgPegaso.h"
 #include "updownclient.h"
 #include "MenuCmds.h"
@@ -415,7 +417,12 @@ void CDownloadListCtrl::DrawFileItem(CDC &dc, int nColumn, LPCRECT lpRect, UINT 
 			}
 
 			rcDraw.left += sm_iLabelOffset;
-			dc.DrawText(sItem, rcDraw, MLC_DT_TEXT | uDrawTextAlignment);
+			if (PegasoIsFlaggedDownload(pPartFile)) {	// Pegaso: reported as fake or wrongly described
+				const COLORREF crOld = dc.SetTextColor(RGB(200, 0, 0));
+				dc.DrawText(CString(_T("[")) + GetPegasoString(PS_RATE_FLAG) + _T("] ") + sItem, rcDraw, MLC_DT_TEXT | uDrawTextAlignment);
+				dc.SetTextColor(crOld);
+			} else
+				dc.DrawText(sItem, rcDraw, MLC_DT_TEXT | uDrawTextAlignment);
 		}
 		break;
 	case 5: // progress
@@ -913,6 +920,7 @@ void CDownloadListCtrl::OnContextMenu(CWnd*, CPoint point)
 			// get merged settings
 			int iSelectedItems = 0;
 			int iFilesNotDone = 0;
+			bool bWebSelected = false;	// Pegaso
 			int iFilesToPause = 0;
 			int iFilesToStop = 0;
 			int iFilesToResume = 0;
@@ -938,6 +946,7 @@ void CDownloadListCtrl::OnContextMenu(CWnd*, CPoint point)
 
 				iFilesToCancel += static_cast<int>(pFile->GetStatus() != PS_COMPLETING);
 				iFilesNotDone += static_cast<int>((pFile->GetStatus() != PS_COMPLETE && pFile->GetStatus() != PS_COMPLETING));
+				bWebSelected |= pFile->IsWebFile();
 				iFilesToStop += static_cast<int>(pFile->CanStopFile());
 				iFilesToPause += static_cast<int>(pFile->CanPauseFile());
 				iFilesToResume += static_cast<int>(pFile->CanResumeFile());
@@ -1022,6 +1031,9 @@ void CDownloadListCtrl::OnContextMenu(CWnd*, CPoint point)
 			else
 				m_FileMenu.SetDefaultItem(UINT_MAX);
 			m_FileMenu.EnableMenuItem(MP_VIEWFILECOMMENTS, (iSelectedItems >= 1 /*&& iFilesNotDone == 1*/) ? MF_ENABLED : MF_GRAYED);
+			// Pegaso: verdict on an ed2k file; a web address as one more source of a running download
+			m_FileMenu.EnableMenuItem(MP_PEGASO_RATE, (iSelectedItems == 1 && !bWebSelected) ? MF_ENABLED : MF_GRAYED);
+			m_FileMenu.EnableMenuItem(MP_PEGASO_ADDWEBSRC, (iSelectedItems == 1 && iFilesNotDone == 1 && !bWebSelected) ? MF_ENABLED : MF_GRAYED);
 			if (thePrefs.m_bImportParts) {
 				m_FileMenu.RenameMenu(MP_IMPORTPARTS, MF_BYCOMMAND, GetResString(iFilesToImport > 0 ? IDS_IMPORTPARTS_STOP : IDS_IMPORTPARTS), _T("FILEIMPORTPARTS"));
 				m_FileMenu.EnableMenuItem(MP_IMPORTPARTS, (thePrefs.m_bImportParts && iSelectedItems == 1 && iFilesNotDone == 1) ? MF_ENABLED : MF_GRAYED);
@@ -1131,6 +1143,8 @@ void CDownloadListCtrl::OnContextMenu(CWnd*, CPoint point)
 
 		m_FileMenu.EnableMenuItem(MP_METINFO, MF_GRAYED);
 		m_FileMenu.EnableMenuItem(MP_VIEWFILECOMMENTS, MF_GRAYED);
+		m_FileMenu.EnableMenuItem(MP_PEGASO_RATE, MF_GRAYED);
+		m_FileMenu.EnableMenuItem(MP_PEGASO_ADDWEBSRC, MF_GRAYED);
 		if (thePrefs.m_bImportParts)
 			m_FileMenu.EnableMenuItem(MP_IMPORTPARTS, MF_GRAYED);
 
@@ -1531,6 +1545,21 @@ BOOL CDownloadListCtrl::OnCommand(WPARAM wParam, LPARAM)
 				break;
 			case MP_VIEWFILECOMMENTS:
 				ShowFileDialog(IDD_COMMENTLST);
+				break;
+			case MP_PEGASO_RATE:
+				if (!file->IsWebFile()) {
+					CPegasoRateDlg dlg(file, this);
+					dlg.DoModal();
+					UpdateItem(file);
+				}
+				break;
+			case MP_PEGASO_ADDWEBSRC:
+				if (!file->IsWebFile() && file->IsPartFile()) {
+					InputBox inputbox;
+					inputbox.SetLabels(GetPegasoString(PS_SRC_ADD_WEB), GetPegasoString(PS_SRC_ADD_WEB_HINT), _T("http://"));
+					if (inputbox.DoModal() == IDOK && !inputbox.WasCancelled())
+						file->AddWebSource(inputbox.GetInput());
+				}
 				break;
 			case MP_IMPORTPARTS:
 				if (!file->m_bMD4HashsetNeeded) //log "no hashset"?
@@ -1997,6 +2026,8 @@ void CDownloadListCtrl::CreateMenus()
 
 	m_FileMenu.AppendMenu(MF_STRING, MP_METINFO, GetResString(IDS_DL_INFO), _T("FILEINFO"));
 	m_FileMenu.AppendMenu(MF_STRING, MP_VIEWFILECOMMENTS, GetResString(IDS_CMT_SHOWALL), _T("FILECOMMENTS"));
+	m_FileMenu.AppendMenu(MF_STRING, MP_PEGASO_RATE, GetPegasoString(PS_RATE_MENU), _T("FILECOMMENTS"));	// Pegaso
+	m_FileMenu.AppendMenu(MF_STRING, MP_PEGASO_ADDWEBSRC, GetPegasoString(PS_SRC_ADD_WEB), _T("WEB"));	// Pegaso
 	if (thePrefs.m_bImportParts)
 		m_FileMenu.AppendMenu(MF_STRING | MF_GRAYED, MP_IMPORTPARTS, GetResString(IDS_IMPORTPARTS), _T("FILEIMPORTPARTS"));
 	m_FileMenu.AppendMenu(MF_SEPARATOR);

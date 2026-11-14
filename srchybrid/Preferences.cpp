@@ -38,6 +38,7 @@
 #include "MuleToolbarCtrl.h"
 #include "VistaDefines.h"
 #include "cryptopp/osrng.h"
+#include "PegasoDefaults.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -603,6 +604,8 @@ void CPreferences::Init()
 		}
 		sdirfile.Close();
 	}
+	if (addresses_list.IsEmpty())	// Pegaso: "update the server list" works out of the box
+		PegasoDefaultServerMetUrls(addresses_list);
 
 	// Explicitly inform the user about errors with incoming/temp folders!
 	if (!::PathFileExists(GetMuleDirectory(EMULE_INCOMINGDIR)) && !::CreateDirectory(GetMuleDirectory(EMULE_INCOMINGDIR), 0)) {

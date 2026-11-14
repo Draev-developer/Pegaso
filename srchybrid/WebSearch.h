@@ -52,6 +52,8 @@ public:
 	explicit CWebSearchDlg(CWnd *pParent = NULL);
 	virtual ~CWebSearchDlg();
 
+	CString	m_sInitialQuery;	// if not empty, the search starts with this as soon as the window opens
+
 protected:
 	virtual BOOL OnInitDialog();
 	virtual void OnOK();		// Enter starts the search

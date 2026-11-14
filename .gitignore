@@ -16,3 +16,5 @@
 /srchybrid/lang/x64/
 /srchybrid/lang/Win32/
 /srchybrid/lang/ARM64/
+tools/webtest/__pycache__/
+tools/webtest/shot_*.png

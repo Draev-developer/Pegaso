@@ -26,6 +26,7 @@
 #include "SearchParamsWnd.h"
 #include "SearchResultsWnd.h"
 #include "StringConversion.h"
+#include "PegasoStrings.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -499,6 +500,7 @@ void CSearchParamsWnd::InitMethodsCtrl()
 	VERIFY(m_ctlMethod.AddItem(GetResString(IDS_GLOBALSEARCH), 2) == SearchTypeEd2kGlobal);
 	VERIFY(m_ctlMethod.AddItem(GetResString(IDS_KADEMLIA) + _T(' ') + GetResString(IDS_NETWORK), 3) == SearchTypeKademlia);
 	VERIFY(m_ctlMethod.AddItem(GetResString(IDS_CONTENTDB), 4) == SearchTypeContentDB);
+	VERIFY(m_ctlMethod.AddItem(GetPegasoString(PS_WS_METHOD), 4) == SearchTypePegasoWeb);	// Pegaso
 	UpdateHorzExtent(m_ctlMethod, 16); // adjust dropped width to ensure all strings are fully visible
 	m_ctlMethod.SetCurSel(iMethod != CB_ERR ? iMethod : SearchTypeAutomatic);
 }

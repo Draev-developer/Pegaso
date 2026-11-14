@@ -286,6 +286,10 @@ BOOL CWebSearchDlg::OnInitDialog()
 
 	if (CWebSearch::LoadProviders().empty())
 		SetDlgItemText(IDC_WS_STATUS, GetPegasoString(PS_WS_NO_PROVIDERS));
+	if (!m_sInitialQuery.IsEmpty()) {
+		SetDlgItemText(IDC_WS_QUERY, m_sInitialQuery);
+		PostMessage(WM_COMMAND, IDOK);
+	}
 	return TRUE;
 }
 

@@ -33,6 +33,7 @@
 #include "HttpDownloadDlg.h"
 #include "ServerWnd.h"
 #include "Log.h"
+#include "PegasoDefaults.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -114,6 +115,10 @@ bool CServerList::Init()
 
 	// insert static servers from text file
 	AddServersFromTextFile(sConfDir + _T("staticservers.dat"));
+
+	// Pegaso: a fresh installation starts with the built-in servers
+	if (list.IsEmpty() && PegasoAddDefaultServers() > 0)
+		bRes = true;
 
 	theApp.serverlist->GiveServersForTraceRoute();
 

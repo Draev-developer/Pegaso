@@ -26,6 +26,8 @@
 #include "WebDownload.h"
 #include "TorrentQueue.h"
 #include "PegasoStrings.h"
+#include "PegasoRating.h"
+#include <wininet.h>
 #include "UpDownClient.h"
 #include "UrlClient.h"
 #include "ED2KLink.h"
@@ -249,6 +251,10 @@ void CPartFile::Init()
 	m_eTorrentState = 0;
 	m_uTorrentPeers = 0;
 	m_uTorrentSeeds = 0;
+	m_uTorrentUpRate = 0;
+	m_uTorrentUploaded = 0;
+	m_iTorrentPiecesDone = -1;
+	m_bTorrentFinished = false;
 
 	m_pAICHRecoveryHashSet = new CAICHRecoveryHashSet(this);
 	m_completedsize = 0ull;
@@ -471,14 +477,28 @@ void CPartFile::UpdateFromTorrent(const STorrentStatus &st)
 		SetFileSize(uSize);
 		UpdatePartsInfo();
 	}
-	if ((uint64)m_completedsize != uDone || m_gaplist.IsEmpty() != (uDone >= uSize)) {
-		// progress is shown as one block; the real piece map stays inside libtorrent
+	if ((uint64)m_completedsize != uDone || m_gaplist.IsEmpty() != (uDone >= uSize) || m_iTorrentPiecesDone != st.piecesDone) {
+		// the progress bar shows the pieces which are there; the wanted pieces are laid out
+		// one after another over the size of the download
 		m_gaplist.RemoveAll();
-		if (uDone < uSize)
-			m_gaplist.AddTail(Gap_Struct{uDone, uSize - 1});
+		if (uDone < uSize) {
+			if (st.mapSize > 0)
+				for (const std::pair<int64_t, int64_t> &gap : st.gaps) {
+					const uint64 uStart = (uint64)((double)gap.first / (double)st.mapSize * (double)uSize);
+					const uint64 uEnd = min(uSize, (uint64)((double)gap.second / (double)st.mapSize * (double)uSize));
+					if (uEnd > uStart)
+						m_gaplist.AddTail(Gap_Struct{uStart, uEnd - 1});
+				}
+			if (m_gaplist.IsEmpty())	// pieces not known (yet): one block
+				m_gaplist.AddTail(Gap_Struct{uDone, uSize - 1});
+		}
 		m_completedsize = uDone;
 		m_uTransferred = uDone;
+		m_iTorrentPiecesDone = st.piecesDone;
 	}
+	m_uTorrentUpRate = (uint32)max(0, st.uploadRate);
+	m_uTorrentUploaded = (uint64)max((int64_t)0, st.uploaded);
+	m_bTorrentFinished = st.finished;
 	m_percentcompleted = (float)(uDone * 100.0 / uSize);
 	m_datarate = (uint32)max(0, st.downloadRate);
 	m_uTorrentPeers = (UINT)max(0, st.peers);
@@ -491,7 +511,7 @@ void CPartFile::UpdateFromTorrent(const STorrentStatus &st)
 	m_eTorrentState = st.state;
 	m_paused = (st.state == TS_PAUSED);
 	m_stopped = false;
-	status = (st.state == TS_ERROR) ? PS_ERROR : (st.state == TS_SEEDING) ? PS_COMPLETE : PS_READY;
+	status = (st.state == TS_ERROR) ? PS_ERROR : (st.state == TS_SEEDING || st.finished) ? PS_COMPLETE : PS_READY;
 	if (eOldState != m_eTorrentState)
 		NotifyStatusChange();
 	UpdateDisplayedInfo(eOldState != m_eTorrentState);
@@ -2681,6 +2701,28 @@ void CPartFile::AddSource(LPCTSTR pszURL, uint32 nIP)
 		UpdatePartsInfo();
 }
 
+// Pegaso: a web address as one more source of an ed2k download. Same path as a source
+// given in an ed2k link ("s=http://..."): the host name is resolved, then the address
+// becomes a source whose data is checked with the ed2k hashes like any other.
+void CPartFile::AddWebSource(const CString &sUrl)
+{
+	CString sAddress(sUrl);
+	sAddress.Trim();
+	TCHAR szHostName[INTERNET_MAX_HOST_NAME_LENGTH];
+	URL_COMPONENTS Url = {};
+	Url.dwStructSize = (DWORD)sizeof Url;
+	Url.lpszHostName = szHostName;
+	Url.dwHostNameLength = _countof(szHostName);
+	if (_tcsnicmp(sAddress, _T("http://"), 7) != 0 || !::InternetCrackUrl(sAddress, 0, 0, &Url) || Url.dwHostNameLength == 0) {
+		LogError(LOG_STATUSBAR, _T("Not a usable web source (http:// only): %s"), (LPCTSTR)sAddress);
+		return;
+	}
+	SUnresolvedHostname host;
+	host.strURL = sAddress;
+	host.strHostname = szHostName;
+	theApp.downloadqueue->AddToResolved(this, &host);
+}
+
 void CPartFile::UpdatePartsInfo()
 {
 	if (!IsPartFile()) {
@@ -3584,9 +3626,23 @@ CString CPartFile::getPartfileStatus() const
 		case TS_DOWNLOADING:
 			return GetResString(m_datarate > 0 ? IDS_DOWNLOADING : IDS_WAITING);
 		case TS_SEEDING:
-			return GetPegasoString(PS_TORRENT_SEEDING);
+			{
+				// what is being given back: current upload speed and the total so far
+				CString sText(GetPegasoString(PS_TORRENT_SEEDING));
+				if (m_uTorrentUpRate > 0) {
+					sText += _T(" - ");
+					sText.AppendFormat(GetPegasoString(PS_TORRENT_UPLOAD), (LPCTSTR)CastItoXBytes(m_uTorrentUpRate));
+				}
+				if (m_uTorrentUploaded > 0) {
+					sText += _T(" - ");
+					sText.AppendFormat(GetPegasoString(PS_TORRENT_SHARED), (LPCTSTR)CastItoXBytes(m_uTorrentUploaded));
+					if ((uint64)m_nFileSize > 1)
+						sText.AppendFormat(_T(" (x%.2f)"), (double)m_uTorrentUploaded / (double)(uint64)m_nFileSize);
+				}
+				return sText;
+			}
 		case TS_PAUSED:
-			return GetResString(IDS_PAUSED);
+			return GetResString(m_bTorrentFinished ? IDS_COMPLETE : IDS_PAUSED);
 		default:
 			return GetResString(IDS_ERRORLIKE);
 		}
@@ -4583,6 +4639,7 @@ void CPartFile::UpdateFileRatingCommentAvail(bool bForceUpdate)
 
 	if (bOldHasComment != m_bHasComment || uOldUserRatings != m_uUserRating || bForceUpdate)
 		UpdateDisplayedInfo(true);
+	PegasoCheckDownloadVerdicts(this);	// Pegaso: warn about files reported as fake
 }
 
 void CPartFile::UpdateDisplayedInfo(bool force)

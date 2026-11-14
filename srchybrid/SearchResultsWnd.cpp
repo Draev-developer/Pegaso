@@ -46,6 +46,7 @@
 #include "StringConversion.h"
 #include "UserMsgs.h"
 #include "Log.h"
+#include "WebSearch.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -223,6 +224,14 @@ void CSearchResultsWnd::StartSearch(SSearchParams *pParams)
 	case SearchTypeContentDB:
 		ShellOpenFile(CreateWebQuery(pParams));
 		delete pParams;
+		return;
+	case SearchTypePegasoWeb:	// Pegaso: the web search window, already searching
+		{
+			CWebSearchDlg dlg(this);
+			dlg.m_sInitialQuery = pParams->strExpression;
+			delete pParams;
+			dlg.DoModal();
+		}
 		return;
 	default:
 		ASSERT(0);

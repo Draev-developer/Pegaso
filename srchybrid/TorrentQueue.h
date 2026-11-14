@@ -2,6 +2,7 @@
 // Main thread only.
 #pragma once
 #include <map>
+#include <set>
 #include "TorrentEngine.h"
 
 class CTorrentQueue
@@ -31,6 +32,10 @@ public:
 
 	void	Process();									// called from CDownloadQueue::Process()
 	uint32	GetDatarate() const							{ return m_uDatarate; }	// download, bytes per second
+	uint32	GetUpDatarate() const						{ return m_uUpDatarate; }
+	// Seeding stops when this much has been given back, in percent of the size; 0 = never.
+	// preferences.ini: TorrentSeedRatio (default 200)
+	static UINT SeedRatioInPrefs();
 	const std::vector<STorrentStatus>& GetStatus() const { return m_status; }
 
 	void	Pause(const std::string &id)				{ m_engine.Pause(id); }
@@ -47,6 +52,8 @@ private:
 	DWORD	m_dwLastPoll;
 	DWORD	m_dwLastReport;
 	uint32	m_uDatarate;
+	uint32	m_uUpDatarate;
+	std::set<std::string> m_ratioStopped;	// stopped once for having reached the seed ratio
 	bool	m_bStartTried;
 	bool	m_bNetPaused;		// VPN protection has stopped the engine's traffic
 	CString	m_sBoundTo;			// bind address the engine was started with

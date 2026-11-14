@@ -10,6 +10,7 @@
 #include "WebDownload.h"
 #include "PartFile.h"
 #include "DownloadQueue.h"
+#include "SharedFileList.h"
 #include "emuleDlg.h"
 #include "TransferDlg.h"
 
@@ -51,9 +52,15 @@ CTorrentQueue::CTorrentQueue()
 	: m_dwLastPoll()
 	, m_dwLastReport()
 	, m_uDatarate()
+	, m_uUpDatarate()
 	, m_bStartTried()
 	, m_bNetPaused()
 {
+}
+
+UINT CTorrentQueue::SeedRatioInPrefs()
+{
+	return (UINT)max(0, (int)theApp.GetProfileInt(_T("eMule"), _T("TorrentSeedRatio"), 200));
 }
 
 bool CTorrentQueue::IsEnabledInPrefs()
@@ -249,6 +256,9 @@ void CTorrentQueue::Process()
 			for (const STorrentFile &file : m_engine.GetFiles(ev.id))
 				if (file.wanted)
 					PegasoMarkFromInternet(thePrefs.GetMuleDirectory(EMULE_INCOMINGDIR) + file.path.c_str());
+			// what landed in the incoming folder is offered on the ed2k and Kad networks as well
+			if (theApp.sharedfiles != NULL)
+				theApp.sharedfiles->Reload();
 			break;
 		case TE_REMOVED:
 			AddLogLine(false, _T("Torrent removed: %s"), ev.name.c_str());
@@ -264,9 +274,21 @@ void CTorrentQueue::Process()
 	m_status = m_engine.GetStatus();
 	SyncDownloadList();
 	uint32 uRate = 0;
-	for (const STorrentStatus &st : m_status)
+	uint32 uUpRate = 0;
+	const UINT uSeedRatio = SeedRatioInPrefs();
+	for (const STorrentStatus &st : m_status) {
 		uRate += (uint32)max(0, st.downloadRate);
+		uUpRate += (uint32)max(0, st.uploadRate);
+		// enough given back: stop seeding (once; the user may resume it)
+		if (uSeedRatio > 0 && st.state == TS_SEEDING && st.size > 0
+			&& (double)st.uploaded * 100.0 >= (double)st.size * uSeedRatio && m_ratioStopped.insert(st.id).second)
+		{
+			m_engine.Pause(st.id);
+			AddLogLine(false, _T("Torrent \"%s\": shared %u%% of its size, seeding stopped"), st.name.c_str(), uSeedRatio);
+		}
+	}
 	m_uDatarate = uRate;
+	m_uUpDatarate = uUpRate;
 	if (uRate > 0)
 		theApp.UpdateReceivedBytes(uRate);	// about one second worth of data: keeps the session statistics going
 

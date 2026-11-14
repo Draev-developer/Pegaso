@@ -317,6 +317,9 @@
     <ClCompile Include="PPgMessages.cpp" />
     <ClCompile Include="PPgNotify.cpp" />
     <ClCompile Include="NetGuard.cpp" />
+    <ClCompile Include="PegasoDefaults.cpp" />
+    <ClCompile Include="PegasoRating.cpp" />
+    <ClCompile Include="PegasoScan.cpp" />
     <ClCompile Include="PPgPegaso.cpp" />
     <ClCompile Include="PPgProxy.cpp" />
     <ClCompile Include="PegasoStrings.cpp" />
@@ -619,6 +622,9 @@
     <ClInclude Include="PPgMessages.h" />
     <ClInclude Include="PPgNotify.h" />
     <ClInclude Include="NetGuard.h" />
+    <ClInclude Include="PegasoDefaults.h" />
+    <ClInclude Include="PegasoRating.h" />
+    <ClInclude Include="PegasoScan.h" />
     <ClInclude Include="PPgPegaso.h" />
     <ClInclude Include="PPgProxy.h" />
     <ClInclude Include="PegasoStrings.h" />

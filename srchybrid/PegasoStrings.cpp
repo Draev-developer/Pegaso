@@ -86,6 +86,62 @@ namespace
 		{L"Add / update", L"A\u00f1adir / actualizar", L"Ajouter / mettre \u00e0 jour", L"Aggiungi / aggiorna", L"\u0414\u043e\u0431\u0430\u0432\u0438\u0442\u044c / \u043e\u0431\u043d\u043e\u0432\u0438\u0442\u044c", L"Adicionar / atualizar", L"Hinzuf\u00fcgen / \u00e4ndern"},
 		// PS_WS_PROV_REMOVE
 		{L"Remove", L"Quitar", L"Supprimer", L"Rimuovi", L"\u0423\u0434\u0430\u043b\u0438\u0442\u044c", L"Remover", L"Entfernen"},
+		// PS_RATE_MENU
+		{L"Rate this file...", L"Valorar este archivo...", L"\u00c9valuer ce fichier...", L"Valuta questo file...", L"\u041e\u0446\u0435\u043d\u0438\u0442\u044c \u0444\u0430\u0439\u043b...", L"Avaliar este ficheiro...", L"Datei bewerten..."},
+		// PS_RATE_TITLE
+		{L"Rate file", L"Valorar archivo", L"\u00c9valuer le fichier", L"Valuta il file", L"\u041e\u0446\u0435\u043d\u043a\u0430 \u0444\u0430\u0439\u043b\u0430", L"Avaliar ficheiro", L"Datei bewerten"},
+		// PS_RATE_OK
+		{L"Correct: it is what it says and it plays well", L"Correcto: es lo que dice y se ve bien", L"Correct : c'est bien ce qui est annonc\u00e9 et la qualit\u00e9 est bonne", L"Corretto: \u00e8 ci\u00f2 che dice e si vede bene", L"\u0412\u0441\u0451 \u0432\u0435\u0440\u043d\u043e: \u0444\u0430\u0439\u043b \u0441\u043e\u043e\u0442\u0432\u0435\u0442\u0441\u0442\u0432\u0443\u0435\u0442 \u043d\u0430\u0437\u0432\u0430\u043d\u0438\u044e, \u043a\u0430\u0447\u0435\u0441\u0442\u0432\u043e \u0445\u043e\u0440\u043e\u0448\u0435\u0435", L"Correto: \u00e9 o que diz e v\u00ea-se bem", L"Korrekt: Inhalt stimmt und die Qualit\u00e4t ist gut"},
+		// PS_RATE_BAD
+		{L"Poor quality: it looks or sounds bad", L"Mala calidad: se ve o se oye mal", L"Mauvaise qualit\u00e9 : l'image ou le son sont mauvais", L"Scarsa qualit\u00e0: si vede o si sente male", L"\u041f\u043b\u043e\u0445\u043e\u0435 \u043a\u0430\u0447\u0435\u0441\u0442\u0432\u043e \u0438\u0437\u043e\u0431\u0440\u0430\u0436\u0435\u043d\u0438\u044f \u0438\u043b\u0438 \u0437\u0432\u0443\u043a\u0430", L"M\u00e1 qualidade: v\u00ea-se ou ouve-se mal", L"Schlechte Qualit\u00e4t: Bild oder Ton sind schlecht"},
+		// PS_RATE_FAKE
+		{L"Fake: it is not what the name says", L"Falso (fake): no es lo que dice el nombre", L"Faux (fake) : ce n'est pas ce que dit le nom", L"Falso (fake): non \u00e8 ci\u00f2 che dice il nome", L"\u0424\u0435\u0439\u043a: \u0441\u043e\u0434\u0435\u0440\u0436\u0438\u043c\u043e\u0435 \u043d\u0435 \u0441\u043e\u043e\u0442\u0432\u0435\u0442\u0441\u0442\u0432\u0443\u0435\u0442 \u043d\u0430\u0437\u0432\u0430\u043d\u0438\u044e", L"Falso (fake): n\u00e3o \u00e9 o que o nome diz", L"Fake: Inhalt entspricht nicht dem Namen"},
+		// PS_RATE_MISMATCH
+		{L"It does not match its description", L"No cumple con la descripci\u00f3n", L"Ne correspond pas \u00e0 sa description", L"Non corrisponde alla descrizione", L"\u041d\u0435 \u0441\u043e\u043e\u0442\u0432\u0435\u0442\u0441\u0442\u0432\u0443\u0435\u0442 \u043e\u043f\u0438\u0441\u0430\u043d\u0438\u044e", L"N\u00e3o corresponde \u00e0 descri\u00e7\u00e3o", L"Entspricht nicht der Beschreibung"},
+		// PS_RATE_NONE
+		{L"No rating", L"Sin valoraci\u00f3n", L"Aucune \u00e9valuation", L"Nessuna valutazione", L"\u0411\u0435\u0437 \u043e\u0446\u0435\u043d\u043a\u0438", L"Sem avalia\u00e7\u00e3o", L"Keine Bewertung"},
+		// PS_RATE_WHAT
+		{L"What does not match", L"Qu\u00e9 no coincide", L"Ce qui ne correspond pas", L"Cosa non corrisponde", L"\u0427\u0442\u043e \u043d\u0435 \u0441\u043e\u043e\u0442\u0432\u0435\u0442\u0441\u0442\u0432\u0443\u0435\u0442", L"O que n\u00e3o corresponde", L"Was nicht stimmt"},
+		// PS_RATE_WHAT_LANG
+		{L"The language", L"El idioma", L"La langue", L"La lingua", L"\u042f\u0437\u044b\u043a", L"O idioma", L"Die Sprache"},
+		// PS_RATE_WHAT_CONTENT
+		{L"The content", L"El contenido", L"Le contenu", L"Il contenuto", L"\u0421\u043e\u0434\u0435\u0440\u0436\u0438\u043c\u043e\u0435", L"O conte\u00fado", L"Der Inhalt"},
+		// PS_RATE_WHAT_QUALITY
+		{L"The advertised quality", L"La calidad anunciada", L"La qualit\u00e9 annonc\u00e9e", L"La qualit\u00e0 dichiarata", L"\u0417\u0430\u044f\u0432\u043b\u0435\u043d\u043d\u043e\u0435 \u043a\u0430\u0447\u0435\u0441\u0442\u0432\u043e", L"A qualidade anunciada", L"Die angegebene Qualit\u00e4t"},
+		// PS_RATE_LANG
+		{L"Real language", L"Idioma real", L"Langue r\u00e9elle", L"Lingua reale", L"\u041d\u0430\u0441\u0442\u043e\u044f\u0449\u0438\u0439 \u044f\u0437\u044b\u043a", L"Idioma real", L"Tats\u00e4chliche Sprache"},
+		// PS_RATE_TEXT
+		{L"Comment (optional)", L"Comentario (opcional)", L"Commentaire (facultatif)", L"Commento (facoltativo)", L"\u041a\u043e\u043c\u043c\u0435\u043d\u0442\u0430\u0440\u0438\u0439 (\u043d\u0435\u043e\u0431\u044f\u0437\u0430\u0442\u0435\u043b\u044c\u043d\u043e)", L"Coment\u00e1rio (opcional)", L"Kommentar (optional)"},
+		// PS_RATE_HINT
+		{L"Your rating is shared with the other users who download this file.", L"Tu valoraci\u00f3n se comparte con los dem\u00e1s usuarios que descargan este archivo.", L"Votre \u00e9valuation est partag\u00e9e avec les autres utilisateurs qui t\u00e9l\u00e9chargent ce fichier.", L"La tua valutazione viene condivisa con gli altri utenti che scaricano questo file.", L"\u0412\u0430\u0448\u0430 \u043e\u0446\u0435\u043d\u043a\u0430 \u0431\u0443\u0434\u0435\u0442 \u0432\u0438\u0434\u043d\u0430 \u0434\u0440\u0443\u0433\u0438\u043c \u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044f\u043c, \u0437\u0430\u0433\u0440\u0443\u0436\u0430\u044e\u0449\u0438\u043c \u044d\u0442\u043e\u0442 \u0444\u0430\u0439\u043b.", L"A sua avalia\u00e7\u00e3o \u00e9 partilhada com os outros utilizadores que transferem este ficheiro.", L"Ihre Bewertung wird mit den anderen Nutzern geteilt, die diese Datei laden."},
+		// PS_RATE_OTHERS
+		{L"Other users: %s", L"Otros usuarios: %s", L"Autres utilisateurs : %s", L"Altri utenti: %s", L"\u0414\u0440\u0443\u0433\u0438\u0435 \u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u0438: %s", L"Outros utilizadores: %s", L"Andere Nutzer: %s"},
+		// PS_RATE_OTHERS_NONE
+		{L"No ratings from other users yet.", L"Todav\u00eda no hay valoraciones de otros usuarios.", L"Pas encore d'\u00e9valuations d'autres utilisateurs.", L"Ancora nessuna valutazione di altri utenti.", L"\u041e\u0446\u0435\u043d\u043e\u043a \u0434\u0440\u0443\u0433\u0438\u0445 \u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u0435\u0439 \u043f\u043e\u043a\u0430 \u043d\u0435\u0442.", L"Ainda n\u00e3o h\u00e1 avalia\u00e7\u00f5es de outros utilizadores.", L"Noch keine Bewertungen anderer Nutzer."},
+		// PS_RATE_SUM_OK
+		{L"%u correct", L"%u correcto", L"%u correct", L"%u corretto", L"%u \u0432\u0435\u0440\u043d\u043e", L"%u correto", L"%u korrekt"},
+		// PS_RATE_SUM_BAD
+		{L"%u poor quality", L"%u mala calidad", L"%u mauvaise qualit\u00e9", L"%u scarsa qualit\u00e0", L"%u \u043f\u043b\u043e\u0445\u043e\u0435 \u043a\u0430\u0447\u0435\u0441\u0442\u0432\u043e", L"%u m\u00e1 qualidade", L"%u schlechte Qualit\u00e4t"},
+		// PS_RATE_SUM_FAKE
+		{L"%u fake", L"%u falso", L"%u faux", L"%u falso", L"%u \u0444\u0435\u0439\u043a", L"%u falso", L"%u Fake"},
+		// PS_RATE_SUM_MISMATCH
+		{L"%u wrong description", L"%u no coincide", L"%u non conforme", L"%u non corrisponde", L"%u \u043d\u0435 \u0441\u043e\u043e\u0442\u0432\u0435\u0442\u0441\u0442\u0432\u0443\u0435\u0442", L"%u n\u00e3o corresponde", L"%u abweichend"},
+		// PS_RATE_WARN
+		{L"Warning: %u users report \"%s\" as fake or wrongly described", L"Aviso: %u usuarios indican que \"%s\" es falso o no cumple con su descripci\u00f3n", L"Attention : %u utilisateurs signalent \u00ab %s \u00bb comme faux ou mal d\u00e9crit", L"Attenzione: %u utenti segnalano \"%s\" come falso o descritto male", L"\u0412\u043d\u0438\u043c\u0430\u043d\u0438\u0435: %u \u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u0435\u0439 \u0441\u043e\u043e\u0431\u0449\u0430\u044e\u0442, \u0447\u0442\u043e \"%s\" - \u0444\u0435\u0439\u043a \u0438\u043b\u0438 \u043d\u0435 \u0441\u043e\u043e\u0442\u0432\u0435\u0442\u0441\u0442\u0432\u0443\u0435\u0442 \u043e\u043f\u0438\u0441\u0430\u043d\u0438\u044e", L"Aviso: %u utilizadores indicam que \"%s\" \u00e9 falso ou n\u00e3o corresponde \u00e0 descri\u00e7\u00e3o", L"Achtung: %u Nutzer melden \"%s\" als Fake oder falsch beschrieben"},
+		// PS_RATE_FLAG
+		{L"SUSPICIOUS", L"SOSPECHOSO", L"SUSPECT", L"SOSPETTO", L"\u041f\u041e\u0414\u041e\u0417\u0420\u0418\u0422\u0415\u041b\u042c\u041d\u041e", L"SUSPEITO", L"VERD\u00c4CHTIG"},
+		// PS_AV_DETECTED
+		{L"Antivirus: \"%s\" was reported as malicious", L"Antivirus: \"%s\" ha sido detectado como malicioso", L"Antivirus : \u00ab %s \u00bb a \u00e9t\u00e9 d\u00e9tect\u00e9 comme malveillant", L"Antivirus: \"%s\" \u00e8 stato rilevato come dannoso", L"\u0410\u043d\u0442\u0438\u0432\u0438\u0440\u0443\u0441: \u0444\u0430\u0439\u043b \"%s\" \u043e\u043f\u0440\u0435\u0434\u0435\u043b\u0451\u043d \u043a\u0430\u043a \u0432\u0440\u0435\u0434\u043e\u043d\u043e\u0441\u043d\u044b\u0439", L"Antiv\u00edrus: \"%s\" foi detetado como malicioso", L"Virenschutz: \"%s\" wurde als sch\u00e4dlich gemeldet"},
+		// PS_WS_METHOD
+		{L"Web (torrents)", L"Web (torrents)", L"Web (torrents)", L"Web (torrent)", L"\u0412\u0435\u0431 (\u0442\u043e\u0440\u0440\u0435\u043d\u0442\u044b)", L"Web (torrents)", L"Web (Torrents)"},
+		// PS_SRC_ADD_WEB
+		{L"Add web source...", L"A\u00f1adir fuente web...", L"Ajouter une source web...", L"Aggiungi fonte web...", L"\u0414\u043e\u0431\u0430\u0432\u0438\u0442\u044c \u0432\u0435\u0431-\u0438\u0441\u0442\u043e\u0447\u043d\u0438\u043a...", L"Adicionar fonte web...", L"Web-Quelle hinzuf\u00fcgen..."},
+		// PS_SRC_ADD_WEB_HINT
+		{L"Address (http://) where this same file can be downloaded", L"Direcci\u00f3n (http://) donde se puede descargar este mismo archivo", L"Adresse (http://) o\u00f9 ce m\u00eame fichier peut \u00eatre t\u00e9l\u00e9charg\u00e9", L"Indirizzo (http://) da cui scaricare questo stesso file", L"\u0410\u0434\u0440\u0435\u0441 (http://), \u043f\u043e \u043a\u043e\u0442\u043e\u0440\u043e\u043c\u0443 \u0434\u043e\u0441\u0442\u0443\u043f\u0435\u043d \u044d\u0442\u043e\u0442 \u0436\u0435 \u0444\u0430\u0439\u043b", L"Endere\u00e7o (http://) onde este mesmo ficheiro pode ser transferido", L"Adresse (http://), unter der dieselbe Datei geladen werden kann"},
+		// PS_TORRENT_UPLOAD
+		{L"upload %s/s", L"subida %s/s", L"envoi %s/s", L"invio %s/s", L"\u043e\u0442\u0434\u0430\u0447\u0430 %s/\u0441", L"envio %s/s", L"Upload %s/s"},
+		// PS_TORRENT_SHARED
+		{L"shared %s", L"compartido %s", L"partag\u00e9 %s", L"condiviso %s", L"\u043e\u0442\u0434\u0430\u043d\u043e %s", L"partilhado %s", L"verteilt %s"},
 	};
 }
 

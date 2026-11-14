@@ -22,6 +22,9 @@
 #include "WebDownload.h"
 #include "TorrentQueue.h"
 #include "NetGuard.h"
+#include "PegasoDefaults.h"
+#include "PegasoScan.h"
+#include "PegasoRating.h"
 #include "PartFile.h"
 #include "ed2kLink.h"
 #include "SearchFile.h"
@@ -365,6 +368,9 @@ void CDownloadQueue::Process()
 	theNetGuard.Process();		// Pegaso: VPN protection
 	theWebDownloads.Process();	// Pegaso: turn pending web addresses into downloads
 	theTorrents.Process();		// Pegaso: BitTorrent engine
+	PegasoDefaultsProcess();
+	PegasoScanProcess();
+	PegasoRatingProcess();
 	ProcessLocalRequests(); // send src requests to local server
 
 	uint32 factor;

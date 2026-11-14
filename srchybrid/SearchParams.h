@@ -12,7 +12,8 @@ enum ESearchType : uint8
 	SearchTypeEd2kServer,
 	SearchTypeEd2kGlobal,
 	SearchTypeKademlia,
-	SearchTypeContentDB
+	SearchTypeContentDB,
+	SearchTypePegasoWeb		// Pegaso: torrents, through the search providers of the user
 };
 
 

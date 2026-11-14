@@ -48,6 +48,13 @@ struct STorrentStatus
 	int		peers = 0;
 	int		seeds = 0;
 	ETorrentState state = TS_METADATA;
+	bool	finished = false;	// everything wanted is there (also true while paused)
+	int64_t	uploaded = 0;		// payload sent to others, all sessions
+	int		piecesDone = 0;
+	// Missing data as [start, end) ranges on a scale of 0..mapSize: the wanted pieces put
+	// one after another. mapSize is 0 while the pieces are not known.
+	int64_t	mapSize = 0;
+	std::vector<std::pair<int64_t, int64_t> > gaps;
 };
 
 struct STorrentFile

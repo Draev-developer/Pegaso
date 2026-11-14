@@ -52,6 +52,8 @@
 #include "MediaInfo.h"
 #include "Log.h"
 #include "KnownFileList.h"
+#include "PegasoRating.h"
+#include "PegasoStrings.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -766,6 +768,7 @@ void CSharedFilesCtrl::OnContextMenu(CWnd*, CPoint point)
 	m_SharedFilesMenu.EnableMenuItem(MP_UNSHAREFILE, bContainsUnshareableFile ? MF_ENABLED : MF_GRAYED);
 	m_SharedFilesMenu.SetDefaultItem(bSingleCompleteFileSelected ? MP_OPEN : -1);
 	m_SharedFilesMenu.EnableMenuItem(MP_CMT, (!bContainsShareableFiles && iSelectedItems > 0) ? MF_ENABLED : MF_GRAYED);
+	m_SharedFilesMenu.EnableMenuItem(MP_PEGASO_RATE, (!bContainsShareableFiles && iSelectedItems == 1) ? MF_ENABLED : MF_GRAYED);	// Pegaso
 	m_SharedFilesMenu.EnableMenuItem(MP_DETAIL, iSelectedItems > 0 ? MF_ENABLED : MF_GRAYED);
 	m_SharedFilesMenu.EnableMenuItem(thePrefs.GetShowCopyEd2kLinkCmd() ? MP_GETED2KLINK : MP_SHOWED2KLINK, (!bContainsOnlyShareableFile && iSelectedItems > 0) ? MF_ENABLED : MF_GRAYED);
 	m_SharedFilesMenu.EnableMenuItem(MP_FIND, GetItemCount() > 0 ? MF_ENABLED : MF_GRAYED);
@@ -982,6 +985,14 @@ BOOL CSharedFilesCtrl::OnCommand(WPARAM wParam, LPARAM)
 			break;
 		case MP_CMT:
 			ShowFileDialog(selectedList, IDD_COMMENT);
+			break;
+		case MP_PEGASO_RATE:	// Pegaso: verdict on the file
+			if (!selectedList.IsEmpty() && selectedList.GetHead()->IsKindOf(RUNTIME_CLASS(CKnownFile))) {
+				CKnownFile *pRated = static_cast<CKnownFile*>(selectedList.GetHead());
+				CPegasoRateDlg dlg(pRated, this);
+				dlg.DoModal();
+				UpdateFile(pRated);
+			}
 			break;
 		case MPG_ALTENTER:
 		case MP_DETAIL:
@@ -1326,6 +1337,7 @@ void CSharedFilesCtrl::CreateMenus()
 
 	m_SharedFilesMenu.AppendMenu(MF_STRING, MP_DETAIL, GetResString(IDS_SHOWDETAILS), _T("FILEINFO"));
 	m_SharedFilesMenu.AppendMenu(MF_STRING, MP_CMT, GetResString(IDS_CMT_ADD), _T("FILECOMMENTS"));
+	m_SharedFilesMenu.AppendMenu(MF_STRING, MP_PEGASO_RATE, GetPegasoString(PS_RATE_MENU), _T("FILECOMMENTS"));	// Pegaso
 	if (thePrefs.GetShowCopyEd2kLinkCmd())
 		m_SharedFilesMenu.AppendMenu(MF_STRING, MP_GETED2KLINK, GetResString(IDS_DL_LINK1), _T("ED2KLINK"));
 	else

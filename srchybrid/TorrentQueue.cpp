@@ -53,18 +53,58 @@ CTorrentQueue::CTorrentQueue()
 {
 }
 
+bool CTorrentQueue::IsEnabledInPrefs()
+{
+	return theApp.GetProfileInt(_T("eMule"), _T("TorrentEnabled"), 1) != 0;
+}
+
+UINT CTorrentQueue::PortInPrefs()
+{
+	const UINT uPort = theApp.GetProfileInt(_T("eMule"), _T("TorrentPort"), 6881);
+	return (uPort >= 1024 && uPort <= 65535) ? uPort : 6881;
+}
+
+bool CTorrentQueue::RequireEncryptionInPrefs()
+{
+	return theApp.GetProfileInt(_T("eMule"), _T("TorrentRequireEncryption"), 0) != 0;
+}
+
+void CTorrentQueue::ApplyPrefs(bool bEnabled, UINT uPort, bool bRequireEncryption)
+{
+	const bool bChanged = bEnabled != IsEnabledInPrefs() || uPort != PortInPrefs() || bRequireEncryption != RequireEncryptionInPrefs();
+	theApp.WriteProfileInt(_T("eMule"), _T("TorrentEnabled"), bEnabled ? 1 : 0);
+	theApp.WriteProfileInt(_T("eMule"), _T("TorrentPort"), (int)uPort);
+	theApp.WriteProfileInt(_T("eMule"), _T("TorrentRequireEncryption"), bRequireEncryption ? 1 : 0);
+	if (bChanged || bEnabled != m_engine.IsRunning()) {
+		Stop();
+		Start();
+	}
+}
+
+void CTorrentQueue::SetFilesWanted(const std::string &id, const std::vector<bool> &wanted)
+{
+	// 'wanted' follows the order of GetFiles()
+	const std::vector<STorrentFile> files(m_engine.GetFiles(id));
+	std::vector<std::pair<int, bool> > changes;
+	for (size_t i = 0; i < files.size() && i < wanted.size(); ++i)
+		if (files[i].wanted != wanted[i])
+			changes.push_back(std::make_pair(files[i].index, (bool)wanted[i]));
+	if (!changes.empty())
+		m_engine.SetFilesWanted(id, changes);
+}
+
 void CTorrentQueue::Start()
 {
 	m_bStartTried = true;
-	if (m_engine.IsRunning() || theApp.GetProfileInt(_T("eMule"), _T("TorrentEnabled"), 1) == 0)
+	if (m_engine.IsRunning() || !IsEnabledInPrefs())
 		return;
 
 	STorrentSettings settings;
 	settings.savePath = (LPCTSTR)thePrefs.GetMuleDirectory(EMULE_INCOMINGDIR);
 	settings.stateDir = (LPCTSTR)(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + _T("torrents\\"));
 	settings.userAgent = CStringA(PEGASO_NAME _T("/") PEGASO_VERSION_NAME);
-	settings.listenPort = (int)theApp.GetProfileInt(_T("eMule"), _T("TorrentPort"), 6881);
-	settings.requireEncryption = theApp.GetProfileInt(_T("eMule"), _T("TorrentRequireEncryption"), 0) != 0;
+	settings.listenPort = (int)PortInPrefs();
+	settings.requireEncryption = RequireEncryptionInPrefs();
 	settings.downloadLimit = LimitFromPrefs(thePrefs.GetMaxDownloadInBytesPerSec(false));
 	settings.uploadLimit = LimitFromPrefs(thePrefs.GetMaxUpload() == UNLIMITED ? UNLIMITED * 1024ull : thePrefs.GetMaxUpload() * 1024ull);
 
@@ -164,7 +204,16 @@ void CTorrentQueue::Process()
 		return;
 	m_dwLastPoll = dwNow;
 
-	m_engine.SetLimits(LimitFromPrefs(thePrefs.GetMaxDownloadInBytesPerSec(true))
+	// The download limit covers ed2k, web and torrents together: the torrents get what the
+	// others leave, but never less than a tenth.
+	int iDownLimit = LimitFromPrefs(thePrefs.GetMaxDownloadInBytesPerSec(true));
+	if (iDownLimit > 0 && theApp.downloadqueue != NULL) {
+		const uint32 uTotal = theApp.downloadqueue->GetDatarate();
+		const int iOther = (int)min((uint32)INT_MAX / 2, uTotal > m_uDatarate ? uTotal - m_uDatarate : 0);
+		const int iFloor = max(iDownLimit / 10, 1024);
+		iDownLimit = (iOther + iFloor < iDownLimit) ? iDownLimit - iOther : iFloor;
+	}
+	m_engine.SetLimits(iDownLimit
 		, LimitFromPrefs(thePrefs.GetMaxUpload() == UNLIMITED ? UNLIMITED * 1024ull : thePrefs.GetMaxUpload() * 1024ull));
 
 	std::vector<STorrentEvent> events;

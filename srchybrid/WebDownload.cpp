@@ -466,7 +466,6 @@ namespace
 
 CWebDownload::CWebDownload(const CString &sUrl)
 	: m_sUrl(sUrl)
-	, m_uMaxConnections(max(1u, min(WEB_MAX_CONNECTIONS, theApp.GetProfileInt(_T("eMule"), _T("WebMaxConnections"), WEB_DEF_CONNECTIONS))))
 	, m_dwRetryTick()
 	, m_dwRateTick()
 	, m_uRateBytes()
@@ -511,7 +510,7 @@ bool CWebDownload::StartSegment(uint64 uStart, uint64 uEnd)
 void CWebDownload::StartSegments(CPartFile *pFile)
 {
 	// With range support unknown or missing only one connection is used.
-	const UINT uMax = m_shared->rangesOk ? m_uMaxConnections : 1;
+	const UINT uMax = m_shared->rangesOk ? theWebDownloads.GetMaxConnections() : 1;
 	while (m_segments.size() < uMax) {
 		// Claimed by running connections: everything from the last drained position to the segment end.
 		// Data between snapPos and the real position may still be in the queue and thus not yet
@@ -737,6 +736,19 @@ void CWebDownloadQueue::AddUrl(const CString &sUrl, int cat)
 void CWebDownloadQueue::Clear()
 {
 	m_probes.clear();	// running workers keep their own reference
+}
+
+UINT CWebDownloadQueue::GetMaxConnections()
+{
+	if (m_uMaxConnections == 0)
+		m_uMaxConnections = max(1u, min(WEB_MAX_CONNECTIONS, theApp.GetProfileInt(_T("eMule"), _T("WebMaxConnections"), WEB_DEF_CONNECTIONS)));
+	return m_uMaxConnections;
+}
+
+void CWebDownloadQueue::SetMaxConnections(UINT uConnections)
+{
+	m_uMaxConnections = max(1u, min(WEB_MAX_CONNECTIONS, uConnections));
+	theApp.WriteProfileInt(_T("eMule"), _T("WebMaxConnections"), (int)m_uMaxConnections);
 }
 
 bool CWebDownloadQueue::LooksLikeFileUrl(const CString &sText)

@@ -11,6 +11,15 @@ public:
 
 	// preferences.ini, section [eMule]:
 	//   TorrentEnabled (1), TorrentPort (6881), TorrentRequireEncryption (0)
+	static bool IsEnabledInPrefs();
+	static UINT PortInPrefs();
+	static bool RequireEncryptionInPrefs();
+	// Stores the settings and restarts the engine if they differ from the running ones.
+	void	ApplyPrefs(bool bEnabled, UINT uPort, bool bRequireEncryption);
+
+	std::vector<STorrentFile> GetFiles(const std::string &id) { return m_engine.GetFiles(id); }
+	void	SetFilesWanted(const std::string &id, const std::vector<bool> &wanted);
+
 	void	Start();
 	void	Stop();
 	bool	IsRunning() const							{ return m_engine.IsRunning(); }

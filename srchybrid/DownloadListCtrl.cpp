@@ -18,6 +18,8 @@
 #include "emule.h"
 #include "DownloadListCtrl.h"
 #include "TorrentQueue.h"
+#include "PegasoStrings.h"
+#include "PPgPegaso.h"
 #include "updownclient.h"
 #include "MenuCmds.h"
 #include "ClientDetailDialog.h"
@@ -903,6 +905,7 @@ void CDownloadListCtrl::OnContextMenu(CWnd*, CPoint point)
 				menu.AppendMenu(MF_STRING | (bCanResume ? MF_ENABLED : MF_GRAYED), MP_RESUME, GetResString(IDS_DL_RESUME));
 				menu.AppendMenu(MF_STRING, MP_CANCEL, GetResString(IDS_MAIN_BTN_CANCEL));
 				menu.AppendMenu(MF_SEPARATOR);
+				menu.AppendMenu(MF_STRING | (GetSelectedCount() == 1 ? MF_ENABLED : MF_GRAYED), MP_TORRENT_FILES, GetPegasoString(PS_TORRENT_FILES));
 				menu.AppendMenu(MF_STRING, MP_OPENFOLDER, GetResString(IDS_OPENFOLDER));
 				menu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x, point.y, this);
 				return;
@@ -1315,6 +1318,10 @@ BOOL CDownloadListCtrl::OnCommand(WPARAM wParam, LPARAM)
 									theTorrents.Remove(pTorrent->GetTorrentId(), pTorrent->GetStatus() != PS_COMPLETE);
 							}
 					}
+					break;
+				case MP_TORRENT_FILES:
+					if (file->IsTorrent())
+						ShowTorrentFiles(file);
 					break;
 				case MP_OPENFOLDER:
 					::ShellExecute(NULL, _T("open"), thePrefs.GetMuleDirectory(EMULE_INCOMINGDIR), NULL, NULL, SW_SHOWNORMAL);
@@ -1879,6 +1886,17 @@ int CDownloadListCtrl::Compare(const CUpDownClient *client1, const CUpDownClient
 	return 0;
 }
 
+// Pegaso: the file chooser of a torrent
+void CDownloadListCtrl::ShowTorrentFiles(const CPartFile *pFile)
+{
+	if (theTorrents.GetFiles(pFile->GetTorrentId()).empty()) {
+		AfxMessageBox(GetPegasoString(PS_TORRENT_NO_METADATA), MB_ICONINFORMATION);
+		return;
+	}
+	CTorrentFilesDlg dlg(pFile->GetTorrentId(), pFile->GetFileName(), this);
+	dlg.DoModal();
+}
+
 void CDownloadListCtrl::OnNmDblClk(LPNMHDR, LRESULT *pResult)
 {
 	int iSel = GetSelectionMark();
@@ -1886,7 +1904,8 @@ void CDownloadListCtrl::OnNmDblClk(LPNMHDR, LRESULT *pResult)
 		const CtrlItem_Struct *content = reinterpret_cast<CtrlItem_Struct*>(GetItemData(iSel));
 		if (content && content->value) {
 			if (content->type == FILE_TYPE && static_cast<CPartFile*>(content->value)->IsTorrent()) {
-				*pResult = 0;	// Pegaso: no details dialog for torrents yet
+				ShowTorrentFiles(static_cast<CPartFile*>(content->value));	// Pegaso
+				*pResult = 0;
 				return;
 			}
 			if (content->type == FILE_TYPE) {

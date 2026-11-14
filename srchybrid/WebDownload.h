@@ -40,7 +40,6 @@ private:
 	CString	m_sUrl;
 	std::shared_ptr<SWebShared> m_shared;
 	std::vector<std::shared_ptr<SWebSegment> > m_segments;	// running connections
-	UINT	m_uMaxConnections;
 	DWORD	m_dwRetryTick;		// no new connections before this time
 	DWORD	m_dwRateTick;
 	uint64	m_uRateBytes;
@@ -62,6 +61,10 @@ public:
 	// second. The web downloads get what this leaves of the configured download limit.
 	void	SetOtherDatarate(uint32 uBytesPerSec)		{ m_uOtherDatarate = uBytesPerSec; }
 
+	// Connections per file, preferences.ini: WebMaxConnections
+	UINT	GetMaxConnections();
+	void	SetMaxConnections(UINT uConnections);
+
 	void	AddUrl(const CString &sUrl, int cat);
 	void	Process();		// main thread, called from CDownloadQueue::Process()
 	void	Clear();		// forget pending requests (shutdown)
@@ -69,6 +72,7 @@ public:
 private:
 	std::vector<std::shared_ptr<SWebProbe> > m_probes;
 	uint32	m_uOtherDatarate = 0;
+	UINT	m_uMaxConnections = 0;	// 0: not read from the preferences yet
 };
 
 extern CWebDownloadQueue theWebDownloads;

@@ -2383,6 +2383,22 @@
 
 // Next default values for new objects
 //
+// Pegaso
+#define IDD_PPG_PEGASO                  5001
+#define IDD_TORRENT_FILES               5002
+#define IDC_PG_BT_GROUP                 5010
+#define IDC_PG_BT_ENABLE                5011
+#define IDC_PG_BT_PORT_LBL              5012
+#define IDC_PG_BT_PORT                  5013
+#define IDC_PG_BT_ENCRYPT               5014
+#define IDC_PG_WEB_GROUP                5015
+#define IDC_PG_WEB_CONN_LBL             5016
+#define IDC_PG_WEB_CONN                 5017
+#define IDC_PG_FILES_LIST               5018
+#define IDC_PG_FILES_HINT               5019
+#define IDC_PG_FILES_ALL                5020
+#define IDC_PG_FILES_NONE               5021
+
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        1568

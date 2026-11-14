@@ -316,7 +316,9 @@
     <ClCompile Include="PPgIRC.cpp" />
     <ClCompile Include="PPgMessages.cpp" />
     <ClCompile Include="PPgNotify.cpp" />
+    <ClCompile Include="PPgPegaso.cpp" />
     <ClCompile Include="PPgProxy.cpp" />
+    <ClCompile Include="PegasoStrings.cpp" />
     <ClCompile Include="PPgScheduler.cpp" />
     <ClCompile Include="PPgSecurity.cpp" />
     <ClCompile Include="PPgServer.cpp" />
@@ -614,7 +616,9 @@
     <ClInclude Include="PPgIRC.h" />
     <ClInclude Include="PPgMessages.h" />
     <ClInclude Include="PPgNotify.h" />
+    <ClInclude Include="PPgPegaso.h" />
     <ClInclude Include="PPgProxy.h" />
+    <ClInclude Include="PegasoStrings.h" />
     <ClInclude Include="PPgScheduler.h" />
     <ClInclude Include="PPgSecurity.h" />
     <ClInclude Include="PPgServer.h" />

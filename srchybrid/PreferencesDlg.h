@@ -13,6 +13,7 @@
 #include "PPgWebServer.h"
 #include "PPgScheduler.h"
 #include "PPgProxy.h"
+#include "PPgPegaso.h"
 #include "PPgMessages.h"
 #if defined(_DEBUG) || defined(USE_DEBUG_DEVICE)
 #include "PPgDebug.h"
@@ -43,6 +44,7 @@ public:
 	CPPgWebServer	m_wndWebServer;
 	CPPgScheduler	m_wndScheduler;
 	CPPgProxy		m_wndProxy;
+	CPPgPegaso		m_wndPegaso;
 	CPPgMessages	m_wndMessages;
 #if defined(_DEBUG) || defined(USE_DEBUG_DEVICE)
 	CPPgDebug		m_wndDebug;

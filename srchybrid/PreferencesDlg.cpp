@@ -17,6 +17,7 @@
 #include "stdafx.h"
 #include "emule.h"
 #include "PreferencesDlg.h"
+#include "PegasoStrings.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -48,6 +49,7 @@ CPreferencesDlg::CPreferencesDlg()
 	m_wndSecurity.m_psp.dwFlags &= ~PSH_HASHELP;
 	m_wndScheduler.m_psp.dwFlags &= ~PSH_HASHELP;
 	m_wndProxy.m_psp.dwFlags &= ~PSH_HASHELP;
+	m_wndPegaso.m_psp.dwFlags &= ~PSH_HASHELP;
 	m_wndMessages.m_psp.dwFlags &= ~PSH_HASHELP;
 #if defined(_DEBUG) || defined(USE_DEBUG_DEVICE)
 	m_wndDebug.m_psp.dwFlags &= ~PSH_HASHELP;
@@ -57,6 +59,7 @@ CPreferencesDlg::CPreferencesDlg()
 	CTreePropSheet::SetPageIcon(&m_wndDisplay, _T("DISPLAY"));
 	CTreePropSheet::SetPageIcon(&m_wndConnection, _T("CONNECTION"));
 	CTreePropSheet::SetPageIcon(&m_wndProxy, _T("PROXY"));
+	CTreePropSheet::SetPageIcon(&m_wndPegaso, _T("TRANSFER"));
 	CTreePropSheet::SetPageIcon(&m_wndServer, _T("SERVER"));
 	CTreePropSheet::SetPageIcon(&m_wndDirectories, _T("FOLDERS"));
 	CTreePropSheet::SetPageIcon(&m_wndFiles, _T("Transfer"));
@@ -79,6 +82,7 @@ CPreferencesDlg::CPreferencesDlg()
 	AddPage(&m_wndServer);
 	AddPage(&m_wndDirectories);
 	AddPage(&m_wndFiles);
+	AddPage(&m_wndPegaso);	// Pegaso: web downloads and BitTorrent
 	AddPage(&m_wndNotify);
 	AddPage(&m_wndStats);
 	// Pegaso: no IRC and no chat, hence no option pages for them
@@ -148,19 +152,24 @@ void CPreferencesDlg::Localize()
 	m_wndWebServer.Localize();
 	m_wndScheduler.Localize();
 	m_wndProxy.Localize();
+	m_wndPegaso.Localize();
 	m_wndMessages.Localize();
 
 	if (GetPageTreeControl()) {
-		static const UINT uids[15] =
+		// Pegaso: follows the AddPage() calls - no IRC and Messages pages, 0 stands for the Pegaso page
+		static const UINT uids[14] =
 		{
 			IDS_PW_GENERAL, IDS_PW_DISPLAY, IDS_CONNECTION, IDS_PW_PROXY, IDS_PW_SERVER
-			, IDS_PW_DIR, IDS_PW_FILES, IDS_PW_EKDEV_OPTIONS, IDS_STATSSETUPINFO, IDS_IRC
-			, IDS_MESSAGESCOMMENTS, IDS_SECURITY, IDS_SCHEDULER, IDS_PW_WS, IDS_PW_TWEAK
+			, IDS_PW_DIR, IDS_PW_FILES, 0, IDS_PW_EKDEV_OPTIONS, IDS_STATSSETUPINFO
+			, IDS_SECURITY, IDS_SCHEDULER, IDS_PW_WS, IDS_PW_TWEAK
 		};
 
 		int c;
 		for (c = 0; c < (int)_countof(uids); ++c)
-			LocalizeItemText(c, uids[c]);
+			if (uids[c] != 0)
+				LocalizeItemText(c, uids[c]);
+			else
+				GetPageTreeControl()->SetItemText(GetPageTreeItem(c), GetPegasoString(PS_OPT_TITLE));
 #if defined(_DEBUG) || defined(USE_DEBUG_DEVICE)
 		GetPageTreeControl()->SetItemText(GetPageTreeItem(c), _T("Debug"));
 #endif

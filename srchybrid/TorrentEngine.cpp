@@ -12,6 +12,7 @@
 #include <chrono>
 #include <cstdio>
 #include <map>
+#include <set>
 #include <thread>
 
 #include <libtorrent/add_torrent_params.hpp>
@@ -25,6 +26,7 @@
 #include <libtorrent/settings_pack.hpp>
 #include <libtorrent/torrent_flags.hpp>
 #include <libtorrent/torrent_handle.hpp>
+#include <libtorrent/torrent_info.hpp>
 #include <libtorrent/torrent_status.hpp>
 #include <libtorrent/write_resume_data.hpp>
 
@@ -102,6 +104,37 @@ namespace
 	}
 
 	const size_t MAX_TORRENT_FILE = 64 * 1024 * 1024;
+
+	bool HasExtension(const std::string &path, const char *ext)
+	{
+		const size_t n = strlen(ext);
+		if (path.size() < n)
+			return false;
+		for (size_t i = 0; i < n; ++i)
+			if (tolower((unsigned char)path[path.size() - n + i]) != ext[i])
+				return false;
+		return true;
+	}
+
+	// Internet shortcuts packed into torrents are advertising more often than not:
+	// they are not downloaded unless the user asks for them.
+	void SkipLinkFiles(const lt::torrent_handle &h)
+	{
+		const std::shared_ptr<const lt::torrent_info> ti = h.torrent_file();
+		if (!ti)
+			return;
+		const lt::file_storage &fs = ti->layout();
+		std::vector<lt::download_priority_t> prio = h.get_file_priorities();
+		prio.resize((size_t)fs.num_files(), lt::default_priority);
+		bool changed = false;
+		for (const lt::file_index_t i : fs.file_range())
+			if (!fs.pad_file_at(i) && HasExtension(fs.file_path(i), ".url")) {
+				prio[(size_t)static_cast<int>(i)] = lt::dont_download;
+				changed = true;
+			}
+		if (changed)
+			h.prioritize_files(prio);
+	}
 	const lt::resume_data_flags_t RESUME_FLAGS = lt::torrent_handle::save_info_dict | lt::torrent_handle::only_if_modified;
 }
 
@@ -112,6 +145,7 @@ struct CTorrentEngine::Impl
 	std::chrono::steady_clock::time_point lastSave;
 	int pendingSaves = 0;	// save_resume_data requests without an answer yet
 	std::map<std::string, std::string> names;	// id -> name, also for torrents which are gone already
+	std::set<std::string> fresh;	// torrents added by the user in this session, as opposed to restored ones
 
 	// Name of a torrent; libtorrent 2.1 alerts do not carry it any more.
 	std::string NameOf(const lt::torrent_handle &h)
@@ -157,6 +191,7 @@ struct CTorrentEngine::Impl
 				error = L"this torrent is already in the list";
 				return false;
 			}
+		fresh.insert(Hex(best));
 		atp.save_path = ToUtf8(settings.savePath);
 		atp.flags |= lt::torrent_flags::auto_managed;
 		atp.flags &= ~lt::torrent_flags::paused;
@@ -198,11 +233,14 @@ struct CTorrentEngine::Impl
 				push(TE_ERROR, std::string(), p->params.name, p->error.message());
 			else {
 				push(TE_ADDED, IdOf(p->handle), NameOf(p->handle), std::string());
+				if (fresh.count(IdOf(p->handle)) != 0)
+					SkipLinkFiles(p->handle);	// a .torrent file brings its file list along
 				p->handle.save_resume_data(lt::torrent_handle::save_info_dict);	// keep it across a restart right away
 				++pendingSaves;
 			}
 		} else if (auto *p = lt::alert_cast<lt::metadata_received_alert>(a)) {
 			push(TE_METADATA, IdOf(p->handle), NameOf(p->handle), std::string());
+			SkipLinkFiles(p->handle);
 			p->handle.save_resume_data(lt::torrent_handle::save_info_dict);
 			++pendingSaves;
 		} else if (auto *p = lt::alert_cast<lt::torrent_finished_alert>(a)) {
@@ -416,6 +454,52 @@ void CTorrentEngine::SetLimits(int downloadLimit, int uploadLimit)
 		m->ApplyLimits(pack);
 		m->ses->apply_settings(pack);
 	}
+}
+
+std::vector<STorrentFile> CTorrentEngine::GetFiles(const std::string &id)
+{
+	std::vector<STorrentFile> out;
+	const lt::torrent_handle h = m->Find(id);
+	if (!h.is_valid())
+		return out;
+	const std::shared_ptr<const lt::torrent_info> ti = h.torrent_file();
+	if (!ti)
+		return out;
+	const lt::file_storage &fs = ti->layout();
+	const std::vector<lt::download_priority_t> prio = h.get_file_priorities();
+	for (const lt::file_index_t i : fs.file_range()) {
+		if (fs.pad_file_at(i))
+			continue;	// filler between files, of no interest to the user
+		STorrentFile f;
+		f.index = static_cast<int>(i);
+		f.path = FromUtf8(fs.file_path(i));
+		f.size = fs.file_size(i);
+		f.wanted = (size_t)f.index >= prio.size() || prio[(size_t)f.index] != lt::dont_download;
+		out.push_back(std::move(f));
+	}
+	return out;
+}
+
+void CTorrentEngine::SetFilesWanted(const std::string &id, const std::vector<std::pair<int, bool> > &wanted)
+{
+	const lt::torrent_handle h = m->Find(id);
+	if (!h.is_valid())
+		return;
+	const std::shared_ptr<const lt::torrent_info> ti = h.torrent_file();
+	if (!ti)
+		return;
+	std::vector<lt::download_priority_t> prio = h.get_file_priorities();
+	prio.resize((size_t)ti->layout().num_files(), lt::default_priority);
+	for (const std::pair<int, bool> &w : wanted)
+		if (w.first >= 0 && (size_t)w.first < prio.size()) {
+			if (!w.second)
+				prio[(size_t)w.first] = lt::dont_download;
+			else if (prio[(size_t)w.first] == lt::dont_download)
+				prio[(size_t)w.first] = lt::default_priority;
+		}
+	h.prioritize_files(prio);
+	h.save_resume_data(lt::torrent_handle::save_info_dict);
+	++m->pendingSaves;
 }
 
 void CTorrentEngine::Poll(std::vector<STorrentEvent> &events)

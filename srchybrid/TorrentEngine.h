@@ -11,6 +11,7 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 struct STorrentSettings
@@ -46,6 +47,14 @@ struct STorrentStatus
 	int		peers = 0;
 	int		seeds = 0;
 	ETorrentState state = TS_METADATA;
+};
+
+struct STorrentFile
+{
+	int		index = 0;			// position inside the torrent
+	std::wstring path;
+	int64_t	size = 0;
+	bool	wanted = true;
 };
 
 enum ETorrentEvent
@@ -86,6 +95,11 @@ public:
 	void	Resume(const std::string &id);
 	void	Remove(const std::string &id, bool deleteFiles);
 	void	SetLimits(int downloadLimit, int uploadLimit);	// bytes per second, 0 = unlimited
+
+	// The files of a torrent; empty while the description of a magnet link has not arrived.
+	// Link files (*.url) are deselected by default when a torrent is added.
+	std::vector<STorrentFile> GetFiles(const std::string &id);
+	void	SetFilesWanted(const std::string &id, const std::vector<std::pair<int, bool> > &wanted);
 
 	void	Poll(std::vector<STorrentEvent> &events);	// collect what happened since the last call
 	std::vector<STorrentStatus> GetStatus();

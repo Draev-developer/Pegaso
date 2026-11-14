@@ -25,6 +25,7 @@
 #include "PartFile.h"
 #include "WebDownload.h"
 #include "TorrentQueue.h"
+#include "PegasoStrings.h"
 #include "UpDownClient.h"
 #include "UrlClient.h"
 #include "ED2KLink.h"
@@ -3569,13 +3570,13 @@ CString CPartFile::getPartfileStatus() const
 	if (IsTorrent())	// Pegaso
 		switch (m_eTorrentState) {
 		case TS_METADATA:
-			return _T("Metadata");
+			return GetPegasoString(PS_TORRENT_METADATA);
 		case TS_CHECKING:
 			return GetResString(IDS_HASHING);
 		case TS_DOWNLOADING:
 			return GetResString(m_datarate > 0 ? IDS_DOWNLOADING : IDS_WAITING);
 		case TS_SEEDING:
-			return GetResString(IDS_COMPLETE);
+			return GetPegasoString(PS_TORRENT_SEEDING);
 		case TS_PAUSED:
 			return GetResString(IDS_PAUSED);
 		default:

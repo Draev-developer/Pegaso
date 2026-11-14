@@ -220,6 +220,26 @@ static bool LoadLangLib(const CString &rstrLangDir1, const CString &rstrLangDir2
 	return false;
 }
 
+// Pegaso: the available language which fits a language of the system: the same variant if
+// there is one, otherwise the same language of another country (Portuguese: Brazil has its
+// own translation, every other country gets the one of Portugal). 0 if there is none.
+static LANGID MatchSystemLanguage(LANGID lidSystem)
+{
+	LANGID lidSameLanguage = 0;
+	for (const SLanguage *pLang = s_aLanguages; pLang->lid; ++pLang) {
+		if (!pLang->bSupported)
+			continue;
+		if (pLang->lid == lidSystem)
+			return pLang->lid;
+		if (PRIMARYLANGID(pLang->lid) == PRIMARYLANGID(lidSystem)
+			&& (lidSameLanguage == 0 || pLang->lid == LANGID_PT_PT))
+		{
+			lidSameLanguage = pLang->lid;
+		}
+	}
+	return lidSameLanguage;
+}
+
 void CPreferences::SetLanguage()
 {
 	InitLanguages(GetMuleDirectory(EMULE_INSTLANGDIR), GetMuleDirectory(EMULE_ADDLANGDIR, false));
@@ -229,14 +249,19 @@ void CPreferences::SetLanguage()
 		bFoundLang = LoadLangLib(GetMuleDirectory(EMULE_INSTLANGDIR), GetMuleDirectory(EMULE_ADDLANGDIR, false), m_wLanguageID);
 
 	if (!bFoundLang) {
-		LANGID lidLocale = (LANGID)::GetThreadLocale();
-		//LANGID lidLocalePri = PRIMARYLANGID(::GetThreadLocale());
-		//LANGID lidLocaleSub = SUBLANGID(::GetThreadLocale());
-
-		bFoundLang = LoadLangLib(GetMuleDirectory(EMULE_INSTLANGDIR), GetMuleDirectory(EMULE_ADDLANGDIR, false), lidLocale);
-		if (bFoundLang)
-			m_wLanguageID = lidLocale;
-		else {
+		// Pegaso: no language chosen yet - take the one of the operating system: the display
+		// language of Windows first, then the regional format. eMule looked at the regional
+		// format only and wanted the very same variant, so e.g. Spanish (Spain, modern sort),
+		// Spanish of any other country, or German of Austria ended up in English.
+		const LANGID aSystem[] = {::GetUserDefaultUILanguage(), (LANGID)::GetThreadLocale()};
+		for (int i = 0; i < _countof(aSystem) && !bFoundLang; ++i) {
+			const LANGID lidMatch = MatchSystemLanguage(aSystem[i]);
+			if (lidMatch != 0 && LoadLangLib(GetMuleDirectory(EMULE_INSTLANGDIR), GetMuleDirectory(EMULE_ADDLANGDIR, false), lidMatch)) {
+				bFoundLang = true;
+				m_wLanguageID = lidMatch;
+			}
+		}
+		if (!bFoundLang) {
 			LoadLangLib(GetMuleDirectory(EMULE_INSTLANGDIR), GetMuleDirectory(EMULE_ADDLANGDIR, false), LANGID_EN_US);
 			m_wLanguageID = LANGID_EN_US;
 			LocMessageBox(IDS_MB_LANGUAGEINFO, MB_ICONASTERISK);

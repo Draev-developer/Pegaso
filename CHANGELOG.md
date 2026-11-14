@@ -37,6 +37,7 @@ Pegaso parte de eMule 0.72a (edición de la comunidad). El historial de eMule es
 - Página de opciones «Web y BitTorrent».
 - Buscador de torrents con proveedores Torznab configurados por el usuario.
 - Idiomas incluidos: español, inglés, francés, italiano, portugués, alemán y ruso.
+- El instalador y el programa arrancan en el idioma de Windows si está entre los incluidos.
 
 ### Técnica
 - Solo Windows 10 y 11 de 64 bits; compilación con Visual Studio 2026.

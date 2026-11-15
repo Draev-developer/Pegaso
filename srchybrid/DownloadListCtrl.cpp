@@ -20,6 +20,7 @@
 #include "TorrentQueue.h"
 #include "PegasoStrings.h"
 #include "PegasoRating.h"
+#include "PegasoTrust.h"
 #include "InputBox.h"
 #include "HybridSwarm.h"
 #include "Ini2.h"
@@ -136,33 +137,16 @@ void CDownloadListCtrl::Init()
 	InsertColumn(12,	_T(""),	LVCFMT_LEFT,	100, -1, true);					//IDS_CAT
 	InsertColumn(13,	_T(""),	LVCFMT_LEFT,	120);							//IDS_ADDEDON
 	InsertColumn(14,	_T(""),	LVCFMT_CENTER,	55);							//Pegaso: origin (E, T, W)
+	InsertColumn(15,	_T(""),	LVCFMT_LEFT,	120);							//Pegaso: trust (fake detector)
 
 	SetAllIcons();
 	Localize();
 	// Pegaso: the origin column is shown right after the name the first time (a column added
 	// later would land at the far right, behind the stored order of the others). This is done
 	// in the stored order - display position -> column - which LoadSettings() applies.
-	if (theApp.GetProfileInt(_T("ListControlSetup"), _T("PegasoOriginColumnPlaced"), 0) == 0) {
-		theApp.WriteProfileInt(_T("ListControlSetup"), _T("PegasoOriginColumnPlaced"), 1);
-		const int iCount = 15;
-		int aiOrder[iCount] = {}, aiNew[iCount];
-		bool abSeen[iCount] = {};
-		CIni ini(thePrefs.GetConfigFile(), _T("ListControlSetup"));
-		ini.SerGet(true, aiOrder, iCount, _T("DownloadListCtrlColumnOrders"));
-		int iNew = 0;
-		aiNew[iNew++] = 0;
-		aiNew[iNew++] = 14;
-		abSeen[0] = abSeen[14] = true;
-		for (int i = 1; i < iCount; ++i)	// the others keep their order; what is missing follows
-			if (aiOrder[i] > 0 && aiOrder[i] < iCount && !abSeen[aiOrder[i]]) {
-				abSeen[aiOrder[i]] = true;
-				aiNew[iNew++] = aiOrder[i];
-			}
-		for (int i = 1; i < iCount; ++i)
-			if (!abSeen[i])
-				aiNew[iNew++] = i;
-		ini.SerGet(false, aiNew, iCount, _T("DownloadListCtrlColumnOrders"));
-	}
+	PegasoPlaceColumn(_T("DownloadListCtrlColumnOrders"), _T("PegasoOriginColumnPlaced"), 16, 14, 1);
+	// the trust column (fake detector) follows it
+	PegasoPlaceColumn(_T("DownloadListCtrlColumnOrders"), _T("PegasoTrustColumnPlaced"), 16, 15, 2);
 	LoadSettings();
 	m_curTab = 0;
 
@@ -239,7 +223,7 @@ void CDownloadListCtrl::Localize()
 	{
 		IDS_DL_FILENAME, IDS_DL_SIZE, IDS_DL_TRANSF, IDS_DL_TRANSFCOMPL, IDS_DL_SPEED
 		, IDS_DL_PROGRESS, IDS_DL_SOURCES, IDS_PRIORITY, IDS_STATUS, IDS_DL_REMAINS
-		, UINT_MAX/*IDS_LASTSEENCOMPL*/, UINT_MAX/*IDS_FD_LASTCHANGE*/, IDS_CAT, IDS_ADDEDON, UINT_MAX/*origin*/, 0
+		, UINT_MAX/*IDS_LASTSEENCOMPL*/, UINT_MAX/*IDS_FD_LASTCHANGE*/, IDS_CAT, IDS_ADDEDON, UINT_MAX/*origin*/, UINT_MAX/*trust*/, 0
 	};
 	LocaliseHeader(uids);
 
@@ -250,6 +234,9 @@ void CDownloadListCtrl::Localize()
 	CString sOrigin(GetPegasoString(PS_COL_ORIGIN));	// Pegaso
 	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)sOrigin);
 	pHeaderCtrl->SetItem(14, &hdi);
+	CString sTrust(GetPegasoString(PS_TRUST_COL));
+	hdi.pszText = const_cast<LPTSTR>((LPCTSTR)sTrust);
+	pHeaderCtrl->SetItem(15, &hdi);
 
 	CString strRes(GetResString(IDS_LASTSEENCOMPL));
 	strRes.Remove(_T(':'));
@@ -489,6 +476,14 @@ void CDownloadListCtrl::DrawFileItem(CDC &dc, int nColumn, LPCRECT lpRect, UINT 
 				dc.SetBkMode(iOldBkMode);
 				dc.SetTextColor(oldclr);
 			}
+		}
+		break;
+	case 15: // Pegaso: trust
+		{
+			const COLORREF crText = dc.GetTextColor();
+			dc.SetTextColor(PegasoTrustColor(PegasoTrustOfDownload(pPartFile), crText));
+			dc.DrawText(sItem, rcDraw, MLC_DT_TEXT | uDrawTextAlignment);
+			dc.SetTextColor(crText);
 		}
 		break;
 	default:
@@ -1919,6 +1914,8 @@ int CDownloadListCtrl::Compare(const CPartFile *file1, const CPartFile *file2, L
 		return sgn(file1->GetCrFileDate() - file2->GetCrFileDate());
 	case 14: // Pegaso: origin
 		return file1->GetOriginText().Compare(file2->GetOriginText());
+	case 15: // Pegaso: trust
+		return PegasoTrustOfDownload(const_cast<CPartFile*>(file1)).score - PegasoTrustOfDownload(const_cast<CPartFile*>(file2)).score;
 	}
 	return 0;
 }
@@ -2279,6 +2276,9 @@ CString CDownloadListCtrl::GetFileItemDisplayText(const CPartFile *lpPartFile, i
 		break;
 	case 14: // Pegaso: origin (E = eMule, T = torrent, W = web)
 		sText = lpPartFile->GetOriginText();
+		break;
+	case 15: // Pegaso: trust (fake detector)
+		sText = PegasoTrustLabel(PegasoTrustOfDownload(const_cast<CPartFile*>(lpPartFile)));
 	}
 	return sText;
 }
@@ -2493,7 +2493,12 @@ void CDownloadListCtrl::OnLvnGetInfoTip(LPNMHDR pNMHDR, LRESULT *pResult)
 
 			// build info text and display it
 			if (content->type == 1) // for downloading files
+			{
 				info = static_cast<CPartFile*>(content->value)->GetInfoSummary();
+				const CString sTrustTip(PegasoTrustTip(PegasoTrustOfDownload(static_cast<CPartFile*>(content->value))));	// Pegaso
+				if (!sTrustTip.IsEmpty())
+					info += _T("\n") + sTrustTip;
+			}
 			else if (content->type == 3 || content->type == 2) { // for sources
 				const CUpDownClient *client = static_cast<CUpDownClient*>(content->value);
 				if (client->IsEd2kClient()) {

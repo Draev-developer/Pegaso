@@ -38,8 +38,8 @@ def main():
     sys.stdout.reconfigure(encoding='utf-8', errors='replace')
     ip = r.lan_ip()
     dead = 'http://%s:9/' % ip  # nothing listens there
-    files = {n: os.urandom(SIZE) for n in ('Manual de usuario.pdf', 'Curso de fotografia.mkv', 'Distribucion Linux.iso',
-                                           'Concierto benefico.mkv', 'Documental de naturaleza.mkv')}
+    files = {n: os.urandom(SIZE) for n in ('Documento.prueba.pdf', 'Video.prueba.avi', 'Imagen.prueba.iso',
+                                           'Video.prueba.2.mkv', 'Video.prueba.5.mkv')}
     names = list(files)
     ed2k = {n: 'ed2k://|file|%s|%d|%s|/' % (n.replace(' ', '%20'), SIZE, w.ed2k_hash(files[n])) for n in names}
     expected = {
@@ -47,8 +47,8 @@ def main():
         names[1]: 'E+W',                     # eMule with a web source
         names[2]: 'E+T',                     # eMule with a torrent of the same file
         names[3]: 'E+T+W',                   # all three
-        'Presentacion del proyecto.mkv': 'T',
-        'Clase grabada.mkv': 'T+W',          # torrent with a web seed
+        'Video.prueba.3.mkv': 'T',
+        'Video.prueba.4.mkv': 'T+W',          # torrent with a web seed
         'slow.bin': 'W',                     # web download
     }
 
@@ -68,11 +68,11 @@ def main():
 
         r.send_link(hwnd, ed2k[names[0]])
         # a web source goes inside the link, before its closing "|/"
-        r.send_link(hwnd, ed2k[names[1]][:-1] + 's=%s%s|/' % (dead, 'curso.mkv'))
+        r.send_link(hwnd, ed2k[names[1]][:-1] + 's=%s%s|/' % (dead, 'video.avi'))
         r.send_link(hwnd, ed2k[names[2]])
-        r.send_link(hwnd, ed2k[names[3]][:-1] + 's=%s%s|/' % (dead, 'concierto.mkv'))
-        r.send_link(hwnd, torrent('Presentacion del proyecto.mkv', os.urandom(SIZE)))
-        r.send_link(hwnd, torrent('Clase grabada.mkv', os.urandom(SIZE), dead + 'clase.mkv'))
+        r.send_link(hwnd, ed2k[names[3]][:-1] + 's=%s%s|/' % (dead, 'video2.mkv'))
+        r.send_link(hwnd, torrent('Video.prueba.3.mkv', os.urandom(SIZE)))
+        r.send_link(hwnd, torrent('Video.prueba.4.mkv', os.urandom(SIZE), dead + 'video4.mkv'))
         r.send_link(hwnd, w.BASE + '/slow.bin')
         time.sleep(6)
         for n in (names[2], names[3]):
@@ -86,7 +86,7 @@ def main():
         print('%-32s %-8s %s' % ('download', 'column', 'expected'))
         for name, want in expected.items():
             row = next((x for x in rows if x[0] == name), None)
-            got = row[-1] if row else None
+            got = row[-2] if row else None  # the last column is the trust (fake detector)
             print('%-32s %-8s %s' % (name, got, want))
             ok &= got == want
         ok &= len(rows) == len(expected)
@@ -106,7 +106,7 @@ def main():
         lv = u.find_child(hwnd, u.IDC_DOWNLOADLIST)
         mem = u.Remote(pegaso.pid)
         rows = btuitest.rows(lv, mem)
-        after = {x[0]: x[-1] for x in rows}
+        after = {x[0]: x[-2] for x in rows}
         want_after = {n: v for n, v in expected.items() if n in after or v != 'W'}  # a finished web download leaves the list
         print('after a restart: %d rows, %s' % (len(rows), after))
         ok &= len(rows) == len(after) and after == want_after and pegaso.poll() is None

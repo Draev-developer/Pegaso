@@ -329,6 +329,7 @@ void CSearchFile::UpdateFileRatingCommentAvail(bool bForceUpdate)
 {
 	bool bOldHasComment = m_bHasComment;
 	UINT uOldUserRatings = m_uUserRating;
+	m_iPegasoTrust = -1;	// Pegaso: the fake detector has to look again
 
 	m_bHasComment = false;
 	UINT uRatings = 0;

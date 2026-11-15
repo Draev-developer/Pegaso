@@ -15,6 +15,7 @@ Pegaso es un cliente P2P libre para Windows, derivado de [eMule](https://www.emu
 | **Descargas web** | HTTP y HTTPS con varias conexiones por archivo, pausa y reanudación tras cerrar el programa. |
 | **Una sola lista** | La columna **Origen** dice de dónde viene cada descarga: `E` eMule, `T` torrent, `W` web, o una mezcla como `E+T+W`. |
 | **Enjambre híbrido** | Una misma descarga puede recibir datos de fuentes eMule, de un servidor web y de un torrent a la vez. Todo lo que llega se comprueba con los hashes de eMule. |
+| **Detector de falsos** | La columna **Confianza** puntúa cada resultado de búsqueda y cada descarga: avisa de un programa con nombre de vídeo, de un archivo cuyo contenido no corresponde a su extensión, de un mismo archivo que circula con nombres que no tienen que ver o de un torrent con un programa camuflado. Solo avisa; la decisión es del usuario. |
 | **Marcador de archivos** | Quien tiene un archivo puede avisar a los demás: correcto, mala calidad, falso o no cumple la descripción (por ejemplo, el nombre dice español y está en inglés). Los archivos señalados por varios usuarios aparecen como sospechosos. |
 | **Protección VPN** | Pegaso puede atarse a un adaptador de red y cortar todo el tráfico si la VPN se cae. |
 | **Seguridad** | Cada descarga terminada se pasa al antivirus instalado (AMSI) y queda marcada como procedente de internet, igual que hacen los navegadores. |

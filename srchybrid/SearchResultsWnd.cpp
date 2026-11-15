@@ -47,6 +47,8 @@
 #include "UserMsgs.h"
 #include "Log.h"
 #include "WebSearch.h"
+#include "PegasoTrust.h"
+#include "PegasoStrings.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -535,6 +537,15 @@ void CSearchResultsWnd::DownloadSelected(bool bPaused)
 				CString strMsg;
 				strMsg.Format(GetResString(IDS_ASKDLINCOMPLETE), (LPCTSTR)sel_file->GetFileName());
 				if (AfxMessageBox(strMsg, MB_ICONQUESTION | MB_YESNO | MB_DEFBUTTON2) != IDYES)
+					continue;
+			}
+
+			// Pegaso: a result which does not look like what its name says - warn, the user decides
+			const SPegasoTrust trust(PegasoTrustOfSearchFile(parent, sel_file->GetFileName()));
+			if (trust.IsSuspicious()) {
+				CString strMsg;
+				strMsg.Format(GetPegasoString(PS_TRUST_ASK), (LPCTSTR)sel_file->GetFileName(), (LPCTSTR)PegasoTrustLabel(trust), (LPCTSTR)trust.reasons);
+				if (AfxMessageBox(strMsg, MB_ICONWARNING | MB_YESNO | MB_DEFBUTTON2) != IDYES)
 					continue;
 			}
 

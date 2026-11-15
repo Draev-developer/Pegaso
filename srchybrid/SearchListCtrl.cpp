@@ -44,6 +44,8 @@
 #include "UserMsgs.h"
 #include "SearchResultsWnd.h"
 #include "MediaInfo.h"
+#include "PegasoTrust.h"
+#include "PegasoStrings.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -271,6 +273,7 @@ void CSearchListCtrl::Init(CSearchList *in_searchlist)
 	InsertColumn(12,	_T(""),	LVCFMT_LEFT,	DFLT_FOLDER_COL_WIDTH, -1, true);	//IDS_FOLDER
 	InsertColumn(13,	_T(""),	LVCFMT_LEFT,	50);								//IDS_KNOWN
 	InsertColumn(14,	_T(""),	LVCFMT_LEFT,	DFLT_HASH_COL_WIDTH, -1, true);		//IDS_AICHHASH
+	InsertColumn(15,	_T(""),	LVCFMT_LEFT,	120);								//Pegaso: trust (fake detector)
 
 	SetAllIcons();
 
@@ -291,6 +294,8 @@ void CSearchListCtrl::Init(CSearchList *in_searchlist)
 
 	CreateMenus();
 
+	// Pegaso: the trust column is shown right after the name the first time
+	PegasoPlaceColumn(_T("SearchListCtrlColumnOrders"), _T("PegasoTrustSearchColumnPlaced"), 16, 15, 1);
 	LoadSettings();
 	SetHighlightColors();
 
@@ -317,7 +322,7 @@ void CSearchListCtrl::Localize()
 	{
 		IDS_DL_FILENAME, IDS_DL_SIZE, UINT_MAX/*IDS_SEARCHAVAIL*/, IDS_COMPLSOURCES, IDS_TYPE
 		, IDS_FILEID, IDS_ARTIST, IDS_ALBUM, IDS_TITLE, IDS_LENGTH
-		, IDS_BITRATE, IDS_CODEC, IDS_FOLDER, IDS_KNOWN, IDS_AICHHASH
+		, IDS_BITRATE, IDS_CODEC, IDS_FOLDER, IDS_KNOWN, IDS_AICHHASH, UINT_MAX/*trust*/
 		, 0
 	};
 	LocaliseHeader(uids);
@@ -329,6 +334,9 @@ void CSearchListCtrl::Localize()
 		strRes.AppendFormat(_T(" (%s)"), (LPCTSTR)GetResString(IDS_DL_SOURCES)); //modify "availability" header
 	hdi.pszText = (LPTSTR)(LPCTSTR)strRes;
 	GetHeaderCtrl()->SetItem(2, &hdi);
+	CString sTrust(GetPegasoString(PS_TRUST_COL));	// Pegaso
+	hdi.pszText = (LPTSTR)(LPCTSTR)sTrust;
+	GetHeaderCtrl()->SetItem(15, &hdi);
 
 	CreateMenus();
 }
@@ -535,6 +543,7 @@ void CSearchListCtrl::OnLvnColumnClick(LPNMHDR pNMHDR, LRESULT *pResult)
 		switch (pNMLV->iSubItem) {
 		case 2: // Availability
 		case 3: // Complete Sources
+		case 15: // Pegaso: trust, the most suspicious first
 			sortAscending = false;
 			break;
 		default:
@@ -663,6 +672,8 @@ int CSearchListCtrl::Compare(const CSearchFile *item1, const CSearchFile *item2,
 		return item1->GetKnownType() - item2->GetKnownType();
 	case 14:
 		return CompareAICHHash(item1->GetFileIdentifierC(), item2->GetFileIdentifierC(), bSortAscending);
+	case 15: // Pegaso: trust
+		return PegasoTrustOfSearchFile(item1).score - PegasoTrustOfSearchFile(item2).score;
 	}
 	return 0;
 }
@@ -1105,6 +1116,9 @@ void CSearchListCtrl::OnLvnGetInfoTip(LPNMHDR pNMHDR, LRESULT *pResult)
 					}
 				}
 #endif
+				const CString sTrustTip(PegasoTrustTip(PegasoTrustOfSearchFile(file)));	// Pegaso: why it is (not) trusted
+				if (!sTrustTip.IsEmpty())
+					strInfo = sTrustTip + (strInfo.IsEmpty() ? _T("") : _T("\n")) + strInfo;
 				strInfo.Insert(0, strHead);
 				strInfo += TOOLTIP_AUTOFORMAT_SUFFIX_CH;
 				_tcsncpy(pGetInfoTip->pszText, strInfo, pGetInfoTip->cchTextMax);
@@ -1439,6 +1453,14 @@ void CSearchListCtrl::DrawSourceParent(CDC &dc, int nColumn, LPRECT lpRect, UINT
 	default:
 		dc.DrawText(sItem, lpRect, MLC_DT_TEXT | uDrawTextAlignment);
 		break;
+	case 15: // Pegaso: trust
+		{
+			const COLORREF crText = dc.GetTextColor();
+			dc.SetTextColor(PegasoTrustColor(PegasoTrustOfSearchFile(src), crText));
+			dc.DrawText(sItem, lpRect, MLC_DT_TEXT | uDrawTextAlignment);
+			dc.SetTextColor(crText);
+		}
+		break;
 	case 3: // complete sources
 		{
 			bool bComplete = IsComplete(src, src->GetSourceCount());
@@ -1641,6 +1663,10 @@ CString CSearchListCtrl::GetItemDisplayText(const CSearchFile *src, int iSubItem
 	case 14: //AICH hash
 		if (src->GetFileIdentifierC().HasAICHHash())
 			sText = src->GetFileIdentifierC().GetAICHHash().GetString();
+		break;
+	case 15: // Pegaso: trust
+		if (src->GetListParent() == NULL)
+			sText = PegasoTrustLabel(PegasoTrustOfSearchFile(src));
 	}
 	return sText;
 }

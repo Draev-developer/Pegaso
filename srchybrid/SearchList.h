@@ -106,6 +106,8 @@ public:
 		return m_foundFilesCount.Lookup(nSearchID, returnVal) ? returnVal : 0;
 	}
 
+	const SearchList* PegasoListOf(uint32 nSearchID)	{ return GetSearchListForID(nSearchID); }	// Pegaso: for the fake detector
+
 protected:
 	SearchList* GetSearchListForID(uint32 nSearchID);
 	uint32	GetSpamFilenameRatings(const CSearchFile *pSearchFile, bool bMarkAsNoSpam);

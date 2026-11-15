@@ -67,7 +67,7 @@ public:
 	const CString& GetNameWithoutKeyword() const			{ return m_strNameWithoutKeywords; }
 	void	SetNameWithoutKeyword(const CString &strName)	{ m_strNameWithoutKeywords = strName; }
 	uint32	GetSpamRating() const							{ return m_nSpamRating; }
-	void	SetSpamRating(uint32 nRating)					{ m_nSpamRating = nRating; }
+	void	SetSpamRating(uint32 nRating)					{ m_nSpamRating = nRating; m_iPegasoTrust = -1; }
 	bool	IsConsideredSpam() const;
 
 	virtual void	UpdateFileRatingCommentAvail(bool bForceUpdate = false);
@@ -164,6 +164,10 @@ public:
 
 	EKnownType GetKnownType() const							{ return m_eKnown; }
 	void SetKnownType(EKnownType eType)						{ m_eKnown = eType; }
+
+	// Pegaso: the result of the fake detector (PegasoTrust); -1 = to be worked out
+	mutable int		m_iPegasoTrust = -1;
+	mutable CString	m_sPegasoTrustWhy;
 
 private:
 	bool	m_bMultipleAICHFound;

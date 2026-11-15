@@ -52,7 +52,8 @@
 #define PEGASO_NAME			_T("Pegaso")
 #define PEGASO_VERSION_MJR	0
 #define PEGASO_VERSION_MIN	3
-#define PEGASO_VERSION_NAME	chSTR(PEGASO_VERSION_MJR) _T(".") chSTR(PEGASO_VERSION_MIN)
+#define PEGASO_VERSION_UPD	1
+#define PEGASO_VERSION_NAME	chSTR(PEGASO_VERSION_MJR) _T(".") chSTR(PEGASO_VERSION_MIN) _T(".") chSTR(PEGASO_VERSION_UPD)
 #define PEGASO_MOD_VERSION	PEGASO_NAME _T(" ") PEGASO_VERSION_NAME
 #define PEGASO_URL			_T("https://github.com/Draev-developer/Pegaso")	// project page: source, releases, issues
 

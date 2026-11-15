@@ -203,6 +203,10 @@ void CClientUDPSocket::OnReceive(int nErrorCode)
 bool CClientUDPSocket::ProcessPacket(const BYTE *packet, UINT size, uint8 opcode, uint32 ip, uint16 port)
 {
 	switch (opcode) {
+	case OP_NATT_ENDPOINT_HINT:	// Pegaso: the buddy of a source tells where the source is
+		theStats.AddDownDataOverheadOther(size);
+		PegasoNat::OnEndpointHint(packet, size, ip, port);
+		break;
 	case OP_HOLEPUNCH:	// Pegaso: an empty datagram which opens the NAT of the sender towards us
 		PegasoNat::OnHolePunch(ip, port);
 		break;
@@ -227,6 +231,7 @@ bool CClientUDPSocket::ProcessPacket(const BYTE *packet, UINT size, uint8 opcode
 						DebugSend("OP_ReaskCallbackTCP", buddy);
 					theStats.AddUpDataOverheadFileRequest(response->size);
 					buddy->SendPacket(response);
+					PegasoNat::OnBuddyRelay(ip, port, packet, size, buddy);	// Pegaso: a hint for who asks to get through to the client we serve
 				}
 			}
 		}
@@ -386,6 +391,8 @@ bool CClientUDPSocket::ProcessPacket(const BYTE *packet, UINT size, uint8 opcode
 				uchar uchUserHash[MDX_DIGEST_SIZE];
 				data.ReadHash16(uchUserHash);
 				uint8 byConnectOptions = data.ReadUInt8();
+				if (PegasoNat::OnDirectCallback(ip, port, uchUserHash, byConnectOptions))
+					break;	// Pegaso: it cannot be called either; it calls us with QUIC
 				CUpDownClient *pRequester = theApp.clientlist->FindClientByUserHash(uchUserHash, ip, nRemoteTCPPort);
 				if (pRequester == NULL) {
 					pRequester = new CUpDownClient(NULL, nRemoteTCPPort, ip, 0, 0, true);

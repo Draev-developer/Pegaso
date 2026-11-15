@@ -78,6 +78,9 @@ python -I tools\webtest\hybridtest.py        # enjambre híbrido, tres instancia
 python -I tools\webtest\ratetest.py          # marcador de archivos, tres instancias
 python -I tools\webtest\btseedtest.py        # torrents entre dos instancias
 python -I tools\webtest\webseedtest.py       # semillas web de torrents
+python -I tools\webtest\nattest.py           # dos ID bajas presentadas por un servidor simulado
+python -I tools\webtest\kadnattest.py direct # dos ID bajas a través de Kad, vía directa por UDP
+python -I tools\webtest\kadnattest.py buddy  # ídem, a través del compañero de la fuente (unos 9 minutos)
 python -I tools\webtest\nettest.py           # Conectar, contra las redes reales
 ```
 

@@ -2,6 +2,19 @@
 
 Pegaso parte de eMule 0.72a (edición de la comunidad). El historial de eMule está en `changelog_full.txt`.
 
+## 0.3.1
+
+### Redes eMule
+- Transferencias entre dos ID bajas a través de Kad, sin depender del servidor, por dos vías:
+  - A través del compañero (*buddy*) de la fuente: Pegaso le envía una petición que cualquier compañero, también el de un eMule sin modificar, reenvía a la fuente; la fuente abre su router hacia nosotros y la conexión se hace sobre QUIC. Cuando Pegaso hace de compañero, además le dice al que pregunta dónde está el cliente al que sirve.
+  - Directa, con las fuentes que tienen el puerto UDP abierto y lo anuncian en Kad (etiqueta `nat`): se les pide por UDP que esperen una llamada QUIC.
+- Pegaso anuncia en sus registros de fuente de Kad que acepta llamadas QUIC cuando no puede recibir conexiones.
+- Con ID baja, las fuentes de Kad que tampoco pueden recibir conexiones ya no se descartan.
+
+### Limitaciones conocidas
+- Las dos vías de Kad solo sirven con fuentes que hablen este dialecto (Pegaso, eMule Qt, eMuleAI); probadas entre dos Pegaso con un nodo Kad y un compañero simulados, no con otros programas ni a través de routers reales.
+- Sigue faltando la presentación a través de servidores Lugdunum.
+
 ## 0.3
 
 ### Redes eMule

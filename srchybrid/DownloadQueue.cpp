@@ -1594,7 +1594,7 @@ void CDownloadQueue::KademliaSearchFile(uint32 nSearchID, const Kademlia::CUInt1
 	case 3:
 		//This will be a firewalled client connected to Kad only.
 		// if we are firewalled ourself, the source is useless to us
-		if (theApp.IsFirewalled() && Pegaso6::PendingKad() == 0)	// Pegaso: unless it can be called over IPv6
+		if (theApp.IsFirewalled() && Pegaso6::PendingKad() == 0 && !PegasoNat::KeepKadSource(type))	// Pegaso: unless it can be called over IPv6, or we get together through its buddy
 			break;
 
 		if (theApp.ipfilter->IsFiltered(dwBuddyIP)) {
@@ -1619,12 +1619,14 @@ void CDownloadQueue::KademliaSearchFile(uint32 nSearchID, const Kademlia::CUInt1
 			ctemp->SetBuddyID(cID);
 			ctemp->SetBuddyIP(dwBuddyIP);
 			ctemp->SetBuddyPort(dwBuddyPort);
+			if (theApp.IsFirewalled() && PegasoNat::IsOn())
+				ctemp->SetConnectIP(ED2Kip);	// Pegaso: where to punch, and where its punch will come from
 		}
 		break;
 	case 6:
 		// firewalled source which supports direct UDP callback
 		// if we are firewalled ourselves, the source is useless to us
-		if (theApp.IsFirewalled() && Pegaso6::PendingKad() == 0)
+		if (theApp.IsFirewalled() && Pegaso6::PendingKad() == 0 && !PegasoNat::KeepKadSource(type))	// Pegaso: unless it takes a QUIC call
 			break;
 
 		if ((byCryptOptions & 0x08) == 0)
@@ -1643,6 +1645,7 @@ void CDownloadQueue::KademliaSearchFile(uint32 nSearchID, const Kademlia::CUInt1
 	if (ctemp != NULL) {
 		// add encryption settings
 		ctemp->SetConnectOptions(byCryptOptions);
+		ctemp->SetPegasoNatQuic((PegasoNat::PendingKadNat() & KADNAT_QUIC) != 0);
 		if (ctemp->HasLowID() && Pegaso6::PendingKad() != 0)
 			ctemp->SetPegasoIP6(Pegaso6::PendingKad());	// Pegaso: a firewalled source which can be called over IPv6
 		CheckAndAddSource(temp, ctemp);

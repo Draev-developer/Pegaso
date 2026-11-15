@@ -1456,6 +1456,16 @@ bool CUpDownClient::TryToConnect(bool bIgnoreMaxCon, bool bNoCallbacks, CRuntime
 		}
 		return true;
 	}
+	// Pegaso: we cannot be called either (low ID to low ID): somebody introduces us - the
+	// server, the buddy of the source, or nobody if its UDP port is open - and the connection
+	// is made over QUIC through the NATs
+	if (theApp.IsFirewalled() && PegasoNat::CanReach(this)) {
+		if (GetDownloadState() == DS_CONNECTING)
+			SetDownloadState(DS_WAITCALLBACK);
+		m_eConnectingState = CCS_SERVERCALLBACK;
+		PegasoNat::Request(this);
+		return true;
+	}
 	////////////////////////////////////////////////////////////
 	// 4) Direct Callback Connections
 	if (SupportsDirectUDPCallback() && thePrefs.GetUDPPort() != 0 && GetConnectIP() != 0) {
@@ -1484,13 +1494,6 @@ bool CUpDownClient::TryToConnect(bool bIgnoreMaxCon, bool bNoCallbacks, CRuntime
 		DebugLogError(_T("LowID and US_CONNECTING (%s)"), (LPCTSTR)DbgGetClientInfo());
 	}
 
-	// Pegaso: we cannot be called either (low ID to low ID): the server introduces us and the
-	// connection is made over QUIC through the NATs
-	if (theApp.IsFirewalled() && PegasoNat::CanReach(this)) {
-		m_eConnectingState = CCS_SERVERCALLBACK;
-		PegasoNat::Request(this);
-		return true;
-	}
 	if (theApp.serverconnect->IsLocalServer(m_dwServerIP, m_nServerPort)) {
 		m_eConnectingState = CCS_SERVERCALLBACK;
 		Packet *packet = new Packet(OP_CALLBACKREQUEST, 4);

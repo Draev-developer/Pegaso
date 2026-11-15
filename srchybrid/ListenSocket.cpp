@@ -16,6 +16,7 @@
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #include "stdafx.h"
 #include "PegasoIPv6.h"
+#include "PegasoNat.h"
 #include "emule.h"
 #include "ListenSocket.h"
 #include "opcodes.h"
@@ -1404,6 +1405,10 @@ void CClientReqSocket::ProcessExtPacket(const BYTE *packet, uint32 size, UINT op
 			uint16 destport = data_in.ReadUInt16();
 			uchar reqfilehash[MDX_DIGEST_SIZE];
 			data_in.ReadHash16(reqfilehash);
+			if (isnulmd4(reqfilehash)) {	// Pegaso: not a reask - a firewalled client wants to get through to us
+				PegasoNat::OnBuddyRendezvous(destip, destport, packet + 22, size - 22);
+				return;
+			}
 			if (thePrefs.GetDebugClientTCPLevel() > 0)
 				DebugRecv("OP_ReaskCallbackTCP", client, reqfilehash);
 			CKnownFile *reqfile = theApp.sharedfiles->GetFileByID(reqfilehash);

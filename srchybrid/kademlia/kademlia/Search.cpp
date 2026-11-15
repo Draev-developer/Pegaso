@@ -31,6 +31,7 @@ their client on the eMule forum.
 
 #include "stdafx.h"
 #include "PegasoIPv6.h"
+#include "PegasoNat.h"
 #include "ClientList.h"
 #include "DownloadQueue.h"
 #include "emule.h"
@@ -705,6 +706,8 @@ void CSearch::StorePacket()
 			}
 
 			listTag.push_back(new CKadTagUInt8(TAG_ENCRYPTION, CKademlia::GetPrefs()->GetMyConnectOptions(true, true)));
+			if (PegasoNat::PublishKadNat())	// Pegaso: firewalled, but we take QUIC calls through the NAT
+				listTag.push_back(new CKadTagUInt8(KADNAT_TAG, KADNAT_QUIC));
 			{	// Pegaso: our IPv6, last, once it is known to take connections
 				in6_addr own6;
 				if (Pegaso6::PeerGateOpen() && Pegaso6::Own(own6))
@@ -950,12 +953,17 @@ void CSearch::ProcessResultFile(const CUInt128 &uAnswer, TagList &rlistInfo)
 	CUInt128 uBuddy;
 	uint8 byCryptOptions = 0; // 0 = not supported
 	uint32 uPegasoIP6 = 0;
+	uint8 uPegasoNat = 0;
 
 	for (TagList::const_iterator itInfoList = rlistInfo.begin(); itInfoList != rlistInfo.end(); ++itInfoList) {
 		const CKadTag &cTag(**itInfoList);
 		if (cTag.m_name.Compare("ip6") == 0) {	// Pegaso: the IPv6 address the source says it can be called at
 			in6_addr addr6;
 			uPegasoIP6 = cTag.IsStr() && Pegaso6::FromHex(CString(cTag.GetStr()), addr6) ? Pegaso6::PseudoOf(addr6) : 0;
+			continue;
+		}
+		if (cTag.m_name.Compare(KADNAT_TAG) == 0) {	// Pegaso: what the source does to get through NATs
+			uPegasoNat = cTag.IsInt() ? (uint8)cTag.GetInt() : 0;
 			continue;
 		}
 		if (cTag.m_name.GetLength() != 1) //all names are 1 byte strings
@@ -1006,8 +1014,10 @@ void CSearch::ProcessResultFile(const CUInt128 &uAnswer, TagList &rlistInfo)
 		++m_uAnswers;
 		theApp.emuledlg->kademliawnd->searchList->SearchRef(this);
 		Pegaso6::SetPendingKad(uPegasoIP6);
+		PegasoNat::SetPendingKadNat(uPegasoNat);
 		theApp.downloadqueue->KademliaSearchFile(m_uSearchID, &uAnswer, &uBuddy, uType, uIP, uTCPPort, uUDPPort, uBuddyIP, uBuddyPort, byCryptOptions);
 		Pegaso6::SetPendingKad(0);
+		PegasoNat::SetPendingKadNat(0);
 		break;
 	}
 }

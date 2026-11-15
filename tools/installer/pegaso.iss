@@ -10,7 +10,7 @@
 ; Downloads\Pegaso), so removing or updating the program does not touch them.
 
 #define AppName "Pegaso"
-#define AppVersion "0.3"
+#define AppVersion "0.3.1"
 #define Release "..\..\srchybrid\x64\Release"
 
 [Setup]

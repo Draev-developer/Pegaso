@@ -18,6 +18,7 @@ RELEASE = r'C:\xampp\htdocs\Emule\eMule0.72a-Sources\eMule0.72a-Sources\srchybri
 
 def deploy():
     shutil.copy2(os.path.join(RELEASE, 'Pegaso.exe'), w.EXE)
+    shutil.copytree(os.path.join(RELEASE, 'geo'), os.path.join(w.RUN, 'geo'), dirs_exist_ok=True)  # country flags
     lang = os.path.join(w.RUN, 'lang')
     os.makedirs(lang, exist_ok=True)
     for dll in glob.glob(os.path.join(RELEASE, 'lang', '*.dll')):

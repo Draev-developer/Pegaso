@@ -207,6 +207,7 @@ STRINGS = [
                     'Проверить наличие новых версий Pegaso', 'Verificar se há novas versões do Pegaso',
                     'Nach neuen Versionen von Pegaso suchen']),
     ('PS_TORRENT_SHARED',['shared %s', 'compartido %s', 'partagé %s', 'condiviso %s', 'отдано %s', 'partilhado %s', 'verteilt %s']),
+    ('PS_GEO_COUNTRY', ['Country', 'País', 'Pays', 'Paese', 'Страна', 'País', 'Land']),
     # ---- port mapping (PegasoPortMap)
     ('PS_PM_OK', ['Ports opened on the router with %s: TCP %u, UDP %u (public address %s)',
                   'Puertos abiertos en el router mediante %s: TCP %u, UDP %u (dirección pública %s)',

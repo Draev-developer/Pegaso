@@ -93,6 +93,9 @@ Name: "torrent"; Description: "{cm:AssocTorrent}"; GroupDescription: "{cm:Links}
 [Files]
 Source: "{#Release}\Pegaso.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#Release}\lang\*.dll"; DestDir: "{app}\lang"; Flags: ignoreversion
+Source: "..\..\geo\ip-country.dat"; DestDir: "{app}\geo"; Flags: ignoreversion
+Source: "..\..\geo\flags.bmp"; DestDir: "{app}\geo"; Flags: ignoreversion
+Source: "..\..\geo\README.txt"; DestDir: "{app}\geo"; Flags: ignoreversion
 Source: "..\..\license*.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "LEEME.txt"; DestDir: "{app}"; Flags: ignoreversion
 

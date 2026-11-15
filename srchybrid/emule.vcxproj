@@ -320,6 +320,7 @@
     <ClCompile Include="NetGuard.cpp" />
     <ClCompile Include="PegasoDefaults.cpp" />
     <ClCompile Include="PegasoRating.cpp" />
+    <ClCompile Include="PegasoGeo.cpp" />
     <ClCompile Include="PegasoPortMap.cpp" />
     <ClCompile Include="PegasoSources.cpp" />
     <ClCompile Include="PegasoTrust.cpp" />
@@ -629,6 +630,7 @@
     <ClInclude Include="NetGuard.h" />
     <ClInclude Include="PegasoDefaults.h" />
     <ClInclude Include="PegasoRating.h" />
+    <ClInclude Include="PegasoGeo.h" />
     <ClInclude Include="PegasoPortMap.h" />
     <ClInclude Include="PegasoSources.h" />
     <ClInclude Include="PegasoTrust.h" />
@@ -996,5 +998,7 @@
   <!-- Pegaso: the languages shipped with the application are built into the lang folder next to the executable -->
   <Target Name="PegasoLanguages" AfterTargets="Build">
     <MSBuild Projects="lang\es_ES_T.vcxproj;lang\fr_FR.vcxproj;lang\it_IT.vcxproj;lang\ru_RU.vcxproj;lang\pt_PT.vcxproj;lang\pt_BR.vcxproj;lang\de_DE.vcxproj" Properties="Configuration=Dynamic;Platform=$(Platform);SolutionDir=$(ProjectDir)lang\;OutDir=$(TargetDir)lang\" />
+    <!-- Pegaso: the country data and the flags go next to the executable -->
+    <Copy SourceFiles="$(ProjectDir)..\geo\ip-country.dat;$(ProjectDir)..\geo\flags.bmp;$(ProjectDir)..\geo\README.txt" DestinationFolder="$(TargetDir)geo" SkipUnchangedFiles="true" />
   </Target>
 </Project>

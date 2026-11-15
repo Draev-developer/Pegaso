@@ -69,6 +69,7 @@ Pegaso se distribuye bajo la **Licencia Pública General de GNU, versión 2** ([
 - Deriva de **eMule** © 2002-2026 Merkur y el equipo de eMule, a partir de la edición de la comunidad mantenida por [irwir](https://github.com/irwir/eMule).
 - BitTorrent mediante [libtorrent](https://libtorrent.org) (Arvid Norberg), con Boost y OpenSSL.
 - También usa Crypto++, mbed TLS, miniupnpc, zlib, id3lib y ResizableLib.
+- Banderas de país: datos de direcciones [IP Geolocation by DB-IP](https://db-ip.com) (base «IP to Country Lite», licencia CC BY 4.0) e iconos de banderas de Mark James (famfamfam.com, dominio público).
 
 Los cambios respecto a eMule 0.72a están en [CHANGELOG.md](CHANGELOG.md) y en el historial de este repositorio.
 

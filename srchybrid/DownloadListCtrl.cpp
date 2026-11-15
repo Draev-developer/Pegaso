@@ -21,6 +21,7 @@
 #include "PegasoStrings.h"
 #include "PegasoRating.h"
 #include "PegasoTrust.h"
+#include "PegasoGeo.h"
 #include "InputBox.h"
 #include "HybridSwarm.h"
 #include "Ini2.h"
@@ -664,6 +665,7 @@ void CDownloadListCtrl::DrawSourceItem(CDC &dc, int nColumn, LPCRECT lpRect, UIN
 			m_ImageList.Draw(&dc, iImage, point2, ILD_NORMAL | INDEXTOOVERLAYMASK(uOvlImg));
 			rcItem.left += 20;
 
+			PegasoDrawFlag(&dc, rcItem, pClient->GetConnectIP());	// Pegaso: country flag
 			dc.DrawText(sItem, &rcItem, MLC_DT_TEXT | uDrawTextAlignment);
 		}
 		break;
@@ -2515,6 +2517,9 @@ void CDownloadListCtrl::OnLvnGetInfoTip(LPNMHDR pNMHDR, LRESULT *pResult)
 							info.AppendFormat(_T(" (%s)"), (LPCTSTR)CastSecondsToHM(client->GetTimeUntilReask(content->owner) / SEC2MS(1)));
 						info += _T("\n");
 					}
+					const CString sCountry(PegasoCountryOf(client->GetConnectIP()));	// Pegaso
+					if (!sCountry.IsEmpty())
+						info.AppendFormat(_T("%s: %s\n"), GetPegasoString(PS_GEO_COUNTRY), (LPCTSTR)sCountry);
 					info.AppendFormat(GetResString(IDS_SOURCEINFO), client->GetAskedCountDown(), client->GetAvailablePartCount());
 					info += _T("\n");
 

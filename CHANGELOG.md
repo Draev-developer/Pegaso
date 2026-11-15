@@ -40,6 +40,7 @@ Pegaso parte de eMule 0.72a (edición de la comunidad). El historial de eMule es
 ### Interfaz
 - Nombre, iconos e identidad propios.
 - Columna «Origen» en la lista de descargas: E (eMule), T (torrent), W (web) o su combinación.
+- Banderas de país junto a las fuentes de las descargas, los clientes (subidas, cola, clientes conocidos) y los servidores; el país aparece también en el globo de cada fuente. La consulta se hace en el propio equipo con la base «IP to Country Lite» de DB-IP (CC BY 4.0); no se envía nada a ningún sitio.
 - Página de opciones «Web y BitTorrent».
 - Buscador de torrents con proveedores Torznab configurados por el usuario.
 - Idiomas incluidos: español, inglés, francés, italiano, portugués, alemán y ruso.

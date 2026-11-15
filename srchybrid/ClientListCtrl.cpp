@@ -29,6 +29,7 @@
 #include "ListenSocket.h"
 #include "ChatWnd.h"
 #include "Kademlia/Kademlia/Kademlia.h"
+#include "PegasoGeo.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -147,6 +148,7 @@ void CClientListCtrl::DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct)
 					const POINT point = { rcItem.left, rcItem.top + iIconY };
 					m_pImageList->Draw(dc, iImage, point, ILD_NORMAL | INDEXTOOVERLAYMASK(uOverlayImage));
 					rcItem.left += 16 + sm_iLabelOffset - sm_iSubItemInset;
+					PegasoDrawFlag(dc, rcItem, client->GetConnectIP(), 4);	// Pegaso: country flag
 				}
 			default: //any text column
 				rcItem.left += sm_iSubItemInset;

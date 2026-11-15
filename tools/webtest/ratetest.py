@@ -47,6 +47,7 @@ def make_instance(folder, port, extra=''):
     os.makedirs(os.path.join(folder, 'config'), exist_ok=True)
     os.makedirs(os.path.join(folder, 'Incoming'), exist_ok=True)
     shutil.copy2(os.path.join(btuitest.RELEASE, 'Pegaso.exe'), folder)
+    shutil.copytree(os.path.join(btuitest.RELEASE, 'geo'), os.path.join(folder, 'geo'), dirs_exist_ok=True)  # country flags
     lang = os.path.join(folder, 'lang')
     os.makedirs(lang, exist_ok=True)
     for dll in glob.glob(os.path.join(btuitest.RELEASE, 'lang', '*.dll')):

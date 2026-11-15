@@ -20,7 +20,7 @@ VERSION = '0.4'
 
 
 def token():
-    out = subprocess.run(['git', '-C', ROOT, 'credential', 'fill'], input='protocol=https\nhost=github.com\n\n',
+    out = subprocess.run(['git', '-C', ROOT, 'credential', 'fill'], input='protocol=https\nhost=github.com\nusername=%s\n\n' % REPO.split('/')[0],
                          capture_output=True, text=True, env=dict(os.environ, GIT_TERMINAL_PROMPT='0'), timeout=60).stdout
     for line in out.splitlines():
         if line.startswith('password='):

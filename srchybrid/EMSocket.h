@@ -88,6 +88,9 @@ public:
 	virtual void Dump(CDumpContext &dc) const;
 #endif
 
+	// Pegaso: sockets which run over a QUIC link send the plain way
+	void	PegasoNoOverlappedSend()					{ m_bUseOverlappedSend = false; }
+
 protected:
 	virtual int	OnLayerCallback(std::vector<t_callbackMsg> &callbacks);
 

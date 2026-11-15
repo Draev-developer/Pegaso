@@ -16,6 +16,7 @@
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #include "stdafx.h"
 #include "PegasoIPv6.h"
+#include "PegasoNat.h"
 #include <io.h>
 #include "emule.h"
 #include "UpDownClient.h"
@@ -379,6 +380,7 @@ void CDownloadQueue::Process()
 	PegasoSourcesProcess();
 	thePortMap.Process();
 	Pegaso6::Process();
+	PegasoNat::Process();
 	ProcessLocalRequests(); // send src requests to local server
 
 	uint32 factor;

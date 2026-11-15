@@ -98,6 +98,7 @@ public:
 	// Pegaso: IPv6, see PegasoIPv6.h. The stand-in of the IPv6 address the client says it can be called at (0 = none).
 	void			SetPegasoIP6(uint32 uPseudo)					{ m_uPegasoIP6 = uPseudo; }
 	uint32			GetPegasoIP6() const							{ return m_uPegasoIP6; }
+	bool			PegasoConnectOverLink(void *pQuicLink);	// Pegaso: the connection runs inside a QUIC link (PegasoNat.h)
 	uint32			PegasoDialIP6() const;	// the stand-in to call over IPv6; 0 = call the usual way
 	uint32			m_uPegasoIP6 = 0;
 	uint32			m_uPegasoModOptions = 0;	// CT_MOD_MISCOPTIONS of its hello

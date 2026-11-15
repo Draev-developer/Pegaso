@@ -119,6 +119,8 @@ if (Want 'libtorrent') {
         Run "$vcpkg\bootstrap-vcpkg.bat" @('-disableMetrics')
     }
     Run "$vcpkg\vcpkg.exe" @('install', "libtorrent[core]:$Platform-windows-static", '--clean-buildtrees-after-build')
+    # QUIC for connections between two low IDs (PegasoQuic.cpp)
+    Run "$vcpkg\vcpkg.exe" @('install', "ngtcp2[openssl]:$Platform-windows-static", '--clean-buildtrees-after-build')
 }
 
 Write-Host 'Dependencies built.'

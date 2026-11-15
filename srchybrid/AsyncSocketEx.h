@@ -208,6 +208,9 @@ public:
 	virtual void OnAccept(int nErrorCode);
 
 	//Notifies a socket that the socket connected to it has closed.
+	// Pegaso: a QUIC link this socket reads and writes instead of its own connection (PegasoQuic.h)
+	void *m_pPegasoLink = NULL;
+
 	virtual void OnClose(int nErrorCode);
 
 	//Notifies a connecting socket that the connection attempt is complete, whether successfully or in error.

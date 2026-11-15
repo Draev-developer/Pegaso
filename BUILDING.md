@@ -28,7 +28,7 @@ Descarga el código de cada una en su carpeta y compílalas todas con:
 pwsh tools\build-deps.ps1
 ```
 
-BitTorrent usa **libtorrent 2.1** con Boost y OpenSSL, que se obtienen con [vcpkg](https://github.com/microsoft/vcpkg). El proyecto lo busca dos carpetas por encima de la raíz del repositorio (`..\..\vcpkg`); se puede indicar otra ruta con la propiedad `PegasoVcpkg` de MSBuild.
+BitTorrent usa **libtorrent 2.1** con Boost y OpenSSL, y las conexiones entre ID bajas usan **ngtcp2** (QUIC); todo ello se obtiene con [vcpkg](https://github.com/microsoft/vcpkg). El proyecto lo busca dos carpetas por encima de la raíz del repositorio (`..\..\vcpkg`); se puede indicar otra ruta con la propiedad `PegasoVcpkg` de MSBuild.
 
 ```powershell
 git clone https://github.com/microsoft/vcpkg ..\..\vcpkg

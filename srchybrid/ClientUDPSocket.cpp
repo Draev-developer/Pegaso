@@ -16,6 +16,8 @@
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #include "stdafx.h"
 #include "PegasoIPv6.h"
+#include "PegasoQuic.h"
+#include "PegasoNat.h"
 #include "emule.h"
 #include "ClientUDPSocket.h"
 #include "Packets.h"
@@ -136,6 +138,9 @@ void CClientUDPSocket::OnReceive(int nErrorCode)
 						, (Kademlia::CPrefs::GetUDPVerifyKey(sockAddr.sin_addr.s_addr) == nReceiverVerifyKey)
 						, Kademlia::CKadUDPKey(nSenderVerifyKey, theApp.GetPublicIP()));
 				break;
+			case OP_UDPRESERVEDPROT2:	// Pegaso: QUIC NAT traversal frames
+				PegasoQuic::OnFrame(pBuffer, (UINT)nPacketLen, sockAddr.sin_addr.s_addr, ntohs(sockAddr.sin_port));
+				break;
 			default:
 				strError.Format(_T("Unknown protocol 0x%02x"), pBuffer[0]);
 			}
@@ -198,6 +203,9 @@ void CClientUDPSocket::OnReceive(int nErrorCode)
 bool CClientUDPSocket::ProcessPacket(const BYTE *packet, UINT size, uint8 opcode, uint32 ip, uint16 port)
 {
 	switch (opcode) {
+	case OP_HOLEPUNCH:	// Pegaso: an empty datagram which opens the NAT of the sender towards us
+		PegasoNat::OnHolePunch(ip, port);
+		break;
 	case OP_REASKCALLBACKUDP:
 		{
 			if (thePrefs.GetDebugClientUDPLevel() > 0)
@@ -451,7 +459,9 @@ SocketSentBytes CClientUDPSocket::SendControlData(uint32 maxNumberOfBytesToSend,
 			}
 			iLen = SendTo(sendbuffer, nLen, cur_packet->dwIP, cur_packet->nPort);
 			if (iLen >= 0) {
-				sentBytes += iLen; // ZZ:UploadBandWithThrottler (UDP)
+				// Pegaso: the bytes of a QUIC link were counted when the eD2K socket above it sent them
+				if (!(cur_packet->packet->prot == OP_UDPRESERVEDPROT2 && cur_packet->packet->opcode == 0x01))
+					sentBytes += iLen; // ZZ:UploadBandWithThrottler (UDP)
 				delete cur_packet->packet;
 				delete cur_packet;
 			} else {

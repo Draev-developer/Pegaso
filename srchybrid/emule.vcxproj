@@ -88,7 +88,7 @@
       <WarningLevel>EnableAllWarnings</WarningLevel>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>$(PegasoVcpkgLib)\torrent-rasterbar.lib;$(PegasoVcpkgLib)\libssl.lib;$(PegasoVcpkgLib)\libcrypto.lib;bcrypt.lib;mswsock.lib;dbghelp.lib;ADSIId.lib;crypt32.lib;delayimp.lib;iphlpapi.lib;version.lib;winmm.lib;ws2_32.lib;..\cryptopp\$(Platform)\$(Configuration)\cryptlib.lib;..\id3lib\libprj\$(Platform)\$(Configuration)\id3lib.lib;..\mbedtls\visualc\vs2017\$(Platform)\$(Configuration)\mbedtls.lib;..\miniupnpc\msvc\$(Platform)\$(Configuration)\miniupnpc.lib;..\resizablelib\$(Platform)\$(Configuration)\resizablelib.lib;..\zlib\contrib\vstudio\vc\$(Platform)\$(Configuration)\zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(PegasoVcpkgLib)\torrent-rasterbar.lib;$(PegasoVcpkgLib)\ngtcp2.lib;$(PegasoVcpkgLib)\ngtcp2_crypto_ossl.lib;$(PegasoVcpkgLib)\libssl.lib;$(PegasoVcpkgLib)\libcrypto.lib;bcrypt.lib;mswsock.lib;dbghelp.lib;ADSIId.lib;crypt32.lib;delayimp.lib;iphlpapi.lib;version.lib;winmm.lib;ws2_32.lib;..\cryptopp\$(Platform)\$(Configuration)\cryptlib.lib;..\id3lib\libprj\$(Platform)\$(Configuration)\id3lib.lib;..\mbedtls\visualc\vs2017\$(Platform)\$(Configuration)\mbedtls.lib;..\miniupnpc\msvc\$(Platform)\$(Configuration)\miniupnpc.lib;..\resizablelib\$(Platform)\$(Configuration)\resizablelib.lib;..\zlib\contrib\vstudio\vc\$(Platform)\$(Configuration)\zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions Condition="'$(Platform)'=='Win32'">/safeseh</AdditionalOptions>
       <DelayLoadDLLs>gdiplus.dll;msimg32.dll;oleacc.dll;ws2_32.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
       <IgnoreSpecificDefaultLibraries>mpr.lib;rasapi32.lib;secur32.lib;sensapi.lib;vfw32.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -116,7 +116,7 @@
       <WarningLevel>EnableAllWarnings</WarningLevel>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>$(PegasoVcpkgLib)\torrent-rasterbar.lib;$(PegasoVcpkgLib)\libssl.lib;$(PegasoVcpkgLib)\libcrypto.lib;bcrypt.lib;mswsock.lib;dbghelp.lib;ADSIId.lib;crypt32.lib;delayimp.lib;iphlpapi.lib;version.lib;winmm.lib;ws2_32.lib;..\cryptopp\$(Platform)\$(Configuration)\cryptlib.lib;..\id3lib\libprj\$(Platform)\$(Configuration)\id3lib.lib;..\mbedtls\visualc\vs2017\$(Platform)\$(Configuration)\mbedtls.lib;..\miniupnpc\msvc\$(Platform)\$(Configuration)\miniupnpc.lib;..\resizablelib\$(Platform)\$(Configuration)\resizablelib.lib;..\zlib\contrib\vstudio\vc\$(Platform)\$(Configuration)\zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(PegasoVcpkgLib)\torrent-rasterbar.lib;$(PegasoVcpkgLib)\ngtcp2.lib;$(PegasoVcpkgLib)\ngtcp2_crypto_ossl.lib;$(PegasoVcpkgLib)\libssl.lib;$(PegasoVcpkgLib)\libcrypto.lib;bcrypt.lib;mswsock.lib;dbghelp.lib;ADSIId.lib;crypt32.lib;delayimp.lib;iphlpapi.lib;version.lib;winmm.lib;ws2_32.lib;..\cryptopp\$(Platform)\$(Configuration)\cryptlib.lib;..\id3lib\libprj\$(Platform)\$(Configuration)\id3lib.lib;..\mbedtls\visualc\vs2017\$(Platform)\$(Configuration)\mbedtls.lib;..\miniupnpc\msvc\$(Platform)\$(Configuration)\miniupnpc.lib;..\resizablelib\$(Platform)\$(Configuration)\resizablelib.lib;..\zlib\contrib\vstudio\vc\$(Platform)\$(Configuration)\zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions Condition="'$(Platform)'=='Win32'">/safeseh</AdditionalOptions>
       <DelayLoadDLLs>gdiplus.dll;msimg32.dll;oleacc.dll;ws2_32.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
       <IgnoreSpecificDefaultLibraries>mpr.lib;rasapi32.lib;secur32.lib;sensapi.lib;vfw32.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -143,7 +143,7 @@
       <WarningLevel>EnableAllWarnings</WarningLevel>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>$(PegasoVcpkgLib)\torrent-rasterbar.lib;$(PegasoVcpkgLib)\libssl.lib;$(PegasoVcpkgLib)\libcrypto.lib;bcrypt.lib;mswsock.lib;dbghelp.lib;ADSIId.lib;crypt32.lib;delayimp.lib;iphlpapi.lib;version.lib;winmm.lib;ws2_32.lib;..\cryptopp\$(Platform)\Debug\cryptlib.lib;..\id3lib\libprj\$(Platform)\Debug\id3lib.lib;..\mbedtls\visualc\vs2017\$(Platform)\Debug\mbedtls.lib;..\miniupnpc\msvc\$(Platform)\Debug\miniupnpc.lib;..\resizablelib\$(Platform)\Debug\resizablelib.lib;..\zlib\contrib\vstudio\vc\$(Platform)\Debug\zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(PegasoVcpkgLib)\torrent-rasterbar.lib;$(PegasoVcpkgLib)\ngtcp2.lib;$(PegasoVcpkgLib)\ngtcp2_crypto_ossl.lib;$(PegasoVcpkgLib)\libssl.lib;$(PegasoVcpkgLib)\libcrypto.lib;bcrypt.lib;mswsock.lib;dbghelp.lib;ADSIId.lib;crypt32.lib;delayimp.lib;iphlpapi.lib;version.lib;winmm.lib;ws2_32.lib;..\cryptopp\$(Platform)\Debug\cryptlib.lib;..\id3lib\libprj\$(Platform)\Debug\id3lib.lib;..\mbedtls\visualc\vs2017\$(Platform)\Debug\mbedtls.lib;..\miniupnpc\msvc\$(Platform)\Debug\miniupnpc.lib;..\resizablelib\$(Platform)\Debug\resizablelib.lib;..\zlib\contrib\vstudio\vc\$(Platform)\Debug\zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions Condition="'$(Platform)'=='Win32'">/safeseh</AdditionalOptions>
       <DelayLoadDLLs>gdiplus.dll;msimg32.dll;oleacc.dll;ws2_32.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
       <IgnoreSpecificDefaultLibraries>mpr.lib;rasapi32.lib;secur32.lib;sensapi.lib;vfw32.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -323,7 +323,12 @@
     <ClCompile Include="PegasoApi.cpp" />
     <ClCompile Include="PegasoGeo.cpp" />
     <ClCompile Include="PegasoIPv6.cpp" />
+    <ClCompile Include="PegasoNat.cpp" />
     <ClCompile Include="PegasoPortMap.cpp" />
+    <ClCompile Include="PegasoQuic.cpp">
+      <!-- ngtcp2 and OpenSSL headers -->
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(PegasoVcpkg)\include</AdditionalIncludeDirectories>
+    </ClCompile>
     <ClCompile Include="PegasoSources.cpp" />
     <ClCompile Include="PegasoTrust.cpp" />
     <ClCompile Include="PegasoScan.cpp" />
@@ -635,7 +640,9 @@
     <ClInclude Include="PegasoApi.h" />
     <ClInclude Include="PegasoGeo.h" />
     <ClInclude Include="PegasoIPv6.h" />
+    <ClInclude Include="PegasoNat.h" />
     <ClInclude Include="PegasoPortMap.h" />
+    <ClInclude Include="PegasoQuic.h" />
     <ClInclude Include="PegasoSources.h" />
     <ClInclude Include="PegasoTrust.h" />
     <ClInclude Include="PegasoScan.h" />

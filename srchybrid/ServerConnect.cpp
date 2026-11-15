@@ -16,6 +16,7 @@
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #include "stdafx.h"
 #include "PegasoIPv6.h"
+#include "PegasoNat.h"
 #include "emule.h"
 #include "ServerConnect.h"
 #include "Opcodes.h"
@@ -177,7 +178,8 @@ void CServerConnect::ConnectionEstablished(CServerSocket *sender)
 		// with it the server may also list sources by their IPv6
 		in6_addr pegasoOwn6;
 		const bool bPegasoIP6 = Pegaso6::Own(pegasoOwn6);
-		UINT tagcount = 4 + static_cast<UINT>(bPegasoIP6);
+		const bool bPegasoNat = PegasoNat::IsOn();	// our UDP ports, for servers which introduce low ID clients
+		UINT tagcount = 4 + static_cast<UINT>(bPegasoIP6) + static_cast<UINT>(bPegasoNat);
 		data.WriteUInt32(tagcount);
 
 		CTag tagName(CT_NAME, thePrefs.GetUserNick());
@@ -199,6 +201,10 @@ void CServerConnect::ConnectionEstablished(CServerSocket *sender)
 		if (bPegasoIP6) {
 			CTag tagIP6(CT_MOD_IP_V6, pegasoOwn6.u.Byte);
 			tagIP6.WriteTagToFile(data);
+		}
+		if (bPegasoNat) {
+			CTag tagUDP(CT_EMULE_UDPPORTS_LOGIN, ((uint64)thePrefs.GetUDPPort() << 16) | thePrefs.GetUDPPort());
+			tagUDP.WriteTagToFile(data);
 		}
 
 		// eMule Version (14-Mar-2004: requested by lugdunummaster (needed for LowID clients

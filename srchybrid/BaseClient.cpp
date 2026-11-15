@@ -16,6 +16,8 @@
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #include "stdafx.h"
 #include "PegasoIPv6.h"
+#include "PegasoNat.h"
+#include "PegasoQuic.h"
 #ifdef _DEBUG
 #include "DebugHelpers.h"
 #endif
@@ -265,6 +267,7 @@ void CUpDownClient::Init()
 
 CUpDownClient::~CUpDownClient()
 {
+	PegasoNat::OnClientGone(this);
 	if (IsAICHReqPending()) {
 		m_fAICHRequested = false;
 		CAICHRecoveryHashSet::ClientAICHRequestFailed(this);
@@ -1073,7 +1076,7 @@ void CUpDownClient::SendHelloTypePacket(CSafeMemFile &data)
 	CTag tagModVersion(CT_MOD_VERSION, PEGASO_MOD_VERSION);
 	tagModVersion.WriteTagToFile(data, UTF8strRaw);
 
-	CTag tagPegasoMisc(CT_MOD_MISCOPTIONS, (uint64)MODMISC_IPV6);
+	CTag tagPegasoMisc(CT_MOD_MISCOPTIONS, (uint64)(MODMISC_IPV6 | (PegasoNat::IsOn() ? MODMISC_NATT_QUIC : 0)));
 	tagPegasoMisc.WriteTagToFile(data);
 	if (uPegasoPeerIP != 0) {
 		if (bPegasoPeer6) {
@@ -1481,6 +1484,13 @@ bool CUpDownClient::TryToConnect(bool bIgnoreMaxCon, bool bNoCallbacks, CRuntime
 		DebugLogError(_T("LowID and US_CONNECTING (%s)"), (LPCTSTR)DbgGetClientInfo());
 	}
 
+	// Pegaso: we cannot be called either (low ID to low ID): the server introduces us and the
+	// connection is made over QUIC through the NATs
+	if (theApp.IsFirewalled() && PegasoNat::CanReach(this)) {
+		m_eConnectingState = CCS_SERVERCALLBACK;
+		PegasoNat::Request(this);
+		return true;
+	}
 	if (theApp.serverconnect->IsLocalServer(m_dwServerIP, m_nServerPort)) {
 		m_eConnectingState = CCS_SERVERCALLBACK;
 		Packet *packet = new Packet(OP_CALLBACKREQUEST, 4);
@@ -1544,6 +1554,38 @@ uint32 CUpDownClient::PegasoDialIP6() const
 	const uint32 uTarget = m_uPegasoIP6 != 0 ? m_uPegasoIP6 : (Pegaso6::IsPseudo(m_nConnectIP) ? m_nConnectIP : 0);
 	in6_addr own;
 	return uTarget != 0 && Pegaso6::Enabled() && Pegaso6::Own(own) ? uTarget : 0;
+}
+
+// Pegaso: a QUIC link to this client is up; from here on as after a TCP connect.
+bool CUpDownClient::PegasoConnectOverLink(void *pQuicLink)
+{
+	PegasoQuic::CLink *pLink = (PegasoQuic::CLink*)pQuicLink;
+	if (socket != NULL)
+		return false;	// connected some other way meanwhile
+	CClientReqSocket *pSocket = new CClientReqSocket(this);
+	if (!pSocket->Create()) {
+		pSocket->Safe_Delete();
+		return false;
+	}
+	pSocket->PegasoNoOverlappedSend();
+	if (!PegasoQuic::AttachToSocket(pSocket, pLink)) {
+		pSocket->Safe_Delete();
+		return false;
+	}
+	socket = pSocket;
+	if (!HasValidHash())
+		SetUserHash(PegasoQuic::LinkPeerHash(pLink));	// it proved who it is
+	m_eConnectingState = CCS_DIRECTTCP;
+	if (HasValidHash() && SupportsCryptLayer() && thePrefs.IsCryptLayerEnabled() && (RequestsCryptLayer() || thePrefs.IsCryptLayerPreferred()))
+		socket->SetConnectionEncryption(true, GetUserHash(), false);
+	else
+		socket->SetConnectionEncryption(false, NULL, false);
+	socket->WaitForOnConnect();
+	socket->OnConnect(0);
+	SendHelloPacket();
+	if (socket != NULL)
+		socket->OnSend(0);	// as a socket tells right after it connected: ready to send
+	return true;
 }
 
 void CUpDownClient::Connect()

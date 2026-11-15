@@ -16,6 +16,7 @@
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #include "stdafx.h"
 #include "PegasoIPv6.h"
+#include "PegasoNat.h"
 #include <io.h>
 #include <sys/stat.h>
 #include <winioctl.h>
@@ -2603,7 +2604,7 @@ bool CPartFile::CanAddSource(uint32 userid, uint16 port, uint32 serverip, uint16
 		return false;
 	}
 	//This allows *.*.*.0 clients to not be removed if Ed2kID == false
-	if (::IsLowID(hybridID) && theApp.IsFirewalled()) {
+	if (::IsLowID(hybridID) && theApp.IsFirewalled() && !PegasoNat::ServerIntroduces(serverip, serverport)) {	// Pegaso: unless the server gets the two of us together
 		if (pdebug_lowiddropped)
 			++(*pdebug_lowiddropped);
 		return false;

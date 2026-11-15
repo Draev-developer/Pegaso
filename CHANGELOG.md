@@ -2,13 +2,25 @@
 
 Pegaso parte de eMule 0.72a (edición de la comunidad). El historial de eMule está en `changelog_full.txt`.
 
-## 0.3 (en desarrollo)
+## 0.3
+
+### Redes eMule
+- IPv6 para fuentes de eD2K y Kad, con la extensión que usan eMule Qt y otros clientes: Pegaso escucha en IPv6, anuncia su dirección en el saludo, en el inicio de sesión del servidor y en Kad cuando sabe que es alcanzable, y llama directamente por IPv6 a las fuentes con ID baja que la anuncian. Entiende las fuentes IPv6 que entregan los servidores y la petición de llamada por IPv6. Claves en `preferences.ini`: `IPv6Enabled`, `IPv6Address`, `IPv6AssumeReachable`.
+- Transferencias entre dos ID bajas: el servidor presenta a los dos clientes (protocolo de ed2k-server 0.9.84 o posterior), ambos abren sus routers con datagramas UDP y la conexión eD2K viaja dentro de un enlace QUIC, con el dialecto de eMuleAI, aMule y eMule Qt. Clave `NatTraversal` en `preferences.ini`.
+- IPv6 queda fuera mientras Pegaso está atado a un adaptador (VPN) o usa un proxy; los enlaces QUIC, solo con proxy (con VPN salen por el adaptador atado, como el resto del tráfico UDP).
 
 ### Interfaz
 - API local para otros programas del equipo: REST y MCP (para asistentes de IA). Desactivada de serie; se activa en Herramientas → «API local (REST y MCP)…». Solo escucha en 127.0.0.1, pide una clave secreta y rechaza las peticiones que vienen de páginas web. Permite ver y manejar descargas, buscar en eD2K y Kad y conectar o desconectar. Descrita en `docs/api.md`.
 
 ### Técnica
 - El instalador admite otra carpeta de salida (`ISCC /DOutDir=…`).
+- Dependencia nueva: ngtcp2 (QUIC), a través de vcpkg.
+
+### Limitaciones conocidas
+- La presentación entre dos ID bajas solo funciona con servidores que hablan el protocolo de ed2k-server; faltan la vía de Kad y la de los servidores Lugdunum.
+- Los datagramas QUIC se ofuscan solo cuando se conoce la IP pública propia al crear el enlace; si no, van sin ofuscar.
+- De la extensión IPv6 faltan el intercambio de fuentes ampliado, las fuentes IPv6 en enlaces ed2k y UDP sobre IPv6.
+- El filtro de IP no cubre direcciones IPv6.
 
 ## 0.2
 

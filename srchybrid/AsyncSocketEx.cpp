@@ -63,6 +63,9 @@ to tim.kosse@filezilla-project.org
 
 #include "stdafx.h"
 #include "PegasoIPv6.h"
+#include "PegasoQuic.h"
+
+namespace PegasoQuic { void DetachFromSocket(CAsyncSocketEx *pSocket); }
 #include "AsyncSocketEx.h"
 
 #include "AsyncSocketExLayer.h"
@@ -794,6 +797,8 @@ void CAsyncSocketEx::Close()
 #ifndef NOSOCKETSTATES
 	m_nPendingEvents = 0;
 #endif //NOSOCKETSTATES
+	if (m_pPegasoLink != NULL)
+		PegasoQuic::DetachFromSocket(this);	// Pegaso: the QUIC link goes with the socket
 	if (m_pFirstLayer)
 		m_pFirstLayer->Close();
 	if (m_SocketData.hSocket != INVALID_SOCKET) {
@@ -865,6 +870,14 @@ void CAsyncSocketEx::FreeAsyncSocketExInstance()
 
 int CAsyncSocketEx::Receive(void *lpBuf, int nBufLen, int nFlags /*=0*/)
 {
+	if (m_pPegasoLink != NULL) {	// Pegaso: the bytes come from a QUIC link
+		const int iRead = PegasoQuic::LinkReceive((PegasoQuic::CLink*)m_pPegasoLink, lpBuf, nBufLen);
+		if (iRead < 0) {
+			WSASetLastError(WSAEWOULDBLOCK);
+			return SOCKET_ERROR;
+		}
+		return iRead;
+	}
 	if (m_pFirstLayer)
 		return m_pFirstLayer->Receive(lpBuf, nBufLen, nFlags);
 	return recv(m_SocketData.hSocket, (LPSTR)lpBuf, nBufLen, nFlags);
@@ -872,6 +885,14 @@ int CAsyncSocketEx::Receive(void *lpBuf, int nBufLen, int nFlags /*=0*/)
 
 int CAsyncSocketEx::Send(const void *lpBuf, int nBufLen, int nFlags /*=0*/)
 {
+	if (m_pPegasoLink != NULL) {	// Pegaso: the bytes go into a QUIC link
+		const int iSent = PegasoQuic::LinkSend((PegasoQuic::CLink*)m_pPegasoLink, lpBuf, nBufLen);
+		if (iSent < 0) {
+			WSASetLastError(WSAEWOULDBLOCK);
+			return SOCKET_ERROR;
+		}
+		return iSent;
+	}
 	if (m_pFirstLayer)
 		return m_pFirstLayer->Send(lpBuf, nBufLen, nFlags);
 	return send(m_SocketData.hSocket, (LPSTR)lpBuf, nBufLen, nFlags);
@@ -1010,6 +1031,14 @@ BOOL CAsyncSocketEx::GetPeerName(LPSOCKADDR lpSockAddr, int *lpSockAddrLen)
 {
 	if (m_pFirstLayer)
 		return m_pFirstLayer->GetPeerName(lpSockAddr, lpSockAddrLen);
+	if (m_pPegasoLink != NULL && lpSockAddrLen != NULL && *lpSockAddrLen >= (int)sizeof(SOCKADDR_IN)) {	// Pegaso: the peer of the QUIC link
+		SOCKADDR_IN *pOut = (SOCKADDR_IN*)lpSockAddr;
+		memset(pOut, 0, sizeof *pOut);
+		pOut->sin_family = AF_INET;
+		pOut->sin_port = htons(PegasoQuic::LinkPort((PegasoQuic::CLink*)m_pPegasoLink));
+		pOut->sin_addr.s_addr = PegasoQuic::LinkIP((PegasoQuic::CLink*)m_pPegasoLink);
+		return TRUE;
+	}
 	// Pegaso: eMule asks with room for an IPv4 address only. For a connection over IPv6 it gets
 	// the stand-in of the peer's address (see PegasoIPv6.h), which the rest of the code can keep.
 	if (m_SocketData.nFamily == AF_INET6 && lpSockAddrLen != NULL && *lpSockAddrLen == (int)sizeof(SOCKADDR_IN)) {

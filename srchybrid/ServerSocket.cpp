@@ -16,6 +16,7 @@
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #include "stdafx.h"
 #include "PegasoIPv6.h"
+#include "PegasoNat.h"
 #include "emule.h"
 #include "ServerSocket.h"
 #include "SearchList.h"
@@ -265,6 +266,7 @@ bool CServerSocket::ProcessPacket(const BYTE *packet, uint32 size, uint8 opcode)
 						uFlags = 0;
 					else {
 						uFlags = PeekUInt32(packet + sizeof(LoginAnswer_Struct));
+						PegasoNat::OnServerFlags(uFlags);	// Pegaso: does it introduce low ID clients to each other?
 						if (thePrefs.GetDebugServerTCPLevel() > 0) {
 							CString strInfo;
 							strInfo.Format(_T("  TCP Flags=0x%08x"), uFlags);
@@ -512,6 +514,10 @@ bool CServerSocket::ProcessPacket(const BYTE *packet, uint32 size, uint8 opcode)
 					DebugLogError((LPCTSTR)GetResString(IDS_ERR_BADSERVERLISTRECEIVED));
 				ex->Delete();
 			}
+			break;
+		case OP_NAT_ENDPOINT:	// Pegaso: low ID to low ID rendezvous
+		case OP_NAT_FAILED:
+			PegasoNat::OnServerPacket(opcode, packet, size);
 			break;
 		case OP_CALLBACKREQUESTED_IPV6:	// Pegaso: a client which cannot be called asks us to call its IPv6
 			if (size >= 18) {

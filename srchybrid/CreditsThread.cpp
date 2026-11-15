@@ -477,6 +477,8 @@ void CCreditsThread::InitText()
 	m_arCredits.Add(_T("03:00:eMule"));
 	sTmp.Format(_T("02:01:Version %s"), PEGASO_VERSION_NAME);
 	m_arCredits.Add(sTmp);
+	m_arCredits.Add(_T("S:10"));
+	m_arCredits.Add(_T("01:06:") PEGASO_CREATED_BY);	// Pegaso
 	//add the rest of the credits
 	for (LPCTSTR const *p = lines; *p; ++p)
 		m_arCredits.Add(*p);

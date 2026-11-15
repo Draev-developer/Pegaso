@@ -19,7 +19,7 @@ Pegaso es un cliente P2P libre para Windows, derivado de [eMule](https://www.emu
 | **Marcador de archivos** | Quien tiene un archivo puede avisar a los demás: correcto, mala calidad, falso o no cumple la descripción (por ejemplo, el nombre dice español y está en inglés). Los archivos señalados por varios usuarios aparecen como sospechosos. |
 | **Protección VPN** | Pegaso puede atarse a un adaptador de red y cortar todo el tráfico si la VPN se cae. |
 | **Seguridad** | Cada descarga terminada se pasa al antivirus instalado (AMSI) y queda marcada como procedente de internet, igual que hacen los navegadores. |
-| **Buscador de torrents** | Consulta los proveedores Torznab que configure el usuario (por ejemplo, una instalación propia de Jackett o Prowlarr). Pegaso no trae ninguno. |
+| **Búsqueda en tus webs** | Guarda en una libreta las webs en las que quieres buscar: una página de búsqueda (con `%s` donde van las palabras) o una API Torznab como la de Jackett o Prowlarr. Pegaso lista los enlaces de descarga que devuelven. No trae ninguna web. |
 | **IPv6 e ID bajas** | Llama directamente por IPv6 a quien tiene ID baja pero dirección IPv6 pública, y conecta a dos clientes con ID baja a través de sus routers (QUIC) cuando el servidor sabe presentarlos. Compatible con eMule Qt, eMuleAI y aMule. |
 | **API local** | REST y MCP para scripts y asistentes de IA del mismo equipo: descargas, búsquedas y conexión. Desactivada de serie, con clave secreta y solo en 127.0.0.1. Ver [docs/api.md](docs/api.md). |
 | **Idiomas** | Español, inglés, francés, italiano, portugués, alemán y ruso. |

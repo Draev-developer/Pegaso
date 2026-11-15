@@ -33,6 +33,15 @@ public:
 	void	ApplyPrefs(const CString &sAdapter, bool bKillSwitch);
 	void	Process();		// called from CDownloadQueue::Process()
 
+	// Kaspersky VPN, if it is installed: the name of its adapter and its program. It can carry
+	// one program alone ("Apps that always connect via VPN" in its split tunnelling), but it
+	// has no way for another program to connect it or to change its settings: Pegaso ties
+	// itself to its adapter, tells the user what to set there and opens it.
+	static bool FindKaspersky(CString &sAdapter, CString &sProgram);
+	static bool KasperskyInstalled();	// looked up every few seconds at most
+	bool	IsKaspersky() const;	// tied to the adapter of Kaspersky VPN
+	void	KasperskyDialog(CWnd *pParent);
+
 	bool	IsActive() const							{ return !m_sAdapter.IsEmpty(); }
 	// true while nothing may be transferred (adapter down and kill switch on)
 	bool	IsBlocked() const							{ return m_bBlocked; }

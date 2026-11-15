@@ -7,6 +7,8 @@
 #include "emule.h"
 #include "WebSearch.h"
 #include "WebDownload.h"
+#include "ED2KLink.h"
+#include "DownloadQueue.h"
 #include "TorrentQueue.h"
 #include "NetGuard.h"
 #include "PegasoStrings.h"
@@ -26,6 +28,7 @@ namespace
 	const size_t MAX_ANSWER = 8 * 1024 * 1024;
 	const size_t MAX_TORRENT = 16 * 1024 * 1024;
 	const int MAX_PROVIDERS = 32;
+	const int MAX_PAGES = 8;	// pages opened for one search in one site
 	const UINT_PTR TIMER_POLL = 1;
 
 	CStringA DecodeEntities(CStringA s)
@@ -121,6 +124,23 @@ namespace
 		return CString(OptUtf8ToStr(s));
 	}
 
+	// the address of a .torrent file, as opposed to the one of any other file
+	bool IsTorrentAddress(const CString &sUrl)
+	{
+		CString sPath(sUrl);
+		const int iCut = sPath.FindOneOf(_T("?#"));
+		if (iCut >= 0)
+			sPath.Truncate(iCut);
+		if (sPath.Right(8).CompareNoCase(_T(".torrent")) == 0)
+			return true;
+		// ".../download.php?file=name.torrent" is one as well
+		CString sWhole(sUrl);
+		const int iFragment = sWhole.Find(_T('#'));
+		if (iFragment >= 0)
+			sWhole.Truncate(iFragment);
+		return sWhole.Right(8).CompareNoCase(_T(".torrent")) == 0;
+	}
+
 	CString ProfileKey(int i, LPCTSTR pszWhat)
 	{
 		CString s;
@@ -155,6 +175,183 @@ void CWebSearch::SaveProviders(const std::vector<SSearchProvider> &providers)
 		theApp.WriteProfileString(_T("eMule"), ProfileKey(i, _T("Name")), EncodeUrlUtf8(providers[i].name));
 		theApp.WriteProfileString(_T("eMule"), ProfileKey(i, _T("Url")), providers[i].url);
 		theApp.WriteProfileString(_T("eMule"), ProfileKey(i, _T("Key")), EncodeUrlUtf8(providers[i].apiKey));
+	}
+}
+
+namespace
+{
+	// "href" of a tag, whatever its quotes
+	CStringA Href(const CStringA &sTag)
+	{
+		CStringA sLower(sTag);
+		sLower.MakeLower();
+		int iPos = sLower.Find("href");
+		while (iPos > 0 && sLower[iPos - 1] != ' ' && sLower[iPos - 1] != '\t' && sLower[iPos - 1] != '\n' && sLower[iPos - 1] != '\r')
+			iPos = sLower.Find("href", iPos + 1);
+		if (iPos < 0)
+			return CStringA();
+		iPos += 4;
+		while (iPos < sTag.GetLength() && (sTag[iPos] == ' ' || sTag[iPos] == '='))
+			++iPos;
+		if (iPos >= sTag.GetLength())
+			return CStringA();
+		const char cQuote = sTag[iPos];
+		int iEnd;
+		if (cQuote == '"' || cQuote == '\'') {
+			iEnd = sTag.Find(cQuote, ++iPos);
+			if (iEnd < 0)
+				return CStringA();
+		} else {
+			iEnd = iPos;
+			while (iEnd < sTag.GetLength() && sTag[iEnd] != ' ' && sTag[iEnd] != '>')
+				++iEnd;
+		}
+		return DecodeEntities(sTag.Mid(iPos, iEnd - iPos));
+	}
+
+	// what is written between <a> and </a>, without its tags
+	CStringA PlainText(const CStringA &sHtml)
+	{
+		CStringA sOut;
+		bool bTag = false;
+		bool bSpace = false;
+		for (int i = 0; i < sHtml.GetLength(); ++i) {
+			const char c = sHtml[i];
+			if (c == '<')
+				bTag = true;
+			else if (c == '>') {
+				bTag = false;
+				bSpace = true;
+			} else if (!bTag) {
+				if (c == ' ' || c == '\t' || c == '\r' || c == '\n')
+					bSpace = true;
+				else {
+					if (bSpace && !sOut.IsEmpty())
+						sOut += ' ';
+					bSpace = false;
+					sOut += c;
+				}
+			}
+		}
+		return DecodeEntities(sOut);
+	}
+
+	// An address as written in a page, made complete with the address of the page.
+	CString Absolute(const CString &sLink, const CString &sPageUrl)
+	{
+		if (sLink.Find(_T("://")) > 0 || _tcsnicmp(sLink, _T("magnet:"), 7) == 0)
+			return sLink;
+		const int iHost = sPageUrl.Find(_T("://"));
+		if (iHost < 0)
+			return CString();
+		int iPath = sPageUrl.Find(_T('/'), iHost + 3);
+		const CString sOrigin(iPath < 0 ? sPageUrl : sPageUrl.Left(iPath));
+		if (sLink.Left(2) == _T("//"))
+			return sPageUrl.Left(iHost + 1) + sLink;
+		if (sLink.Left(1) == _T("/"))
+			return sOrigin + sLink;
+		CString sDir(iPath < 0 ? sPageUrl + _T('/') : sPageUrl);
+		const int iCut = sDir.FindOneOf(_T("?#"));
+		if (iCut >= 0)
+			sDir.Truncate(iCut);
+		sDir.Truncate(sDir.ReverseFind(_T('/')) + 1);
+		return sDir + sLink;
+	}
+
+	CString HostOf(const CString &sUrl)
+	{
+		const int iHost = sUrl.Find(_T("://"));
+		if (iHost < 0)
+			return CString();
+		CString s(sUrl.Mid(iHost + 3));
+		const int iEnd = s.FindOneOf(_T("/?#"));
+		if (iEnd >= 0)
+			s.Truncate(iEnd);
+		return s.MakeLower();
+	}
+
+	CString LastSegment(const CString &sUrl)
+	{
+		CString s(sUrl);
+		const int iCut = s.FindOneOf(_T("?#"));
+		if (iCut >= 0)
+			s.Truncate(iCut);
+		s = s.Mid(s.ReverseFind(_T('/')) + 1);
+		return CString(OptUtf8ToStr(URLDecode(s)));
+	}
+}
+
+// The download links of a web page. A link counts if it is an ed2k or magnet link, the
+// address of a .torrent file or the address of something which looks like a file to
+// download; the rest of the page - menus, pictures, other pages - is left out, or, if asked
+// for, the links to other pages of the same site are given apart, each with its text as title.
+void CWebSearch::ParsePage(const std::vector<BYTE> &html, const CString &sPageUrl, const CString &sProvider, std::vector<SWebSearchResult> &results
+	, std::vector<SWebSearchResult> *pOtherPages)
+{
+	const CStringA sPage((LPCSTR)html.data(), (int)min(html.size(), (size_t)INT_MAX));
+	CStringA sLower(sPage);
+	sLower.MakeLower();
+	const size_t uFirst = results.size();
+	for (int iPos = sLower.Find("<a"); iPos >= 0 && results.size() - uFirst < 500; iPos = sLower.Find("<a", iPos + 1)) {
+		const char cNext = sPage[iPos + 2];
+		if (cNext != ' ' && cNext != '\t' && cNext != '\r' && cNext != '\n')
+			continue;	// <abbr>, <area>, ...
+		const int iTagEnd = sPage.Find('>', iPos);
+		if (iTagEnd < 0)
+			break;
+		const CStringA sHref(Href(sPage.Mid(iPos, iTagEnd - iPos)));
+		if (sHref.IsEmpty())
+			continue;
+		int iClose = sLower.Find("</a", iTagEnd);
+		if (iClose < 0 || iClose - iTagEnd > 4096)
+			iClose = iTagEnd + 1;
+		const CString sText(FromUtf8(PlainText(sPage.Mid(iTagEnd + 1, iClose - iTagEnd - 1))).Trim());
+
+		SWebSearchResult r;
+		r.size = 0;
+		r.seeds = r.peers = -1;
+		r.provider = sProvider;
+		r.link = FromUtf8(sHref).Trim();
+		r.text = sText;
+		if (_tcsnicmp(r.link, _T("ed2k://|file|"), 13) == 0) {
+			// ed2k://|file|<name>|<size>|<hash>|...
+			int iField = 13;
+			const CString sName(r.link.Tokenize(_T("|"), iField));
+			const CString sSize(iField >= 0 ? r.link.Tokenize(_T("|"), iField) : CString());
+			r.title = CString(OptUtf8ToStr(URLDecode(sName)));
+			r.size = _tcstoui64(sSize, NULL, 10);
+		} else if (_tcsnicmp(r.link, _T("magnet:?"), 8) == 0) {
+			if (!CTorrentQueue::IsTorrentLink(r.link))
+				continue;
+			const int iName = r.link.Find(_T("dn="));
+			if (iName >= 0) {
+				CString sName(r.link.Mid(iName + 3));
+				const int iEnd = sName.Find(_T('&'));
+				if (iEnd >= 0)
+					sName.Truncate(iEnd);
+				sName.Replace(_T('+'), _T(' '));
+				r.title = CString(OptUtf8ToStr(URLDecode(sName)));
+			}
+		} else {
+			r.link = Absolute(r.link, sPageUrl);
+			if (!CWebDownloadQueue::IsWebUrl(r.link))
+				continue;
+			if (!IsTorrentAddress(r.link) && !CWebDownloadQueue::LooksLikeFileUrl(r.link)) {
+				if (pOtherPages != NULL && !sText.IsEmpty() && pOtherPages->size() < 5000 && HostOf(r.link) == HostOf(sPageUrl)) {
+					r.title = sText;
+					pOtherPages->push_back(r);
+				}
+				continue;
+			}
+			r.title = LastSegment(r.link);
+		}
+		if (r.title.IsEmpty())
+			r.title = sText.IsEmpty() ? r.link : sText;
+		bool bKnown = false;
+		for (size_t i = uFirst; i < results.size() && !bKnown; ++i)
+			bKnown = results[i].link == r.link;
+		if (!bKnown)
+			results.push_back(r);
 	}
 }
 
@@ -218,19 +415,116 @@ struct SWebSearchJob
 
 namespace
 {
+	// all the words, in any order
+	bool HasWords(CString sText, const std::vector<CString> &words)
+	{
+		sText.MakeLower();
+		for (const CString &sWord : words)
+			if (sText.Find(sWord) < 0)
+				return false;
+		return !words.empty();
+	}
+
+	// Many sites do not link their downloads from the list but from one page for each thing
+	// listed. The pages whose name holds the words are opened, a few at most, and their
+	// download links taken, each under the name of its page.
+	void OpenPages(const std::vector<SWebSearchResult> &pages, const std::vector<CString> &words, const CString &sProvider
+		, std::vector<SWebSearchResult> &found, CString &sError)
+	{
+		int iOpened = 0;
+		int iLeft = 0;
+		std::vector<CString> seen;
+		for (const SWebSearchResult &page : pages) {
+			if (!HasWords(page.title, words) || std::find(seen.begin(), seen.end(), page.link) != seen.end())
+				continue;
+			seen.push_back(page.link);
+			// A page which is not opened, cannot be read or shows no download - it may be behind
+			// another site, or a step only a person can take - is listed itself: the user opens it
+			// in his browser and goes on from there.
+			SWebSearchResult self(page);
+			self.page = true;
+			if (iOpened >= MAX_PAGES) {
+				++iLeft;
+				found.push_back(self);
+				continue;
+			}
+			++iOpened;
+			std::vector<BYTE> data;
+			CString sIgnored;
+			std::vector<SWebSearchResult> inside;
+			if (PegasoHttpGet(page.link, data, sIgnored, MAX_ANSWER))
+				CWebSearch::ParsePage(data, page.link, sProvider, inside);
+			if (inside.empty())
+				found.push_back(self);
+			for (SWebSearchResult &r : inside) {
+				if (CWebDownloadQueue::IsWebUrl(r.link))
+					r.title = page.title + _T(" - ") + (r.text.IsEmpty() ? r.title : r.text);
+				found.push_back(r);
+			}
+		}
+		if (iLeft > 0)
+			sError.Format(GetPegasoString(PS_WS_MORE_PAGES), iLeft);
+	}
+
 	void SearchWorker(std::shared_ptr<SWebSearchJob> pJob, SSearchProvider provider, CString sQuery)
 	{
 		CString sUrl(provider.url);
-		sUrl += (sUrl.Find(_T('?')) < 0) ? _T('?') : _T('&');
-		sUrl += _T("t=search&q=") + EncodeQueryValue(sQuery);
-		if (!provider.apiKey.IsEmpty())
-			sUrl += _T("&apikey=") + EncodeQueryValue(provider.apiKey);
+		const bool bPage = provider.IsPage();
+		if (bPage)
+			sUrl.Replace(_T("%s"), EncodeQueryValue(sQuery));
+		else {
+			sUrl += (sUrl.Find(_T('?')) < 0) ? _T('?') : _T('&');
+			sUrl += _T("t=search&q=") + EncodeQueryValue(sQuery);
+			if (!provider.apiKey.IsEmpty())
+				sUrl += _T("&apikey=") + EncodeQueryValue(provider.apiKey);
+		}
+
+		std::vector<CString> words;
+		{
+			CString sLower(sQuery);
+			sLower.MakeLower();
+			for (int iPos = 0; iPos >= 0;) {
+				const CString sWord(sLower.Tokenize(_T(" \t"), iPos));
+				if (!sWord.IsEmpty())
+					words.push_back(sWord);
+			}
+		}
 
 		std::vector<BYTE> data;
 		CString sError;
 		std::vector<SWebSearchResult> found;
-		if (PegasoHttpGet(sUrl, data, sError, MAX_ANSWER))
-			CWebSearch::ParseResults(data, provider.name, found);
+		if (PegasoHttpGet(sUrl, data, sError, MAX_ANSWER)) {
+			if (bPage) {
+				// the page of results of the site; if it only leads to other pages, those are opened
+				std::vector<SWebSearchResult> pages;
+				CWebSearch::ParsePage(data, sUrl, provider.name, found, &pages);
+				if (found.empty())
+					OpenPages(pages, words, provider.name, found, sError);
+			} else {
+				CWebSearch::ParseResults(data, provider.name, found);
+				bool bHtml = false;
+				if (found.empty()) {
+					CStringA sHead((LPCSTR)data.data(), (int)min(data.size(), (size_t)4096));
+					sHead.MakeLower();
+					bHtml = sHead.Find("<html") >= 0 || sHead.Find("<!doctype html") >= 0;
+				}
+				// An ordinary web page where a feed was expected: a site without a search of its
+				// own. The page is taken as a catalogue: what it lists is searched for the words.
+				if (bHtml) {
+					data.clear();
+					if (PegasoHttpGet(provider.url, data, sError, MAX_ANSWER)) {
+						std::vector<SWebSearchResult> all, pages;
+						CWebSearch::ParsePage(data, provider.url, provider.name, all, &pages);
+						for (const SWebSearchResult &r : all)
+							if (HasWords(r.title + _T(' ') + r.text, words))
+								found.push_back(r);
+						OpenPages(pages, words, provider.name, found, sError);
+						if (found.empty() && sError.IsEmpty())
+							sError = GetPegasoString(PS_WS_NOT_FEED);	// "0 results" alone explains nothing
+					}
+				}
+			}
+		}
 
 		std::lock_guard<std::mutex> lock(pJob->mtx);
 		pJob->results.insert(pJob->results.end(), found.begin(), found.end());
@@ -250,6 +544,7 @@ BEGIN_MESSAGE_MAP(CWebSearchDlg, CDialog)
 	ON_BN_CLICKED(IDC_WS_PROVIDERS, OnBnClickedProviders)
 	ON_BN_CLICKED(IDC_WS_DOWNLOAD, OnBnClickedDownload)
 	ON_NOTIFY(NM_DBLCLK, IDC_WS_LIST, OnNmDblClkList)
+	ON_NOTIFY(LVN_ITEMCHANGED, IDC_WS_LIST, OnLvnItemChangedList)
 	ON_WM_TIMER()
 END_MESSAGE_MAP()
 
@@ -274,6 +569,7 @@ BOOL CWebSearchDlg::OnInitDialog()
 	SetDlgItemText(IDC_WS_PROVIDERS, GetPegasoString(PS_WS_PROVIDERS));
 	SetDlgItemText(IDC_WS_DOWNLOAD, GetPegasoString(PS_WS_DOWNLOAD));
 	SetDlgItemText(IDCANCEL, GetPegasoString(PS_WS_CLOSE));
+	FillSites();
 
 	CRect rc;
 	m_list.GetClientRect(&rc);
@@ -303,11 +599,19 @@ void CWebSearchDlg::OnOK()
 		SetDlgItemText(IDC_WS_STATUS, GetPegasoString(PS_WS_BLOCKED));
 		return;
 	}
-	const std::vector<SSearchProvider> providers(CWebSearch::LoadProviders());
+	std::vector<SSearchProvider> providers(CWebSearch::LoadProviders());
 	if (providers.empty()) {
 		SetDlgItemText(IDC_WS_STATUS, GetPegasoString(PS_WS_NO_PROVIDERS));
 		return;
 	}
+	// one site alone, if the user chose one
+	const int iSite = static_cast<CComboBox*>(GetDlgItem(IDC_WS_SITE))->GetCurSel();
+	if (iSite > 0 && (size_t)iSite <= providers.size()) {
+		const SSearchProvider only(providers[(size_t)iSite - 1]);
+		providers.assign(1, only);
+		theApp.WriteProfileString(_T("eMule"), _T("WebSearchSite"), EncodeUrlUtf8(only.name));
+	} else
+		theApp.WriteProfileString(_T("eMule"), _T("WebSearchSite"), _T(""));
 
 	// an older search still running keeps its own job object and is simply ignored
 	m_job = std::make_shared<SWebSearchJob>();
@@ -354,14 +658,14 @@ void CWebSearchDlg::OnTimer(UINT_PTR nIDEvent)
 
 void CWebSearchDlg::ShowResults()
 {
-	// best seeded first
-	std::stable_sort(m_results.begin(), m_results.end(), [](const SWebSearchResult &a, const SWebSearchResult &b) { return a.seeds > b.seeds; });
+	// best seeded first, the pages to open by hand last
+	std::stable_sort(m_results.begin(), m_results.end(), [](const SWebSearchResult &a, const SWebSearchResult &b) { return a.page != b.page ? b.page : a.seeds > b.seeds; });
 	m_list.SetRedraw(FALSE);
 	m_list.DeleteAllItems();
 	for (size_t i = 0; i < m_results.size(); ++i) {
 		const SWebSearchResult &r = m_results[i];
 		const int iItem = m_list.InsertItem((int)i, r.title);
-		m_list.SetItemText(iItem, 1, r.size ? (LPCTSTR)CastItoXBytes(r.size) : _T(""));
+		m_list.SetItemText(iItem, 1, r.page ? (LPCTSTR)GetPegasoString(PS_WS_PAGE) : r.size ? (LPCTSTR)CastItoXBytes(r.size) : _T(""));
 		CString s;
 		if (r.seeds >= 0) {
 			s.Format(_T("%d"), r.seeds);
@@ -374,6 +678,16 @@ void CWebSearchDlg::ShowResults()
 		m_list.SetItemText(iItem, 4, r.provider);
 	}
 	m_list.SetRedraw(TRUE);
+	SetDlgItemText(IDC_WS_DOWNLOAD, GetPegasoString(PS_WS_DOWNLOAD));
+}
+
+// the button says what it will do with the result chosen
+void CWebSearchDlg::OnLvnItemChangedList(LPNMHDR, LRESULT *pResult)
+{
+	const int iSel = m_list.GetNextItem(-1, LVNI_SELECTED);
+	const bool bPage = iSel >= 0 && (size_t)iSel < m_results.size() && m_results[(size_t)iSel].page;
+	SetDlgItemText(IDC_WS_DOWNLOAD, GetPegasoString(bPage ? PS_WS_OPEN_PAGE : PS_WS_DOWNLOAD));
+	*pResult = 0;
 }
 
 void CWebSearchDlg::OnNmDblClkList(LPNMHDR, LRESULT *pResult)
@@ -392,9 +706,35 @@ void CWebSearchDlg::OnBnClickedDownload()
 		SetDlgItemText(IDC_WS_STATUS, GetPegasoString(PS_WS_BLOCKED));
 		return;
 	}
+	if (r.page) {	// a page of the site: the user goes on in his browser
+		if (CWebDownloadQueue::IsWebUrl(r.link)) {
+			::ShellExecute(NULL, _T("open"), r.link, NULL, NULL, SW_SHOWNORMAL);
+			SetDlgItemText(IDC_WS_STATUS, GetPegasoString(PS_WS_PAGE_OPENED));
+		}
+		return;
+	}
 	if (_tcsnicmp(r.link, _T("magnet:?"), 8) == 0) {
 		if (theTorrents.AddLink(r.link))
 			SetDlgItemText(IDC_WS_STATUS, r.title);
+		return;
+	}
+	if (_tcsnicmp(r.link, _T("ed2k://|file|"), 13) == 0) {
+		CED2KLink *pLink = NULL;
+		try {
+			pLink = CED2KLink::CreateLinkFromUrl(r.link.Right(1) == _T("/") ? r.link : r.link + _T('/'));
+			if (pLink != NULL && pLink->GetKind() == CED2KLink::kFile) {
+				theApp.downloadqueue->AddFileLinkToDownload(*pLink->GetFileLink(), 0);
+				SetDlgItemText(IDC_WS_STATUS, r.title);
+			}
+		} catch (const CString &sError) {
+			SetDlgItemText(IDC_WS_STATUS, r.title + _T("  -  ") + sError);
+		}
+		delete pLink;
+		return;
+	}
+	if (!IsTorrentAddress(r.link)) {	// a file on the web
+		theWebDownloads.AddUrl(r.link, 0);
+		SetDlgItemText(IDC_WS_STATUS, r.title);
 		return;
 	}
 
@@ -418,10 +758,27 @@ void CWebSearchDlg::OnBnClickedDownload()
 		SetDlgItemText(IDC_WS_STATUS, r.title);
 }
 
+// The sites to search in: all of them, or one.
+void CWebSearchDlg::FillSites()
+{
+	CComboBox *pCombo = static_cast<CComboBox*>(GetDlgItem(IDC_WS_SITE));
+	pCombo->ResetContent();
+	pCombo->AddString(GetPegasoString(PS_WS_ALL_SITES));
+	const CString sLast(OptUtf8ToStr(URLDecode(theApp.GetProfileString(_T("eMule"), _T("WebSearchSite"), _T("")))));
+	int iSel = 0;
+	for (const SSearchProvider &provider : CWebSearch::LoadProviders()) {
+		const int i = pCombo->AddString(provider.name);
+		if (!sLast.IsEmpty() && provider.name.CompareNoCase(sLast) == 0)
+			iSel = i;
+	}
+	pCombo->SetCurSel(iSel);
+}
+
 void CWebSearchDlg::OnBnClickedProviders()
 {
 	CSearchProvidersDlg dlg(this);
 	dlg.DoModal();
+	FillSites();
 	SetDlgItemText(IDC_WS_STATUS, CWebSearch::LoadProviders().empty() ? GetPegasoString(PS_WS_NO_PROVIDERS) : _T(""));
 }
 

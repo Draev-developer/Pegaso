@@ -20,6 +20,7 @@
 #include "MemDC.h"
 #include "Preferences.h"
 #include "MuleListCtrl.h"
+#include "PegasoUi.h"
 #include "Ini2.h"
 #include "MenuCmds.h"
 #include "OtherFunctions.h"
@@ -456,6 +457,12 @@ void CMuleListCtrl::SetColors()
 		m_crHighlight = MLC_RGBBLEND(crHighlight, m_crWindow, 4);
 		m_crHighlightText = m_crWindowText;
 		m_crGlow = MLC_RGBBLEND(crHighlight, m_crWindow, 3);
+		if (ini == NULL) {	// Pegaso: the selected row in the colour of the program, unless a skin says otherwise
+			m_crHighlight = PegasoUi::CR_ACCENT_BG;
+			m_crNoHighlight = PegasoUi::CR_HOVER;
+			m_crFocusLine = PegasoUi::CR_ACCENT_BG;
+			m_crNoFocusLine = PegasoUi::CR_HOVER;
+		}
 	}
 }
 
@@ -1334,6 +1341,8 @@ void CMuleListCtrl::MeasureItem(LPMEASUREITEMSTRUCT lpMeasureItemStruct)
 			ReleaseDC(pDC);
 		}
 	}
+	// Pegaso: rows with some air
+	lpMeasureItemStruct->itemHeight = max(lpMeasureItemStruct->itemHeight, (UINT)PegasoUi::Scale(26));
 }
 
 HIMAGELIST CMuleListCtrl::ApplyImageList(HIMAGELIST himl)

@@ -1780,6 +1780,7 @@ void CPreferences::SavePreferences()
 
 	ini.WriteBool(_T("WinaTransToolbar"), m_bWinaTransToolbar);
 	ini.WriteBool(_T("ShowDownloadToolbar"), m_bShowDownloadToolbar);
+	ini.WriteInt(_T("PegasoUiLayout"), 1);
 
 	ini.WriteBool(_T("CryptLayerRequested"), m_bCryptLayerRequested);
 	ini.WriteBool(_T("CryptLayerRequired"), m_bCryptLayerRequired);
@@ -2342,6 +2343,12 @@ void CPreferences::LoadPreferences()
 
 	m_bWinaTransToolbar = ini.GetBool(_T("WinaTransToolbar"), true);
 	m_bShowDownloadToolbar = ini.GetBool(_T("ShowDownloadToolbar"), true);
+	if (ini.GetInt(_T("PegasoUiLayout"), 0) < 1) {
+		// Pegaso: once, the layout of the new main window - the downloads alone (the uploads
+		// have a section of their own) and without the column of small buttons next to them
+		m_bShowDownloadToolbar = false;
+		m_uTransferWnd1 = 1;
+	}
 
 	m_bCryptLayerRequested = ini.GetBool(_T("CryptLayerRequested"), true);
 	m_bCryptLayerRequired = ini.GetBool(_T("CryptLayerRequired"), false);

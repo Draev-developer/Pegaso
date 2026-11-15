@@ -24,6 +24,8 @@ PORT = 4791
 TOKEN = '0123456789abcdef0123456789abcdef'
 NAME = 'Video.prueba.avi.exe'  # a name the fake detector objects to
 SIZE = 5 * 1024 * 1024
+# the version the build announces: the one of the installer script
+VERSION = [line.split('"')[1] for line in open(os.path.join(HERE, '..', 'installer', 'pegaso.iss'), encoding='utf-8-sig') if line.startswith('#define AppVersion')][0]
 
 
 def call(method, path, body=None, token=TOKEN, headers=None):
@@ -91,7 +93,7 @@ def main():
         print('REST')
         status, st = call('GET', '/api/v1/status')
         print('   ', st)
-        check('status', status == 200 and st['name'] == 'Pegaso' and st['version'] == '0.3' and st['ed2k']['connected'] is False)
+        check('status', status == 200 and st['name'] == 'Pegaso' and st['version'] == VERSION and st['ed2k']['connected'] is False)
         link = 'ed2k://|file|%s|%d|%s|/' % (NAME, SIZE, w.ed2k_hash(os.urandom(SIZE)))
         status, added = call('POST', '/api/v1/downloads', {'links': [link, w.BASE + '/slow.bin', 'ed2k://|file|broken']})
         print('   ', added)
@@ -135,7 +137,7 @@ def main():
         check('tools/list (string id echoed, every tool with a schema)', tools['id'] == 'abc' and len(listed_tools) == 12
               and all(t['inputSchema']['type'] == 'object' and t['description'] for t in tools['result']['tools']))
         is_error, st = tool('pegaso_status')
-        check('tools/call pegaso_status', not is_error and st['version'] == '0.3')
+        check('tools/call pegaso_status', not is_error and st['version'] == VERSION)
         is_error, added = tool('pegaso_add_download', {'links': [link]})
         check('tools/call pegaso_add_download', not is_error and added['added'] == 1)
         time.sleep(2)

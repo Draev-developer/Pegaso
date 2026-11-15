@@ -10,7 +10,7 @@
 ; Downloads\Pegaso), so removing or updating the program does not touch them.
 
 #define AppName "Pegaso"
-#define AppVersion "0.3.1"
+#define AppVersion "0.4"
 #define Release "..\..\srchybrid\x64\Release"
 
 [Setup]
@@ -18,7 +18,7 @@ AppId={{14D11134-ABAA-4D8E-B3CE-9993BD325C7A}
 AppName={#AppName}
 AppVersion={#AppVersion}
 AppVerName={#AppName} {#AppVersion}
-AppPublisher=Pegaso
+AppPublisher=Draev
 DefaultDirName={autopf}\{#AppName}
 DefaultGroupName={#AppName}
 DisableProgramGroupPage=yes

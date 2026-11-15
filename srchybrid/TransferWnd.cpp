@@ -1379,6 +1379,18 @@ void CTransferWnd::SetWnd2Icon(EWnd2Icon iIcon)
 	m_btnWnd2.SetButtonInfo((int)::GetWindowLongPtr(m_btnWnd2, GWLP_ID), &tbbi);
 }
 
+void CTransferWnd::PegasoShowList(bool bUploads)
+{
+	const uint32 dwWanted = bUploads ? IDC_UPLOADLIST : IDC_DOWNLOADLIST;
+	if (m_dwShowListIDC != dwWanted)
+		ShowList(dwWanted);
+}
+
+bool CTransferWnd::PegasoShowsUploads() const
+{
+	return m_dwShowListIDC == IDC_UPLOADLIST;
+}
+
 void CTransferWnd::ShowList(uint32 dwListIDC)
 {
 	RECT rcWnd;

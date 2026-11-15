@@ -78,6 +78,9 @@ python -I tools\webtest\hybridtest.py        # enjambre híbrido, tres instancia
 python -I tools\webtest\ratetest.py          # marcador de archivos, tres instancias
 python -I tools\webtest\btseedtest.py        # torrents entre dos instancias
 python -I tools\webtest\webseedtest.py       # semillas web de torrents
+python -I tools\webtest\sidebartest.py       # barra lateral, campo de búsqueda y filtros (pantalla al 100 %)
+python -I tools\webtest\sitesearchtest.py    # búsqueda en las webs del usuario (web simulada)
+python -I tools\webtest\kvpntest.py          # oferta de Kaspersky VPN (solo si está instalado; no lo toca)
 python -I tools\webtest\nattest.py           # dos ID bajas presentadas por un servidor simulado
 python -I tools\webtest\kadnattest.py direct # dos ID bajas a través de Kad, vía directa por UDP
 python -I tools\webtest\kadnattest.py buddy  # ídem, a través del compañero de la fuente (unos 9 minutos)

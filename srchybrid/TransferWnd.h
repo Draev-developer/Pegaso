@@ -66,6 +66,8 @@ public:
 	CTransferWnd& operator=(const CTransferWnd&) = delete;
 
 	void ShowQueueCount(INT_PTR number);
+	void PegasoShowList(bool bUploads);		// Pegaso: the downloads alone, or the uploads alone
+	bool PegasoShowsUploads() const;
 	void UpdateListCount(EWnd2 listindex, int iCount = -1);
 	void UpdateFilesCount(int iCount);
 	void Localize();

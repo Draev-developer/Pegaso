@@ -69,6 +69,10 @@
 #define MP_PEGASO_ADDWEBSRC		10983	// Pegaso
 #define MP_PEGASO_ADDTORRENT	10984	// Pegaso
 #define MP_PEGASO_API			10985	// Pegaso
+#define MP_PEGASO_NAV_DOWNLOADS	10986	// Pegaso: sections of the bar on the left
+#define MP_PEGASO_NAV_UPLOADS	10987
+#define MP_PEGASO_KVPN		10989	// Pegaso: Kaspersky VPN for Pegaso
+#define MP_PEGASO_SUBMIT		10988	// Pegaso: Enter in the field above
 #define	MP_HM_IPFILTER			10245
 #define	MP_WEBSVC_EDIT			10246
 #define	MP_HM_DIRECT_DOWNLOAD	10247

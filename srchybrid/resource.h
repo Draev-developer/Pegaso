@@ -2410,6 +2410,7 @@
 #define IDC_WS_LIST                     5033
 #define IDC_WS_STATUS                   5034
 #define IDC_WS_DOWNLOAD                 5035
+#define IDC_WS_SITE                     5036
 #define IDC_WP_LIST                     5040
 #define IDC_WP_NAME_LBL                 5041
 #define IDC_WP_NAME                     5042

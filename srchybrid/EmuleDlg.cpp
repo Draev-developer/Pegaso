@@ -42,12 +42,15 @@
 #include "PegasoSources.h"
 #include "PegasoPortMap.h"
 #include "PegasoApi.h"
+#include "PegasoUi.h"
+#include "NetGuard.h"
 #include "PegasoDefaults.h"
 #include "otherfunctions.h"
 #include "ServerWnd.h"
 #include "KademliaWnd.h"
 #include "DownloadListCtrl.h"
 #include "TransferDlg.h"
+#include "TransferWnd.h"
 #include "SearchDlg.h"
 #include "SharedFilesWnd.h"
 #include "ChatWnd.h"
@@ -342,6 +345,8 @@ CemuleDlg::~CemuleDlg()
 	delete m_pDropTarget;
 	delete statusbar;
 	delete toolbar;
+	delete m_pSideBar;
+	delete m_pTopBar;
 	delete statisticswnd;
 	delete ircwnd;
 	delete chatwnd;
@@ -428,9 +433,10 @@ BOOL CemuleDlg::OnInitDialog()
 	}
 
 	CWnd *pwndToolbarX = toolbar;
-	if (toolbar->Create(WS_CHILD | WS_VISIBLE, RECT(), this, IDC_TOOLBAR)) {
+	// Pegaso: the toolbar exists - much of the program talks to it - but it is not shown
+	if (toolbar->Create(WS_CHILD, RECT(), this, IDC_TOOLBAR)) {
 		toolbar->Init();
-		if (thePrefs.GetUseReBarToolbar()) {
+		if (false) {
 			if (m_ctlMainTopReBar.Create(WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN |
 				RBS_BANDBORDERS | RBS_AUTOSIZE | CCS_NODIVIDER,
 				RECT(), this, AFX_IDW_REBAR))
@@ -531,15 +537,27 @@ BOOL CemuleDlg::OnInitDialog()
 	//ShowConnectionState(false);
 
 	// adjust all main window sizes for toolbar height and maximize the child windows
-	CRect rcClient, rcToolbar, rcStatusbar;
+	CRect rcClient, rcStatusbar;
 	GetClientRect(&rcClient);
-	pwndToolbarX->GetWindowRect(&rcToolbar);
 	statusbar->GetWindowRect(&rcStatusbar);
-	rcClient.top += rcToolbar.Height();
 	rcClient.bottom -= rcStatusbar.Height();
+	pwndToolbarX->ShowWindow(SW_HIDE);
+	pwndToolbarX->SetWindowPos(NULL, 0, 0, 0, 0, SWP_NOZORDER | SWP_NOACTIVATE);
+
+	// Pegaso: the sections on the left, the search field above what is shown
+	m_pSideBar = new CPegasoSideBar;
+	m_pTopBar = new CPegasoTopBar;
+	if (m_pSideBar->Create(this) && m_pTopBar->Create(this)) {
+		m_pSideBar->SetWindowPos(NULL, rcClient.left, rcClient.top, CPegasoSideBar::Width(), rcClient.Height(), SWP_NOZORDER);
+		rcClient.left += CPegasoSideBar::Width();
+		m_pTopBar->SetWindowPos(NULL, rcClient.left, rcClient.top, rcClient.Width(), CPegasoTopBar::Height(), SWP_NOZORDER);
+		rcClient.top += CPegasoTopBar::Height();
+		AddAnchor(*m_pSideBar, TOP_LEFT, BOTTOM_LEFT);
+		AddAnchor(*m_pTopBar, TOP_LEFT, TOP_RIGHT);
+		PegasoSyncSideBar();	// the section which is already open
+	}
 
 	// anchor bars
-	AddAnchor(*pwndToolbarX, TOP_LEFT, TOP_RIGHT);
 	AddAnchor(*statusbar, BOTTOM_LEFT, BOTTOM_RIGHT);
 
 	CWnd *const apWnds[] =
@@ -1209,6 +1227,57 @@ void CemuleDlg::MinimizeWindow()
 	ShowPing();
 }
 
+// Pegaso: the bar on the left shows which section is open
+void CemuleDlg::PegasoSyncSideBar()
+{
+	if (m_pSideBar == NULL || activewnd == NULL)
+		return;
+	int iItem = CPegasoSideBar::ITEM_DOWNLOADS;
+	if (activewnd == transferwnd)
+		iItem = transferwnd->m_pwndTransfer != NULL && transferwnd->m_pwndTransfer->PegasoShowsUploads() ? CPegasoSideBar::ITEM_UPLOADS : CPegasoSideBar::ITEM_DOWNLOADS;
+	else if (activewnd == searchwnd)
+		iItem = CPegasoSideBar::ITEM_SEARCH;
+	else if (activewnd == sharedfileswnd)
+		iItem = CPegasoSideBar::ITEM_SHARED;
+	else if (activewnd == serverwnd)
+		iItem = CPegasoSideBar::ITEM_SERVERS;
+	else if (activewnd == kademliawnd)
+		iItem = CPegasoSideBar::ITEM_KAD;
+	else if (activewnd == statisticswnd)
+		iItem = CPegasoSideBar::ITEM_STATS;
+	m_pSideBar->SetSelected(iItem);
+	if (m_pTopBar != NULL)
+		m_pTopBar->SetSection(CPegasoSideBar::Label(iItem), iItem == CPegasoSideBar::ITEM_DOWNLOADS);
+}
+
+// Pegaso: Enter in the field above. Links are offered for download in the window for
+// links; anything else is a search.
+void CemuleDlg::PegasoSubmit(const CString &sText)
+{
+	// one ed2k link is taken whole: typed by hand its name may have blanks, where the search for
+	// links in a text - and the window for links - would cut it
+	CString sLinks;
+	if (sText.Find(_T('\n')) < 0 && _tcsnicmp(sText, _T("ed2k://|"), 8) == 0) {
+		sLinks = sText;
+		sLinks.Replace(_T(" "), _T("%20"));
+	} else
+		sLinks = CDirectDownloadDlg::ExtractLinks(sText);
+	if (!sLinks.IsEmpty()) {
+		if (m_pLinksDlg != NULL) {
+			m_pLinksDlg->AppendLinks(sLinks);
+			return;
+		}
+		CDirectDownloadDlg dlg;
+		dlg.m_sInitialLinks = sLinks;
+		m_pLinksDlg = &dlg;
+		dlg.DoModal();
+		m_pLinksDlg = NULL;
+		return;
+	}
+	SetActiveDialog(searchwnd);
+	searchwnd->ProcessEd2kSearchLinkRequest(sText);
+}
+
 void CemuleDlg::SetActiveDialog(CWnd *dlg)
 {
 	if (dlg == activewnd)
@@ -1221,6 +1290,7 @@ void CemuleDlg::SetActiveDialog(CWnd *dlg)
 	int iToolbarButtonID = MapWindowToToolbarButton(dlg);
 	if (iToolbarButtonID != -1)
 		toolbar->PressMuleButton(iToolbarButtonID);
+	PegasoSyncSideBar();
 	if (dlg == transferwnd) {
 		if (thePrefs.ShowCatTabInfos())
 			transferwnd->UpdateCatTabTitles();
@@ -2354,6 +2424,10 @@ void CemuleDlg::Localize()
 
 	ShowUserStateIcon();
 	toolbar->Localize();
+	if (m_pTopBar != NULL)
+		m_pTopBar->Localize();
+	if (m_pSideBar != NULL && m_pSideBar->m_hWnd != NULL)
+		m_pSideBar->Invalidate(FALSE);
 	ShowConnectionState();
 	ShowTransferRate(true);
 	ShowUserCount();
@@ -2514,6 +2588,20 @@ BOOL CemuleDlg::OnCommand(WPARAM wParam, LPARAM lParam)
 	case MP_HM_TRANSFER:
 		SetActiveDialog(transferwnd);
 		break;
+	case MP_PEGASO_SUBMIT:	// Pegaso: Enter in the field above
+		if (m_pTopBar != NULL && !m_pTopBar->m_sSubmitted.IsEmpty()) {
+			const CString sText(m_pTopBar->m_sSubmitted);
+			m_pTopBar->m_sSubmitted.Empty();
+			PegasoSubmit(sText);
+		}
+		break;
+	case MP_PEGASO_NAV_DOWNLOADS:	// Pegaso: the bar on the left
+	case MP_PEGASO_NAV_UPLOADS:
+		if (transferwnd->m_pwndTransfer != NULL)
+			transferwnd->m_pwndTransfer->PegasoShowList(wParam == MP_PEGASO_NAV_UPLOADS);
+		SetActiveDialog(transferwnd);
+		PegasoSyncSideBar();
+		break;
 	case TBBTN_SEARCH:
 	case MP_HM_SEARCH:
 		SetActiveDialog(searchwnd);
@@ -2582,6 +2670,11 @@ BOOL CemuleDlg::OnCommand(WPARAM wParam, LPARAM lParam)
 			CIPFilterDlg dlg;
 			dlg.DoModal();
 		}
+		break;
+	case MP_PEGASO_KVPN:	// Pegaso: tie Pegaso to Kaspersky VPN, open it
+		theNetGuard.KasperskyDialog(this);
+		if (m_pSideBar != NULL)
+			m_pSideBar->Refresh();
 		break;
 	case MP_PEGASO_API:	// Pegaso: the local API (REST and MCP)
 		thePegasoApi.ShowDialog(this);
@@ -2685,6 +2778,11 @@ void CemuleDlg::ShowToolPopup(bool toolsonly)
 	menu.AppendMenu(MF_STRING, MP_HM_IPFILTER, GetResString(IDS_IPFILTER) + _T("..."), _T("IPFILTER"));
 	menu.AppendMenu(MF_STRING, MP_HM_DIRECT_DOWNLOAD, GetPegasoString(PS_ADD_LINKS) + CString(_T("...")), _T("PASTELINK"));
 	menu.AppendMenu(MF_STRING | (thePegasoApi.IsRunning() ? MF_CHECKED : 0), MP_PEGASO_API, GetPegasoString(PS_API_MENU) + CString(_T("...")));
+	{	// Pegaso: only where Kaspersky VPN is installed
+		CString sKasperskyAdapter, sKasperskyProgram;
+		if (CNetGuard::FindKaspersky(sKasperskyAdapter, sKasperskyProgram))
+			menu.AppendMenu(MF_STRING | (theNetGuard.IsKaspersky() ? MF_CHECKED : 0), MP_PEGASO_KVPN, GetPegasoString(PS_KVPN_MENU) + CString(_T("...")));
+	}
 	menu.AppendMenu(MF_STRING, MP_PEGASO_WEBSEARCH, GetPegasoString(PS_WS_MENU), _T("SEARCH"));	// Pegaso
 
 	menu.AppendMenu(MF_SEPARATOR);

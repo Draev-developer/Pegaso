@@ -1,11 +1,17 @@
-// Pegaso: torrent search on the web through Torznab providers.
+// Pegaso: search on the web, in the sites of the user.
 //
-// Torznab is the search API spoken by indexer managers such as Jackett and Prowlarr.
-// Pegaso ships without any provider: the user adds the ones he runs or is entitled to
-// use (name, address of the API, key). A search asks every provider in the background
-// and lists what they answer; a result is added as a magnet link or .torrent file.
+// The user keeps a list of the sites he wants to search in; Pegaso ships with none. A site
+// is either
+//  - a web page: the address of its search page with %s where the words go. Pegaso fetches
+//    that page as a browser would and lists the download links it finds in it (ed2k,
+//    magnet, .torrent files, files). Nothing which is specific to any site, no logging in
+//    and no getting around what a site puts in the way of programs: where the download
+//    is not in the page itself, the page is listed and the user opens it in his browser;
+//  - a Torznab API, as spoken by indexer managers such as Jackett and Prowlarr (address of
+//    the API and key).
+// A search asks all the sites, or the one chosen, in the background.
 //
-// preferences.ini, section [eMule]: TorznabCount, Torznab<n>Name / Url / Key
+// preferences.ini, section [eMule]: TorznabCount, Torznab<n>Name / Url / Key; WebSearchSite
 #pragma once
 #include <memory>
 #include <vector>
@@ -16,16 +22,20 @@ struct SSearchProvider
 	CString	name;
 	CString	url;		// e.g. http://127.0.0.1:9117/api/v2.0/indexers/all/results/torznab/api
 	CString	apiKey;
+
+	bool	IsPage() const		{ return url.Find(_T("%s")) >= 0; }	// a search page, not a Torznab API
 };
 
 struct SWebSearchResult
 {
 	CString	title;
-	CString	link;		// magnet link, or the address of a .torrent file
+	CString	link;		// magnet or ed2k link, or the address of a .torrent file or of a file
 	CString	provider;
+	CString	text;		// what the link says in its page, if it comes from one
 	uint64	size;
 	int		seeds;		// -1 if the provider does not tell
 	int		peers;
+	bool	page = false;	// not a download but a page of the site, for the user to open in his browser
 };
 
 struct SWebSearchJob;
@@ -37,6 +47,9 @@ public:
 	static void SaveProviders(const std::vector<SSearchProvider> &providers);
 	// Parses a Torznab answer (RSS with torznab:attr elements).
 	static void ParseResults(const std::vector<BYTE> &xml, const CString &sProvider, std::vector<SWebSearchResult> &results);
+	// The download links of a web page; sPageUrl is where it came from, for relative addresses.
+	static void ParsePage(const std::vector<BYTE> &html, const CString &sPageUrl, const CString &sProvider, std::vector<SWebSearchResult> &results
+		, std::vector<SWebSearchResult> *pOtherPages = NULL);
 };
 
 class CWebSearchDlg : public CDialog
@@ -62,10 +75,12 @@ protected:
 	afx_msg void OnBnClickedProviders();
 	afx_msg void OnBnClickedDownload();
 	afx_msg void OnNmDblClkList(LPNMHDR, LRESULT *pResult);
+	afx_msg void OnLvnItemChangedList(LPNMHDR, LRESULT *pResult);
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 
 private:
 	void	ShowResults();
+	void	FillSites();
 
 	CListCtrl m_list;
 	std::shared_ptr<SWebSearchJob> m_job;

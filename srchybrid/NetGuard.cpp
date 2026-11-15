@@ -3,6 +3,7 @@
 #include <iphlpapi.h>
 #include "emule.h"
 #include "NetGuard.h"
+#include "PegasoStrings.h"
 #include "Preferences.h"
 #include "emuleDlg.h"
 #include "Log.h"
@@ -33,6 +34,9 @@ CNetGuard::CNetGuard()
 	, m_bUp()
 {
 }
+
+// the adapters of Kaspersky VPN, by their description
+static const TCHAR KASPERSKY_ADAPTER[] = _T("*Kaspersky VPN");
 
 std::vector<SNetAdapter> CNetGuard::ListAdapters()
 {
@@ -100,6 +104,80 @@ void CNetGuard::ApplyPrefs(const CString &sAdapter, bool bKillSwitch)
 	Refresh(true);
 }
 
+bool CNetGuard::KasperskyInstalled()
+{
+	static DWORD s_dwChecked;
+	static bool s_bInstalled;
+	const DWORD dwNow = ::GetTickCount();
+	if (s_dwChecked == 0 || dwNow - s_dwChecked > 10000) {
+		CString sAdapter, sProgram;
+		s_bInstalled = FindKaspersky(sAdapter, sProgram);
+		s_dwChecked = dwNow | 1;
+	}
+	return s_bInstalled;
+}
+
+bool CNetGuard::FindKaspersky(CString &sAdapter, CString &sProgram)
+{
+	// Kaspersky VPN has one adapter which is always there and, with WireGuard, another one
+	// which exists only while it is connected: Pegaso is tied to "the one which is connected"
+	sAdapter.Empty();
+	sProgram.Empty();
+	for (const SNetAdapter &adapter : ListAdapters())
+		if (adapter.description.Find(KASPERSKY_ADAPTER + 1) >= 0) {
+			sAdapter = KASPERSKY_ADAPTER;
+			break;
+		}
+	if (sAdapter.IsEmpty())
+		return false;
+	// its program: the one registered for the links of Kaspersky VPN ("<path>" -hidden navigate "%1")
+	TCHAR szCommand[1024] = {};
+	DWORD dwSize = sizeof szCommand - sizeof(TCHAR);
+	if (::RegGetValue(HKEY_CLASSES_ROOT, _T("KSDE\\shell\\open\\command"), NULL, RRF_RT_REG_SZ, NULL, szCommand, &dwSize) == ERROR_SUCCESS) {
+		CString sCommand(szCommand);
+		sCommand.Trim();
+		if (sCommand.Left(1) == _T("\"")) {
+			const int iEnd = sCommand.Find(_T('"'), 1);
+			if (iEnd > 1)
+				sProgram = sCommand.Mid(1, iEnd - 1);
+		}
+		if (!sProgram.IsEmpty() && ::GetFileAttributes(sProgram) == INVALID_FILE_ATTRIBUTES)
+			sProgram.Empty();
+	}
+	return true;
+}
+
+bool CNetGuard::IsKaspersky() const
+{
+	CString sAdapter, sProgram;
+	return IsActive() && FindKaspersky(sAdapter, sProgram) && sAdapter.CompareNoCase(m_sAdapter) == 0;
+}
+
+void CNetGuard::KasperskyDialog(CWnd *pParent)
+{
+	CString sAdapter, sProgram;
+	if (!FindKaspersky(sAdapter, sProgram))
+		return;
+	TCHAR szSelf[MAX_PATH] = {};
+	::GetModuleFileName(NULL, szSelf, _countof(szSelf) - 1);
+	CString sText;
+	bool bOpen;
+	if (IsActive() && sAdapter.CompareNoCase(m_sAdapter) == 0) {
+		sText.Format(GetPegasoString(PS_KVPN_ON), KASPERSKY_ADAPTER + 1);
+		const int iAnswer = ::MessageBox(pParent->GetSafeHwnd(), sText, GetPegasoString(PS_KVPN_MENU), MB_YESNOCANCEL | MB_ICONINFORMATION);
+		if (iAnswer == IDNO)
+			ApplyPrefs(CString(), KillSwitchInPrefs());
+		bOpen = iAnswer == IDYES;
+	} else {
+		sText.Format(GetPegasoString(PS_KVPN_ASK), KASPERSKY_ADAPTER + 1, szSelf);
+		bOpen = ::MessageBox(pParent->GetSafeHwnd(), sText, GetPegasoString(PS_KVPN_MENU), MB_YESNO | MB_ICONQUESTION) == IDYES;
+		if (bOpen)
+			ApplyPrefs(sAdapter, true);	// with the kill switch: nothing leaves outside of the VPN
+	}
+	if (bOpen && !sProgram.IsEmpty())
+		::ShellExecute(NULL, _T("open"), sProgram, NULL, NULL, SW_SHOWNORMAL);
+}
+
 void CNetGuard::Process()
 {
 	const DWORD dwNow = ::GetTickCount();
@@ -121,11 +199,15 @@ void CNetGuard::Refresh(bool bLog)
 
 	bool bUp = false;
 	CString sAddress;
+	// "*text" stands for whichever adapter has that text in its description and is connected:
+	// a VPN may bring its own adapter along each time it connects, under one name or another
+	const bool bByDescription = m_sAdapter.Left(1) == _T("*");
 	for (const SNetAdapter &adapter : ListAdapters())
-		if (adapter.name.CompareNoCase(m_sAdapter) == 0) {
+		if (bByDescription ? adapter.description.Find(m_sAdapter.Mid(1)) >= 0 : adapter.name.CompareNoCase(m_sAdapter) == 0) {
 			bUp = adapter.up && !adapter.ipv4.IsEmpty();
 			sAddress = adapter.ipv4;
-			break;
+			if (bUp || !bByDescription)
+				break;
 		}
 
 	const bool bBlocked = !bUp && m_bKillSwitch;

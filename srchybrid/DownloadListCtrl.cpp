@@ -17,6 +17,7 @@
 #include "stdafx.h"
 #include "emule.h"
 #include "DownloadListCtrl.h"
+#include "PegasoUi.h"
 #include "TorrentQueue.h"
 #include "PegasoStrings.h"
 #include "PegasoRating.h"
@@ -53,6 +54,24 @@
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
 #endif
+
+// Pegaso: the state the list is narrowed down to, and whether a download is in it
+static int s_iPegasoFilter;
+
+static bool PegasoMatches(const CPartFile *pFile, int iFilter)
+{
+	const bool bDone = pFile->GetStatus() == PS_COMPLETE || pFile->GetStatus() == PS_COMPLETING;
+	const bool bPaused = !bDone && (pFile->GetStatus() == PS_PAUSED || pFile->GetStatus() == PS_ERROR || pFile->IsStopped());
+	switch (iFilter) {
+	case CDownloadListCtrl::PEGASO_ACTIVE:
+		return !bDone && !bPaused;
+	case CDownloadListCtrl::PEGASO_PAUSED:
+		return bPaused;
+	case CDownloadListCtrl::PEGASO_DONE:
+		return bDone;
+	}
+	return true;
+}
 
 
 // CDownloadListCtrl
@@ -267,7 +286,7 @@ void CDownloadListCtrl::AddFile(CPartFile *toadd)
 	ASSERT(m_ListItems.find(toadd) == m_ListItems.end());
 	m_ListItems.emplace(toadd, newitem);
 
-	if (toadd->CheckShowItemInGivenCat(m_curTab))
+	if (toadd->CheckShowItemInGivenCat(m_curTab) && PegasoMatches(toadd, s_iPegasoFilter))
 		InsertItem(LVIF_TEXT | LVIF_PARAM, GetItemCount(), LPSTR_TEXTCALLBACK, 0, 0, 0, (LPARAM)newitem);
 
 	ShowFilesCount();
@@ -446,37 +465,24 @@ void CDownloadListCtrl::DrawFileItem(CDC &dc, int nColumn, LPCRECT lpRect, UINT 
 		break;
 	case 5: // progress
 		{
-			--rcDraw.bottom;
-			++rcDraw.top;
-
-			int iWidth = rcDraw.Width();
-			int iHeight = rcDraw.Height();
-			HGDIOBJ hOldBitmap;
-			CDC cdcStatus;
-			cdcStatus.CreateCompatibleDC(&dc);
-			const DWORD curTick = ::GetTickCount();
-			if (!(HBITMAP)pCtrlItem->status || curTick >= pCtrlItem->dwUpdated
-				|| pCtrlItem->status.GetBitmapDimension() != CSize(iWidth, iHeight))
-			{
-				pCtrlItem->status.DeleteObject();
-				pCtrlItem->status.CreateCompatibleBitmap(&dc, iWidth, iHeight);
-				hOldBitmap = cdcStatus.SelectObject(pCtrlItem->status);
-
-				CRect rec_status(0, 0, iWidth, iHeight);
-				pPartFile->DrawStatusBar(cdcStatus, rec_status, thePrefs.UseFlatBar());
-				pCtrlItem->dwUpdated = curTick + DLC_BARUPDATE + (rand() & 0x7f);
-			} else
-				hOldBitmap = cdcStatus.SelectObject(pCtrlItem->status);
-			dc.BitBlt(rcDraw.left, rcDraw.top, iWidth, iHeight, &cdcStatus, 0, 0, SRCCOPY);
-			cdcStatus.SelectObject(hOldBitmap);
-
-			if (thePrefs.GetUseDwlPercentage()) {
-				COLORREF oldclr = dc.SetTextColor(RGB(255, 255, 255));
-				int iOldBkMode = dc.SetBkMode(TRANSPARENT);
-				dc.DrawText(CPTR(sItem, sItem.ReverseFind(_T(' ')) + 1), -1, rcDraw, (MLC_DT_TEXT & ~DT_LEFT) | DT_CENTER);
-				dc.SetBkMode(iOldBkMode);
-				dc.SetTextColor(oldclr);
+			// Pegaso: a thin bar and the figure. The map of the parts is in the details of the file.
+			const COLORREF crBar = pPartFile->GetStatus() == PS_COMPLETE ? PegasoUi::CR_TEXT
+				: (pPartFile->GetStatus() == PS_ERROR ? RGB(0xB4, 0x2A, 0x1E)
+				: (pPartFile->GetStatus() == PS_PAUSED || pPartFile->IsStopped() ? PegasoUi::CR_IDLE : PegasoUi::CR_ACCENT));
+			CString sPercent;
+			sPercent.Format(_T("%.0f%%"), floor(pPartFile->GetPercentCompleted()));
+			const int iText = dc.GetTextExtent(_T("100%")).cx + PegasoUi::Scale(10);
+			CRect rcBar(rcDraw);
+			rcBar.DeflateRect(PegasoUi::Scale(2), 0);
+			if (rcBar.Width() > iText + PegasoUi::Scale(30)) {
+				CRect rcText(rcBar);
+				rcText.left = rcText.right - iText;
+				rcBar.right = rcText.left;
+				const COLORREF crOld = dc.SetTextColor(PegasoUi::CR_MUTED);
+				dc.DrawText(sPercent, rcText, (MLC_DT_TEXT & ~DT_LEFT) | DT_RIGHT);
+				dc.SetTextColor(crOld);
 			}
+			PegasoUi::ProgressBar(dc, rcBar, pPartFile->GetPercentCompleted(), crBar);
 		}
 		break;
 	case 15: // Pegaso: trust
@@ -2161,7 +2167,7 @@ int CDownloadListCtrl::GetFilesCountInCurCat()
 		const CtrlItem_Struct *cur_item = it->second;
 		if (cur_item->type == FILE_TYPE) {
 			CPartFile *file = static_cast<CPartFile*>(cur_item->value);
-			iCount += static_cast<int>(file->CheckShowItemInGivenCat(m_curTab));
+			iCount += static_cast<int>(file->CheckShowItemInGivenCat(m_curTab) && PegasoMatches(file, s_iPegasoFilter));
 		}
 	}
 	return iCount;
@@ -2346,12 +2352,38 @@ void CDownloadListCtrl::UpdateCurrentCategoryView(CPartFile *thisfile)
 		const CtrlItem_Struct *cur_item = it->second;
 		if (cur_item->type == FILE_TYPE) {
 			CPartFile *file = static_cast<CPartFile*>(cur_item->value);
-			if (file->CheckShowItemInGivenCat(m_curTab))
+			if (file->CheckShowItemInGivenCat(m_curTab) && PegasoMatches(file, s_iPegasoFilter))
 				ShowFile(it);
 			else
 				HideFile(it);
 		}
 	}
+}
+
+void CDownloadListCtrl::PegasoSetFilter(int iFilter)
+{
+	if (iFilter != s_iPegasoFilter && iFilter >= 0 && iFilter < PEGASO_FILTERS) {
+		s_iPegasoFilter = iFilter;
+		ChangeCategory(m_curTab);
+	}
+}
+
+int CDownloadListCtrl::PegasoFilter() const
+{
+	return s_iPegasoFilter;
+}
+
+void CDownloadListCtrl::PegasoCounts(int aiCount[PEGASO_FILTERS])
+{
+	for (int i = 0; i < PEGASO_FILTERS; ++i)
+		aiCount[i] = 0;
+	for (ListItems::const_iterator it = m_ListItems.begin(); it != m_ListItems.end(); ++it)
+		if (it->second->type == FILE_TYPE) {
+			CPartFile *pFile = static_cast<CPartFile*>(it->second->value);
+			if (pFile->CheckShowItemInGivenCat(m_curTab))
+				for (int i = 0; i < PEGASO_FILTERS; ++i)
+					aiCount[i] += static_cast<int>(PegasoMatches(pFile, i));
+		}
 }
 
 void CDownloadListCtrl::ChangeCategory(int newsel)
@@ -2362,7 +2394,7 @@ void CDownloadListCtrl::ChangeCategory(int newsel)
 	for (ListItems::const_iterator it = m_ListItems.begin(); it != m_ListItems.end(); ++it) {
 		const CtrlItem_Struct *cur_item = it->second;
 		if (cur_item->type == FILE_TYPE)
-			if (static_cast<CPartFile*>(cur_item->value)->CheckShowItemInGivenCat(newsel))
+			if (static_cast<CPartFile*>(cur_item->value)->CheckShowItemInGivenCat(newsel) && PegasoMatches(static_cast<CPartFile*>(cur_item->value), s_iPegasoFilter))
 				ShowFile(it);
 			else
 				HideFile(it);

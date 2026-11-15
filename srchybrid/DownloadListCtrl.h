@@ -107,6 +107,12 @@ public:
 	void	Localize();
 	void	ShowFilesCount();
 	void	ChangeCategory(int newsel);
+	// Pegaso: besides the category, the list can show the downloads in one state only
+	enum { PEGASO_ALL, PEGASO_ACTIVE, PEGASO_PAUSED, PEGASO_DONE, PEGASO_FILTERS };
+	void	PegasoSetFilter(int iFilter);
+	int		PegasoFilter() const;
+	void	PegasoRefilter()						{ ChangeCategory(m_curTab); }
+	void	PegasoCounts(int aiCount[PEGASO_FILTERS]);	// downloads of the category shown, by state
 	CString getTextList();
 	void	ShowSelectedFileDetails();
 	void	ExpandCollapseItem(int iItem, int iAction, bool bCollapseSource = false);

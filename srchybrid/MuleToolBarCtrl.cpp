@@ -723,6 +723,8 @@ void CMuleToolbarCtrl::ChangeTextLabelStyle(EToolbarLabelType eLabelType, bool b
 
 void CMuleToolbarCtrl::Refresh()
 {
+	if (theApp.emuledlg->PegasoHasSideBar())
+		return;	// Pegaso: the toolbar is not shown, the bar on the left took its place
 	SetAllButtonsWidth();
 	AutoSize();	// Causes a toolbar to be resized.
 

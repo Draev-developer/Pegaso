@@ -67,6 +67,13 @@ class CemuleDlg : public CTrayDialog
 	//Client icons for all windows
 	CImageList m_IconList;
 	CReBarCtrl m_ctlMainTopReBar;
+public:
+	class CPegasoSideBar *m_pSideBar = NULL;	// Pegaso: the sections, on the left
+	class CPegasoTopBar *m_pTopBar = NULL;		// Pegaso: search field and buttons, above
+	bool PegasoHasSideBar() const		{ return m_pSideBar != NULL; }
+	void PegasoSubmit(const CString &sText);	// what was typed into the field above: a link, or something to search for
+	void PegasoSyncSideBar();
+private:
 	CTaskbarNotifier m_wndTaskbarNotifier;
 	void SetClientIconList();
 	CString	m_strLastClipboardContents;

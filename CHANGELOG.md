@@ -2,6 +2,31 @@
 
 Pegaso parte de eMule 0.72a (edición de la comunidad). El historial de eMule está en `changelog_full.txt`.
 
+## 0.4
+
+### Interfaz
+- Ventana principal nueva. Una barra lateral sustituye a la barra de herramientas: las secciones (Descargas, Buscar, Compartidos, Subidas, Servidores, Kad, Estadísticas) con sus contadores y, al pie, el estado de las redes con el botón de conectar.
+- Sobre cada sección, un único campo: lo que se escribe se busca, y si es un enlace (ed2k, magnet o web) se ofrece para descargar. A su lado, «Añadir enlace», Herramientas y Preferencias.
+- Las descargas se pueden filtrar por estado: todas, descargando, en pausa y completadas, cada una con su número.
+- Barras de progreso finas con el porcentaje al lado, filas más altas y la fila seleccionada en el color del programa. El mapa de partes sigue en los detalles del archivo.
+- Descargas y Subidas tienen cada una su sección; la columna de botones pequeños junto a las descargas queda oculta de serie (se recupera en Preferencias → Mostrar).
+
+### Búsqueda
+- Buscar en las webs del usuario: la lista de proveedores de la búsqueda web pasa a ser una libreta de webs. Además de una API Torznab, una web se guarda con la dirección de su página de búsqueda y `%s` donde van las palabras; Pegaso pide esa página y lista los enlaces de descarga que encuentra en ella (ed2k, magnet, archivos .torrent y archivos). Se busca en todas las webs o en la que se elija. Pegaso sigue sin traer ninguna web.
+- Webs sin buscador: una dirección guardada sin `%s` que no resulta ser una fuente Torznab se toma como catálogo. Pegaso busca las palabras en lo que la página lista, abre las páginas que coinciden (ocho como mucho por búsqueda; dice cuántas quedan) y lista sus enlaces de descarga con el nombre de cada página. Lo mismo se hace con una página de resultados que solo enlaza a otras páginas. Si nada coincide, la búsqueda lo dice y explica qué dirección guardar, en vez de «0 resultados» sin más.
+- Páginas para abrir a mano: cuando una página que coincide no enseña la descarga (está tras otra web o tras un paso que solo puede dar una persona), no se puede leer o no llegó a abrirse, sale en los resultados como «Página web» y el botón pasa a «Abrir la web»: se abre en el navegador del usuario, que sigue allí. Pegaso no intenta saltarse esos pasos.
+- Una dirección del tipo `…/bajar.php?file=nombre.torrent` se reconoce como archivo .torrent.
+
+### Seguridad
+- Kaspersky VPN para Pegaso: donde está instalado Kaspersky VPN, Herramientas ofrece atar Pegaso a su adaptador con el corte de seguridad puesto, explica qué ajustar en Kaspersky para que la VPN lleve solo Pegaso (túnel dividido, «Apps que siempre se conectan por VPN») y lo abre. Kaspersky VPN no permite que otro programa lo conecte ni cambie sus ajustes: conectar y añadir Pegaso a su lista lo hace el usuario allí.
+
+### Identidad
+- Pegaso muestra «Created by Draev» bajo su nombre y en los créditos; el instalador lo indica como editor.
+
+### Limitaciones conocidas
+- La búsqueda en webs solo ve lo que la página trae en su HTML: no ejecuta JavaScript, no inicia sesión y no pasa comprobaciones contra programas (captchas y similares). De una página toma hasta 500 enlaces, sin tamaño ni semillas salvo en los enlaces ed2k.
+- El interior de las secciones (búsqueda, servidores, Kad, estadísticas, preferencias) conserva los controles de siempre.
+
 ## 0.3.1
 
 ### Redes eMule

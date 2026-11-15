@@ -1838,6 +1838,7 @@ void CPreferences::SavePreferences()
 	// Section: "UPnP"
 	//
 	ini.WriteBool(_T("EnableUPnP"), m_bEnableUPnP, _T("UPnP"));
+	ini.WriteBool(_T("PegasoPortMappingDefault"), true, _T("UPnP"));
 	ini.WriteBool(_T("SkipWANIPSetup"), m_bSkipWANIPSetup);
 	ini.WriteBool(_T("SkipWANPPPSetup"), m_bSkipWANPPPSetup);
 	ini.WriteBool(_T("CloseUPnPOnExit"), m_bCloseUPnPOnExit);
@@ -2417,7 +2418,11 @@ void CPreferences::LoadPreferences()
 	///////////////////////////////////////////////////////////////////////////
 	// Section: "UPnP"
 	//
-	m_bEnableUPnP = ini.GetBool(_T("EnableUPnP"), false, _T("UPnP"));
+	// Pegaso: the ports are opened on the router unless the user says no. Profiles written
+	// before that became the default carry eMule's "off": it is turned on for them once.
+	m_bEnableUPnP = ini.GetBool(_T("EnableUPnP"), true, _T("UPnP"));
+	if (!ini.GetBool(_T("PegasoPortMappingDefault"), false, _T("UPnP")))
+		m_bEnableUPnP = true;
 	m_bSkipWANIPSetup = ini.GetBool(_T("SkipWANIPSetup"), false);
 	m_bSkipWANPPPSetup = ini.GetBool(_T("SkipWANPPPSetup"), false);
 	m_bCloseUPnPOnExit = ini.GetBool(_T("CloseUPnPOnExit"), true);

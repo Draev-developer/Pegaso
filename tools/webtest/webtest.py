@@ -19,7 +19,12 @@ SERVER_LOG = os.path.join(HERE, 'server.log')
 sys.path.insert(0, HERE)
 import rangeserver  # noqa: E402  (same directory as this script)
 
-PREFS = """[eMule]
+# The tests leave the router alone: no port mapping (the [UPnP] section comes first because
+# the tests append their own keys, which belong to [eMule]).
+PREFS = """[UPnP]
+EnableUPnP=0
+PegasoPortMappingDefault=1
+[eMule]
 AppVersion=0.72a
 Language=1033
 Nick=PegasoTest

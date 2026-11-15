@@ -7,6 +7,7 @@ Pegaso parte de eMule 0.72a (edición de la comunidad). El historial de eMule es
 ### Redes eMule
 - Servidores eD2K de serie y direcciones para actualizar la lista de servidores.
 - **Conectar** entra siempre en un servidor y en Kad; si Kad no conoce contactos, descarga una lista inicial.
+- Apertura de puertos en el router: activada de serie y, además de UPnP, con NAT-PMP y PCP. Un puerto solo cuenta como abierto si el router concede exactamente el pedido y lo dirige a este equipo; se renueva antes de caducar y se devuelve al salir. Si el router no tiene dirección pública (CGNAT o doble router) o el puerto ya está redirigido a otro equipo, Pegaso lo dice en el registro en lugar de dejar una ID baja sin explicación.
 - Las fuentes de cada descarga se recuerdan al cerrar (hasta 20 por archivo, durante 24 horas) y se recuperan al arrancar, sin esperar a que el servidor o Kad las vuelvan a encontrar.
 - Sin chat IRC ni mensajes entre usuarios.
 

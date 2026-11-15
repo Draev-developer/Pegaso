@@ -35,7 +35,7 @@ Descarga el instalador de la [última versión](https://github.com/Draev-develop
 2. Pega un enlace `ed2k://`, un enlace `magnet:`, un archivo `.torrent` o una dirección web para empezar una descarga.
 3. En **Preferencias → Web y BitTorrent** están el puerto de BitTorrent, las conexiones por descarga web y la protección VPN.
 
-Para recibir conexiones entrantes (ID alta en eMule), abre en el router los puertos que aparecen en **Preferencias → Conexión**.
+Para recibir conexiones entrantes (ID alta en eMule), Pegaso pide al router que abra sus puertos (UPnP, NAT-PMP o PCP). Si el router no lo admite, ábrelos a mano: son los que aparecen en **Preferencias → Conexión**. Si el registro avisa de que el router no tiene dirección pública (CGNAT), solo tu operador puede darte una.
 
 ### Enjambre híbrido
 

@@ -18,6 +18,7 @@
 #include "preferences.h"
 #include "UPnPImplMiniLib.h"
 #include "Log.h"
+#include "PegasoPortMap.h"
 #include "Otherfunctions.h"
 #include "miniupnpc\include\miniupnpc.h"
 #include "miniupnpc\include\upnpcommands.h"
@@ -252,6 +253,7 @@ int CUPnPImplMiniLib::CStartDiscoveryThread::Run()
 				break;
 			case 2:
 				DebugLog(_T("Found an IGD with a reserved IP address (%S) : %S"), m_pOwner->m_achWanIP, m_pOwner->m_pURLs->controlURL);
+				thePortMap.NoteNoPublicAddress(m_pOwner->m_achWanIP);	// Pegaso: tell the user why no port can be opened
 				bNotFound = true;
 				break;
 			case 3:
@@ -326,7 +328,7 @@ bool CUPnPImplMiniLib::CStartDiscoveryThread::OpenPort(uint16 nPort, bool bTCP, 
 												 , achOutIP, achOutPort
 												 , NULL, NULL, NULL);
 
-		if (nResult == UPNPCOMMAND_SUCCESS && achOutIP[0] != 0) {
+		if (nResult == UPNPCOMMAND_SUCCESS && achOutIP[0] != 0 && strcmp(achOutIP, pachLANIP) == 0) {	// Pegaso: and it leads here
 			DebugLog(_T("Checking UPnP: Mapping for port %hu (%s) on local IP %S still exists"), nPort, (bTCP ? sTCP : sUDP), achOutIP);
 			return true;
 		}
@@ -344,6 +346,14 @@ bool CUPnPImplMiniLib::CStartDiscoveryThread::OpenPort(uint16 nPort, bool bTCP, 
 
 	if (nResult != UPNPCOMMAND_SUCCESS) {
 		DebugLog(_T("Adding PortMapping failed, Error Code %u"), nResult);
+		// Pegaso: is the port taken by another device?
+		achOutIP[0] = 0;
+		if (UPNP_GetSpecificPortMappingEntry(m_pOwner->m_pURLs->controlURL, m_pOwner->m_pIGDData->first.servicetype, achPort
+				, (bTCP ? sTCPa : sUDPa), NULL, achOutIP, achOutPort, NULL, NULL, NULL) == UPNPCOMMAND_SUCCESS
+			&& achOutIP[0] != 0 && strcmp(achOutIP, pachLANIP) != 0)
+		{
+			thePortMap.NoteConflict(nPort, bTCP, achOutIP);
+		}
 		return false;
 	}
 
@@ -360,7 +370,9 @@ bool CUPnPImplMiniLib::CStartDiscoveryThread::OpenPort(uint16 nPort, bool bTCP, 
 											 , achOutIP, achOutPort
 											 , NULL, NULL, NULL);
 
-	if (nResult == UPNPCOMMAND_SUCCESS && achOutIP[0] != 0) {
+	if (nResult == UPNPCOMMAND_SUCCESS && achOutIP[0] != 0 && strcmp(achOutIP, pachLANIP) != 0)
+		thePortMap.NoteConflict(nPort, bTCP, achOutIP);	// Pegaso: the port leads to another device
+	else if (nResult == UPNPCOMMAND_SUCCESS && achOutIP[0] != 0) {
 		DebugLog(_T("Successfully added mapping for port %hu (%s) on local IP %S"), nPort, (bTCP ? sTCP : sUDP), achOutIP);
 		return true;
 	}

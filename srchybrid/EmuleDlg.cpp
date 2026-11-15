@@ -38,6 +38,7 @@
 #include "WebSearch.h"
 #include "PegasoStrings.h"
 #include "PegasoSources.h"
+#include "PegasoPortMap.h"
 #include "PegasoDefaults.h"
 #include "otherfunctions.h"
 #include "ServerWnd.h"
@@ -1742,6 +1743,7 @@ void CemuleDlg::OnClose()
 	if (thePrefs.IsStoringSearchesEnabled())
 		theApp.searchlist->StoreSearches();
 
+	thePortMap.Stop();	// Pegaso: NAT-PMP / PCP mappings are given back
 	// close uPnP Ports
 	theApp.m_pUPnPFinder->GetImplementation()->StopAsyncFind();
 	if (thePrefs.CloseUPnPOnExit())
@@ -3458,7 +3460,7 @@ LRESULT CemuleDlg::OnUPnPResult(WPARAM wParam, LPARAM lParam)
 			// remember the last working implementation
 			thePrefs.SetLastWorkingUPnPImpl(impl->GetImplementationID());
 			Log(GetResString(IDS_UPNPSUCCESS), impl->GetUsedTCPPort(), impl->GetUsedUDPPort());
-		} else
+		} else if (!thePortMap.IsMapped())	// Pegaso: not a failure if NAT-PMP or PCP opened the ports
 			LogWarning(GetResString(IDS_UPNPFAILED));
 
 	if (theApp.IsRunning() && m_bConnectRequestDelayedForUPnP)
@@ -3491,6 +3493,11 @@ LRESULT CemuleDlg::OnPowerBroadcast(WPARAM wParam, LPARAM lParam)
 
 void CemuleDlg::StartUPnP(bool bReset, uint16 nForceTCPPort, uint16 nForceUDPPort)
 {
+	// Pegaso: the gateway is asked with NAT-PMP and PCP as well, on its own thread
+	if (bReset)
+		thePortMap.Start(nForceTCPPort ? nForceTCPPort : thePrefs.GetPort(), nForceUDPPort ? nForceUDPPort : thePrefs.GetUDPPort());
+	if (CPegasoPortMap::HasFixedGateway())
+		return;
 	if (theApp.m_pUPnPFinder != NULL && (m_hUPnPTimeOutTimer == 0 || !bReset)) {
 		if (bReset) {
 			theApp.m_pUPnPFinder->Reset();

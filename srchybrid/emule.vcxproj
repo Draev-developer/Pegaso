@@ -320,6 +320,7 @@
     <ClCompile Include="NetGuard.cpp" />
     <ClCompile Include="PegasoDefaults.cpp" />
     <ClCompile Include="PegasoRating.cpp" />
+    <ClCompile Include="PegasoPortMap.cpp" />
     <ClCompile Include="PegasoSources.cpp" />
     <ClCompile Include="PegasoTrust.cpp" />
     <ClCompile Include="PegasoScan.cpp" />
@@ -628,6 +629,7 @@
     <ClInclude Include="NetGuard.h" />
     <ClInclude Include="PegasoDefaults.h" />
     <ClInclude Include="PegasoRating.h" />
+    <ClInclude Include="PegasoPortMap.h" />
     <ClInclude Include="PegasoSources.h" />
     <ClInclude Include="PegasoTrust.h" />
     <ClInclude Include="PegasoScan.h" />

@@ -68,6 +68,7 @@
 #define MP_PEGASO_RATE			10982	// Pegaso
 #define MP_PEGASO_ADDWEBSRC		10983	// Pegaso
 #define MP_PEGASO_ADDTORRENT	10984	// Pegaso
+#define MP_PEGASO_API			10985	// Pegaso
 #define	MP_HM_IPFILTER			10245
 #define	MP_WEBSVC_EDIT			10246
 #define	MP_HM_DIRECT_DOWNLOAD	10247

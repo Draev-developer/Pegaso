@@ -10,7 +10,7 @@
 ; Downloads\Pegaso), so removing or updating the program does not touch them.
 
 #define AppName "Pegaso"
-#define AppVersion "0.2"
+#define AppVersion "0.3"
 #define Release "..\..\srchybrid\x64\Release"
 
 [Setup]
@@ -30,7 +30,11 @@ MinVersion=10.0
 LicenseFile=..\..\license.txt
 SetupIconFile=..\..\srchybrid\res\Mule_Vista.ico
 UninstallDisplayIcon={app}\Pegaso.exe
-OutputDir=output
+; another folder: ISCC /DOutDir=<folder> pegaso.iss
+#ifndef OutDir
+  #define OutDir "output"
+#endif
+OutputDir={#OutDir}
 OutputBaseFilename=Pegaso-{#AppVersion}-setup
 Compression=lzma2
 SolidCompression=yes

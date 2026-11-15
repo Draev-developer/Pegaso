@@ -2,6 +2,14 @@
 
 Pegaso parte de eMule 0.72a (edición de la comunidad). El historial de eMule está en `changelog_full.txt`.
 
+## 0.3 (en desarrollo)
+
+### Interfaz
+- API local para otros programas del equipo: REST y MCP (para asistentes de IA). Desactivada de serie; se activa en Herramientas → «API local (REST y MCP)…». Solo escucha en 127.0.0.1, pide una clave secreta y rechaza las peticiones que vienen de páginas web. Permite ver y manejar descargas, buscar en eD2K y Kad y conectar o desconectar. Descrita en `docs/api.md`.
+
+### Técnica
+- El instalador admite otra carpeta de salida (`ISCC /DOutDir=…`).
+
 ## 0.2
 
 ### Seguridad

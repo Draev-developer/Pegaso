@@ -39,6 +39,7 @@
 #include "PegasoStrings.h"
 #include "PegasoSources.h"
 #include "PegasoPortMap.h"
+#include "PegasoApi.h"
 #include "PegasoDefaults.h"
 #include "otherfunctions.h"
 #include "ServerWnd.h"
@@ -625,6 +626,8 @@ BOOL CemuleDlg::OnInitDialog()
 	VERIFY((m_hTimer = ::SetTimer(NULL, 0, MSEC(300), StartupTimer)) != 0);
 	if (thePrefs.GetVerbose() && !m_hTimer)
 		AddDebugLogLine(true, _T("Failed to create 'startup' timer - %s"), (LPCTSTR)GetErrorMessage(::GetLastError()));
+
+	thePegasoApi.Start();	// Pegaso: the local API, if the user turned it on
 
 	// Start UPnP port forwarding
 	if (thePrefs.IsUPnPEnabled())
@@ -1744,6 +1747,7 @@ void CemuleDlg::OnClose()
 		theApp.searchlist->StoreSearches();
 
 	thePortMap.Stop();	// Pegaso: NAT-PMP / PCP mappings are given back
+	thePegasoApi.Stop();
 	// close uPnP Ports
 	theApp.m_pUPnPFinder->GetImplementation()->StopAsyncFind();
 	if (thePrefs.CloseUPnPOnExit())
@@ -2575,6 +2579,9 @@ BOOL CemuleDlg::OnCommand(WPARAM wParam, LPARAM lParam)
 			dlg.DoModal();
 		}
 		break;
+	case MP_PEGASO_API:	// Pegaso: the local API (REST and MCP)
+		thePegasoApi.ShowDialog(this);
+		break;
 	case MP_HM_DIRECT_DOWNLOAD:
 		if (m_pLinksDlg == NULL) {
 			CDirectDownloadDlg dlg;
@@ -2673,6 +2680,7 @@ void CemuleDlg::ShowToolPopup(bool toolsonly)
 	menu.AppendMenu(MF_STRING, MP_HM_1STSWIZARD, GetResString(IDS_WIZ1) + _T("..."), _T("WIZARD"));
 	menu.AppendMenu(MF_STRING, MP_HM_IPFILTER, GetResString(IDS_IPFILTER) + _T("..."), _T("IPFILTER"));
 	menu.AppendMenu(MF_STRING, MP_HM_DIRECT_DOWNLOAD, GetPegasoString(PS_ADD_LINKS) + CString(_T("...")), _T("PASTELINK"));
+	menu.AppendMenu(MF_STRING | (thePegasoApi.IsRunning() ? MF_CHECKED : 0), MP_PEGASO_API, GetPegasoString(PS_API_MENU) + CString(_T("...")));
 	menu.AppendMenu(MF_STRING, MP_PEGASO_WEBSEARCH, GetPegasoString(PS_WS_MENU), _T("SEARCH"));	// Pegaso
 
 	menu.AppendMenu(MF_SEPARATOR);

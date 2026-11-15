@@ -16,7 +16,7 @@ import urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 REPO = 'Draev-developer/Pegaso'
-VERSION = '0.2'
+VERSION = '0.3'
 
 
 def token():
@@ -50,7 +50,9 @@ def main():
     title = sys.argv[2] if len(sys.argv) > 2 else 'Pegaso ' + VERSION
     body = open(os.path.join(ROOT, 'docs', 'release-%s.md' % VERSION), encoding='utf-8').read()
     body = body.split('\n', 1)[1].lstrip()  # the first line is the title
-    installer = os.path.join(ROOT, 'tools', 'installer', 'output', 'Pegaso-%s-setup.exe' % VERSION)
+    # the folder the installer was written to: tools/installer/output unless PEGASO_DIST names another one
+    folder = os.environ.get('PEGASO_DIST') or os.path.join(ROOT, 'tools', 'installer', 'output')
+    installer = os.path.join(folder, 'Pegaso-%s-setup.exe' % VERSION)
     data = open(installer, 'rb').read()
     tok = token()
     release = call('POST', 'https://api.github.com/repos/%s/releases' % REPO, tok,

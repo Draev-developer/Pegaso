@@ -26,6 +26,7 @@
 #include "PegasoScan.h"
 #include "PegasoRating.h"
 #include "PegasoTrust.h"
+#include "PegasoSources.h"
 #include "PartFile.h"
 #include "ed2kLink.h"
 #include "SearchFile.h"
@@ -373,6 +374,7 @@ void CDownloadQueue::Process()
 	PegasoScanProcess();
 	PegasoRatingProcess();
 	PegasoTrustProcess();
+	PegasoSourcesProcess();
 	ProcessLocalRequests(); // send src requests to local server
 
 	uint32 factor;

@@ -37,6 +37,7 @@
 #include "TorrentQueue.h"
 #include "WebSearch.h"
 #include "PegasoStrings.h"
+#include "PegasoSources.h"
 #include "PegasoDefaults.h"
 #include "otherfunctions.h"
 #include "ServerWnd.h"
@@ -1717,6 +1718,7 @@ void CemuleDlg::OnClose()
 		}
 	}
 
+	PegasoSourcesSave();	// Pegaso: the sources of the downloads, for the next start
 	Kademlia::CKademlia::Stop();	// couple of data files are written
 
 	// try to wait until the hashing thread notices that we are shutting down

@@ -2,13 +2,23 @@
 
 Pegaso parte de eMule 0.72a (edición de la comunidad). El historial de eMule está en `changelog_full.txt`.
 
+## 0.2
+
+### Seguridad
+- Detector de falsos: cada resultado de búsqueda y cada descarga recibe una puntuación de 0 a 100 sin esperar a que nadie lo valore. Mira el nombre (un programa con nombre de vídeo, extensiones dobles), los nombres distintos con que circula un mismo archivo, la duración anunciada frente al tamaño, los primeros bytes de la descarga frente a su extensión, el contenido de los torrents y las valoraciones de los usuarios. Se ve en la columna «Confianza», con los motivos en el globo de ayuda; antes de descargar un resultado sospechoso, Pegaso pregunta. Solo avisa, nunca bloquea.
+
+### Redes eMule
+- Las fuentes de cada descarga se recuerdan al cerrar (hasta 20 por archivo, durante 24 horas) y se recuperan al arrancar, sin esperar a que el servidor o Kad las vuelvan a encontrar.
+- Apertura de puertos en el router: activada de serie y, además de UPnP, con NAT-PMP y PCP. Un puerto solo cuenta como abierto si el router concede exactamente el pedido y lo dirige a este equipo; se renueva antes de caducar y se devuelve al salir. Si el router no tiene dirección pública (CGNAT o doble router) o el puerto ya está redirigido a otro equipo, Pegaso lo dice en el registro en lugar de dejar una ID baja sin explicación.
+
+### Interfaz
+- Banderas de país junto a las fuentes de las descargas, los clientes (subidas, cola, clientes conocidos) y los servidores; el país aparece también en el globo de cada fuente. La consulta se hace en el propio equipo con la base «IP to Country Lite» de DB-IP (CC BY 4.0); no se envía nada a ningún sitio.
+
 ## 0.1 — primera versión
 
 ### Redes eMule
 - Servidores eD2K de serie y direcciones para actualizar la lista de servidores.
 - **Conectar** entra siempre en un servidor y en Kad; si Kad no conoce contactos, descarga una lista inicial.
-- Apertura de puertos en el router: activada de serie y, además de UPnP, con NAT-PMP y PCP. Un puerto solo cuenta como abierto si el router concede exactamente el pedido y lo dirige a este equipo; se renueva antes de caducar y se devuelve al salir. Si el router no tiene dirección pública (CGNAT o doble router) o el puerto ya está redirigido a otro equipo, Pegaso lo dice en el registro en lugar de dejar una ID baja sin explicación.
-- Las fuentes de cada descarga se recuerdan al cerrar (hasta 20 por archivo, durante 24 horas) y se recuperan al arrancar, sin esperar a que el servidor o Kad las vuelvan a encontrar.
 - Sin chat IRC ni mensajes entre usuarios.
 
 ### BitTorrent
@@ -30,7 +40,6 @@ Pegaso parte de eMule 0.72a (edición de la comunidad). El historial de eMule es
 - Las fuentes web y el torrent añadidos a una descarga se conservan al reiniciar.
 
 ### Seguridad
-- Detector de falsos: cada resultado de búsqueda y cada descarga recibe una puntuación de 0 a 100 sin esperar a que nadie lo valore. Mira el nombre (un programa con nombre de vídeo, extensiones dobles), los nombres distintos con que circula un mismo archivo, la duración anunciada frente al tamaño, los primeros bytes de la descarga frente a su extensión, el contenido de los torrents y las valoraciones de los usuarios. Se ve en la columna «Confianza», con los motivos en el globo de ayuda; antes de descargar un resultado sospechoso, Pegaso pregunta. Solo avisa, nunca bloquea.
 - Marcador de archivos: correcto, mala calidad, falso o no cumple la descripción, con aviso cuando varios usuarios señalan un archivo.
 - El marcador vale también para torrents: la valoración se publica en Kad y la ven los demás usuarios de Pegaso que añadan ese torrent.
 - Protección VPN: uso exclusivo de un adaptador de red y corte del tráfico si se desconecta.
@@ -40,7 +49,6 @@ Pegaso parte de eMule 0.72a (edición de la comunidad). El historial de eMule es
 ### Interfaz
 - Nombre, iconos e identidad propios.
 - Columna «Origen» en la lista de descargas: E (eMule), T (torrent), W (web) o su combinación.
-- Banderas de país junto a las fuentes de las descargas, los clientes (subidas, cola, clientes conocidos) y los servidores; el país aparece también en el globo de cada fuente. La consulta se hace en el propio equipo con la base «IP to Country Lite» de DB-IP (CC BY 4.0); no se envía nada a ningún sitio.
 - Página de opciones «Web y BitTorrent».
 - Buscador de torrents con proveedores Torznab configurados por el usuario.
 - Idiomas incluidos: español, inglés, francés, italiano, portugués, alemán y ruso.

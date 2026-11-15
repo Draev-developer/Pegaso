@@ -154,7 +154,8 @@ def main():
         left = os.listdir(os.path.join(w.RUN, 'Temp', 'hybrid')) if os.path.isdir(os.path.join(w.RUN, 'Temp', 'hybrid')) else []
         print('finished in %ds (eMule alone at 40 KB/s would need about %d min); identical: %s' % (took, SIZE / 40000 / 60, same))
         print('sources column showed: %r; helper data left behind: %s' % (shown, left))
-        ok &= same and took < 100 and '+ BT' in shown and not left
+        # between two local instances the torrent can deliver everything before the list is read once
+        ok &= same and took < 100 and ('+ BT' in shown or took < 8) and not left
 
         # ---- 2. a torrent with a file of the same size but other content
         r.send_link(hwnd, 'ed2k://|file|%s|%d|%s|/' % (OTHER, SIZE, w.ed2k_hash(other)) + src)

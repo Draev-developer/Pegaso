@@ -15,6 +15,7 @@
 //along with this program; if not, write to the Free Software
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #include "stdafx.h"
+#include "PegasoIPv6.h"
 #define MMNODRV			// mmsystem: Installable driver support
 //#define MMNOSOUND		// mmsystem: Sound support
 #define MMNOWAVE		// mmsystem: Waveform support
@@ -1748,6 +1749,7 @@ void CemuleDlg::OnClose()
 
 	thePortMap.Stop();	// Pegaso: NAT-PMP / PCP mappings are given back
 	thePegasoApi.Stop();
+	Pegaso6::Stop();
 	// close uPnP Ports
 	theApp.m_pUPnPFinder->GetImplementation()->StopAsyncFind();
 	if (thePrefs.CloseUPnPOnExit())

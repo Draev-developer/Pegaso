@@ -15,6 +15,7 @@
 //along with this program; if not, write to the Free Software
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #include "stdafx.h"
+#include "PegasoIPv6.h"
 /* #ifdef _DEBUG
 #define _CRTDBG_MAP_ALLOC
 #include <crtdbg.h>
@@ -1102,6 +1103,8 @@ bool CemuleApp::IsFirewalled()
 
 bool CemuleApp::CanDoCallback(CUpDownClient *client)
 {
+	if (client != NULL && client->PegasoDialIP6() != 0)
+		return true;	// Pegaso: no callback needed, it is called over IPv6
 	bool ed2k = theApp.serverconnect->IsConnected();
 	bool eLow = theApp.serverconnect->IsLowID();
 

@@ -15,6 +15,7 @@
 //along with this program; if not, write to the Free Software
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #include "stdafx.h"
+#include "PegasoIPv6.h"
 #include "emule.h"
 #include "ServerConnect.h"
 #include "Opcodes.h"
@@ -172,7 +173,11 @@ void CServerConnect::ConnectionEstablished(CServerSocket *sender)
 		data.WriteUInt32(GetClientID());
 		data.WriteUInt16(thePrefs.GetPort());
 
-		UINT tagcount = 4;
+		// Pegaso: our IPv6, so that the server can test it and give us to others as an IPv6 source;
+		// with it the server may also list sources by their IPv6
+		in6_addr pegasoOwn6;
+		const bool bPegasoIP6 = Pegaso6::Own(pegasoOwn6);
+		UINT tagcount = 4 + static_cast<UINT>(bPegasoIP6);
 		data.WriteUInt32(tagcount);
 
 		CTag tagName(CT_NAME, thePrefs.GetUserNick());
@@ -191,6 +196,10 @@ void CServerConnect::ConnectionEstablished(CServerSocket *sender)
 
 		CTag tagFlags(CT_SERVER_FLAGS, SRVCAP_ZLIB | SRVCAP_NEWTAGS | SRVCAP_LARGEFILES | SRVCAP_UNICODE | dwCryptFlags);
 		tagFlags.WriteTagToFile(data);
+		if (bPegasoIP6) {
+			CTag tagIP6(CT_MOD_IP_V6, pegasoOwn6.u.Byte);
+			tagIP6.WriteTagToFile(data);
+		}
 
 		// eMule Version (14-Mar-2004: requested by lugdunummaster (needed for LowID clients
 		// that have no chance to send a Hello packet to the server during the callback test))

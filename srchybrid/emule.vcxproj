@@ -322,6 +322,7 @@
     <ClCompile Include="PegasoRating.cpp" />
     <ClCompile Include="PegasoApi.cpp" />
     <ClCompile Include="PegasoGeo.cpp" />
+    <ClCompile Include="PegasoIPv6.cpp" />
     <ClCompile Include="PegasoPortMap.cpp" />
     <ClCompile Include="PegasoSources.cpp" />
     <ClCompile Include="PegasoTrust.cpp" />
@@ -633,6 +634,7 @@
     <ClInclude Include="PegasoRating.h" />
     <ClInclude Include="PegasoApi.h" />
     <ClInclude Include="PegasoGeo.h" />
+    <ClInclude Include="PegasoIPv6.h" />
     <ClInclude Include="PegasoPortMap.h" />
     <ClInclude Include="PegasoSources.h" />
     <ClInclude Include="PegasoTrust.h" />

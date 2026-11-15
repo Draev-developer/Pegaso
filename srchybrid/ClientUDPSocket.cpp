@@ -15,6 +15,7 @@
 //along with this program; if not, write to the Free Software
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #include "stdafx.h"
+#include "PegasoIPv6.h"
 #include "emule.h"
 #include "ClientUDPSocket.h"
 #include "Packets.h"
@@ -494,6 +495,10 @@ int CClientUDPSocket::SendTo(uchar *lpBuf, int nBufLen, uint32 dwIP, uint16 nPor
 
 bool CClientUDPSocket::SendPacket(Packet *packet, uint32 dwIP, uint16 nPort, bool bEncrypt, const uchar *pachTargetClientHashORKadID, bool bKad, uint32 nReceiverVerifyKey)
 {
+	if (Pegaso6::IsPseudo(dwIP)) {	// Pegaso: the UDP socket is IPv4; a client known by its IPv6 is asked over TCP
+		delete packet;
+		return false;
+	}
 	UDPPack *newpending = new UDPPack;
 	newpending->dwIP = dwIP;
 	newpending->nPort = nPort;

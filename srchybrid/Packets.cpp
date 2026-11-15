@@ -672,7 +672,7 @@ bool CTag::WriteTagToFile(CFileDataIO &file, EUTF8str eStrEncode) const
 
 	// don't write tags of unknown types, we wouldn't be able to read in them,
 	// and the met file would be corrupted
-	if (IsStr() || IsInt64() || IsFloat() || IsBlob()) {
+	if (IsStr() || IsInt64() || IsFloat() || IsBlob() || IsHash()) {	// Pegaso: hash tags too (IPv6 addresses)
 		file.WriteUInt8(m_uType);
 
 		if (m_sName.IsEmpty()) {
@@ -686,6 +686,8 @@ bool CTag::WriteTagToFile(CFileDataIO &file, EUTF8str eStrEncode) const
 
 		if (IsStr())
 			file.WriteString(GetStr(), eStrEncode);
+		else if (IsHash())
+			file.WriteHash16(m_pData);
 		else if (IsInt())
 			file.WriteUInt32((uint32)m_uVal);
 		else if (IsInt64(false))

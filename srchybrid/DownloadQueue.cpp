@@ -15,6 +15,7 @@
 //along with this program; if not, write to the Free Software
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #include "stdafx.h"
+#include "PegasoIPv6.h"
 #include <io.h>
 #include "emule.h"
 #include "UpDownClient.h"
@@ -377,6 +378,7 @@ void CDownloadQueue::Process()
 	PegasoTrustProcess();
 	PegasoSourcesProcess();
 	thePortMap.Process();
+	Pegaso6::Process();
 	ProcessLocalRequests(); // send src requests to local server
 
 	uint32 factor;
@@ -1590,7 +1592,7 @@ void CDownloadQueue::KademliaSearchFile(uint32 nSearchID, const Kademlia::CUInt1
 	case 3:
 		//This will be a firewalled client connected to Kad only.
 		// if we are firewalled ourself, the source is useless to us
-		if (theApp.IsFirewalled())
+		if (theApp.IsFirewalled() && Pegaso6::PendingKad() == 0)	// Pegaso: unless it can be called over IPv6
 			break;
 
 		if (theApp.ipfilter->IsFiltered(dwBuddyIP)) {
@@ -1620,7 +1622,7 @@ void CDownloadQueue::KademliaSearchFile(uint32 nSearchID, const Kademlia::CUInt1
 	case 6:
 		// firewalled source which supports direct UDP callback
 		// if we are firewalled ourselves, the source is useless to us
-		if (theApp.IsFirewalled())
+		if (theApp.IsFirewalled() && Pegaso6::PendingKad() == 0)
 			break;
 
 		if ((byCryptOptions & 0x08) == 0)
@@ -1639,6 +1641,8 @@ void CDownloadQueue::KademliaSearchFile(uint32 nSearchID, const Kademlia::CUInt1
 	if (ctemp != NULL) {
 		// add encryption settings
 		ctemp->SetConnectOptions(byCryptOptions);
+		if (ctemp->HasLowID() && Pegaso6::PendingKad() != 0)
+			ctemp->SetPegasoIP6(Pegaso6::PendingKad());	// Pegaso: a firewalled source which can be called over IPv6
 		CheckAndAddSource(temp, ctemp);
 	}
 }

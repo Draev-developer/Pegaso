@@ -15,6 +15,7 @@
 //along with this program; if not, write to the Free Software
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #include "stdafx.h"
+#include "PegasoIPv6.h"
 #include <atlimage.h>
 #include <fcntl.h>
 #include <io.h>
@@ -2737,11 +2738,15 @@ CString ipstr(uint32 nIP, uint16 nPort)
 
 CString ipstr(uint32 nIP)
 {
+	if (Pegaso6::IsPseudo(nIP))	// Pegaso: the stand-in of an IPv6 address
+		return Pegaso6::Text(nIP);
 	return CString(inet_ntoa(*(in_addr*)&nIP));
 }
 
 CStringA ipstrA(uint32 nIP)
 {
+	if (Pegaso6::IsPseudo(nIP))
+		return CStringA(Pegaso6::Text(nIP));
 	return CStringA(inet_ntoa(*(in_addr*)&nIP));
 }
 

@@ -30,6 +30,7 @@ their client on the eMule forum.
 */
 
 #include "stdafx.h"
+#include "PegasoIPv6.h"
 #include "ClientList.h"
 #include "DownloadQueue.h"
 #include "emule.h"
@@ -651,7 +652,7 @@ void CSearch::StorePacket()
 			TagList listTag;
 			if (theApp.IsFirewalled()) {
 				bool bDirectCallback = (Kademlia::CKademlia::IsRunning() && !Kademlia::CUDPFirewallTester::IsFirewalledUDP(true) && Kademlia::CUDPFirewallTester::IsVerified());
-				if (!bDirectCallback && !theApp.clientlist->GetBuddy()) {
+				if (!bDirectCallback && !theApp.clientlist->GetBuddy() && !Pegaso6::PeerGateOpen()) {
 					// We are firewalled, no direct callback and no buddy. Stop everything.
 					PrepareToStop();
 					break;
@@ -660,6 +661,15 @@ void CSearch::StorePacket()
 				if (bDirectCallback) {
 					// firewalled, but direct UDP callback is possible without buddies
 					listTag.push_back(new CKadTagUInt(TAG_SOURCETYPE, 6));
+					listTag.push_back(new CKadTagUInt(TAG_SOURCEPORT, thePrefs.GetPort()));
+					if (!CKademlia::GetPrefs()->GetUseExternKadPort())
+						listTag.push_back(new CKadTagUInt16(TAG_SOURCEUPORT, CKademlia::GetPrefs()->GetInternKadPort()));
+					if (pFromContact->GetVersion() >= KADEMLIA_VERSION2_47a)
+						listTag.push_back(new CKadTagUInt(TAG_FILESIZE, pFile->GetFileSize()));
+				} else if (!theApp.clientlist->GetBuddy()) {
+					// Pegaso: firewalled and without a buddy, but reachable over IPv6: a firewalled
+					// source without the buddy tags; who knows the "ip6" tag calls it directly
+					listTag.push_back(new CKadTagUInt8(TAG_SOURCETYPE, (pFile->GetFileSize() > OLD_MAX_EMULE_FILE_SIZE ? 5 : 3)));
 					listTag.push_back(new CKadTagUInt(TAG_SOURCEPORT, thePrefs.GetPort()));
 					if (!CKademlia::GetPrefs()->GetUseExternKadPort())
 						listTag.push_back(new CKadTagUInt16(TAG_SOURCEUPORT, CKademlia::GetPrefs()->GetInternKadPort()));
@@ -695,6 +705,11 @@ void CSearch::StorePacket()
 			}
 
 			listTag.push_back(new CKadTagUInt8(TAG_ENCRYPTION, CKademlia::GetPrefs()->GetMyConnectOptions(true, true)));
+			{	// Pegaso: our IPv6, last, once it is known to take connections
+				in6_addr own6;
+				if (Pegaso6::PeerGateOpen() && Pegaso6::Own(own6))
+					listTag.push_back(new CKadTagStr("ip6", (CStringW)Pegaso6::ToHex(own6)));
+			}
 
 			// Send packet
 			CKademlia::GetUDPListener()->SendPublishSourcePacket(pFromContact, m_uTarget, uID, listTag);
@@ -934,9 +949,15 @@ void CSearch::ProcessResultFile(const CUInt128 &uAnswer, TagList &rlistInfo)
 	//uint32 uClientID = 0;
 	CUInt128 uBuddy;
 	uint8 byCryptOptions = 0; // 0 = not supported
+	uint32 uPegasoIP6 = 0;
 
 	for (TagList::const_iterator itInfoList = rlistInfo.begin(); itInfoList != rlistInfo.end(); ++itInfoList) {
 		const CKadTag &cTag(**itInfoList);
+		if (cTag.m_name.Compare("ip6") == 0) {	// Pegaso: the IPv6 address the source says it can be called at
+			in6_addr addr6;
+			uPegasoIP6 = cTag.IsStr() && Pegaso6::FromHex(CString(cTag.GetStr()), addr6) ? Pegaso6::PseudoOf(addr6) : 0;
+			continue;
+		}
 		if (cTag.m_name.GetLength() != 1) //all names are 1 byte strings
 			continue;
 		switch ((byte)cTag.m_name[0]) {
@@ -984,7 +1005,9 @@ void CSearch::ProcessResultFile(const CUInt128 &uAnswer, TagList &rlistInfo)
 	case 6:
 		++m_uAnswers;
 		theApp.emuledlg->kademliawnd->searchList->SearchRef(this);
+		Pegaso6::SetPendingKad(uPegasoIP6);
 		theApp.downloadqueue->KademliaSearchFile(m_uSearchID, &uAnswer, &uBuddy, uType, uIP, uTCPPort, uUDPPort, uBuddyIP, uBuddyPort, byCryptOptions);
+		Pegaso6::SetPendingKad(0);
 		break;
 	}
 }

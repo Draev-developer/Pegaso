@@ -95,6 +95,12 @@ public:
 	uint32			GetIP() const									{ return m_dwUserIP; }
 	//Only use this when you know the real IP or when your clearing it.
 	void			SetIP(uint32 val)								{ m_dwUserIP = m_nConnectIP = val; }
+	// Pegaso: IPv6, see PegasoIPv6.h. The stand-in of the IPv6 address the client says it can be called at (0 = none).
+	void			SetPegasoIP6(uint32 uPseudo)					{ m_uPegasoIP6 = uPseudo; }
+	uint32			GetPegasoIP6() const							{ return m_uPegasoIP6; }
+	uint32			PegasoDialIP6() const;	// the stand-in to call over IPv6; 0 = call the usual way
+	uint32			m_uPegasoIP6 = 0;
+	uint32			m_uPegasoModOptions = 0;	// CT_MOD_MISCOPTIONS of its hello
 
 	inline bool		HasLowID() const								{ return ::IsLowID(m_nUserIDHybrid); }
 	uint32			GetConnectIP() const							{ return m_nConnectIP; }

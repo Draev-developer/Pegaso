@@ -15,6 +15,7 @@
 //along with this program; if not, write to the Free Software
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #include "stdafx.h"
+#include "PegasoIPv6.h"
 #include <io.h>
 #include <sys/stat.h>
 #include <winioctl.h>
@@ -2634,6 +2635,23 @@ void CPartFile::AddSources(CSafeMemFile *sources, uint32 serverip, uint16 server
 				DebugLogWarning(_T("Server didn't provide UserHash for source %u, even if it was expected to (or local obfuscation settings changed during server connect)"), userid);
 			} else if (!thePrefs.IsCryptLayerPreferred() && (byCryptOptions & 0x02/*requested*/) == 0 && (byCryptOptions & 0x80) != 0)
 				DebugLogWarning(_T("Server provided UserHash for source %u, even if it wasn't expected to (or local obfuscation settings changed during server connect)"), userid);
+		}
+
+		// Pegaso: a source with an IPv6 address - the ID is a marker and 16 bytes follow, always last
+		if (userid == IPV6_SOURCE_SENTINEL) {
+			in6_addr addr6;
+			sources->Read(&addr6, sizeof addr6);
+			if (m_stopped || bSkip || GetMaxSources() <= GetSourceCount())
+				continue;
+			CUpDownClient *newsource = Pegaso6::NewSource(this, addr6, port);
+			if (newsource != NULL) {
+				newsource->SetSourceFrom(SF_SERVER);
+				newsource->SetConnectOptions(byCryptOptions, true, false);
+				if ((byCryptOptions & 0x80) != 0)
+					newsource->SetUserHash(achUserHash);
+				theApp.downloadqueue->CheckAndAddSource(this, newsource);
+			}
+			continue;
 		}
 
 		// since we may receive multiple UDP source search results, we have to "consume" all data of that packet

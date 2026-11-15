@@ -15,6 +15,7 @@
 //along with this program; if not, write to the Free Software
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #include "stdafx.h"
+#include "PegasoIPv6.h"
 #ifdef _DEBUG
 #include "DebugHelpers.h"
 #endif
@@ -544,6 +545,21 @@ bool CUpDownClient::ProcessHelloTypePacket(CSafeMemFile &data)
 			} else if (bDbgInfo)
 				m_strHelloInfo.AppendFormat(_T("\n  ***UnkType=%s"), (LPCTSTR)temptag.GetFullInfo());
 			break;
+		case CT_MOD_MISCOPTIONS:	// Pegaso: capabilities of clients which speak the IPv6 extension
+			if (temptag.IsInt())
+				m_uPegasoModOptions = temptag.GetInt();
+			break;
+		case CT_MOD_IP_V6:			// Pegaso: the IPv6 address the client can be called at
+			if (temptag.IsHash()) {
+				in6_addr addr6;
+				memcpy(&addr6, temptag.GetHash(), sizeof addr6);
+				m_uPegasoIP6 = Pegaso6::PseudoOf(addr6);
+				if (bDbgInfo)
+					m_strHelloInfo.AppendFormat(_T("\n  IPv6=%s"), (LPCTSTR)Pegaso6::Text(m_uPegasoIP6));
+			}
+			break;
+		case CT_MOD_YOUR_IP:		// how the client sees us; not taken on trust
+			break;
 		default:
 			// Since eDonkeyHybrid 1.3 is no longer sending the additional Int32 at the end of
 			// the Hello packet, we use the "pr=1" tag to determine them.
@@ -605,7 +621,14 @@ bool CUpDownClient::ProcessHelloTypePacket(CSafeMemFile &data)
 	//(b)Some older clients will not send an ID, these client are HighID users that are not connected to a server.
 	//(c)Kad users with a *.*.*.0 IPs will look like a lowID user they are actually a highID user. They can be detected easily
 	//because they will send an ID that is the same as their IP.
-	if (!HasLowID() || m_nUserIDHybrid == 0 || m_nUserIDHybrid == m_dwUserIP)
+	if (Pegaso6::IsPseudo(m_dwUserIP)) {
+		// Pegaso: the connection runs over IPv6. The IPv4 identity the client claims cannot be checked
+		// here, so it is not taken over: a low ID of its own stands for a client known by its IPv6.
+		if (!HasLowID() || m_nUserIDHybrid == 0)
+			m_nUserIDHybrid = Pegaso6::PlaceholderID(m_dwUserIP);
+		if (m_eConnectingState == CCS_NONE)
+			Pegaso6::NoteInboundHello(m_dwUserIP);	// it was the client who called: connections get in
+	} else if (!HasLowID() || m_nUserIDHybrid == 0 || m_nUserIDHybrid == m_dwUserIP)
 		m_nUserIDHybrid = ntohl(m_dwUserIP);
 
 	CClientCredits *pFoundCredits = theApp.clientcredits->GetCredit(m_achUserHash);
@@ -919,6 +942,18 @@ void CUpDownClient::SendHelloTypePacket(CSafeMemFile &data)
 
 	uint32 tagcount = 7;
 
+	// Pegaso: the IPv6 extension - our capabilities, the address of the peer as we see it, and
+	// our own IPv6 once it is known to take connections
+	in6_addr pegasoOwn6, pegasoPeer6;
+	const bool bPegasoTell6 = Pegaso6::PeerGateOpen() && Pegaso6::Own(pegasoOwn6);
+	uint32 uPegasoPeerIP = GetIP() != 0 ? GetIP() : GetConnectIP();
+	if (socket != NULL && socket->GetFamily() == AF_INET6 && !Pegaso6::IsPseudo(uPegasoPeerIP))
+		uPegasoPeerIP = PegasoDialIP6();
+	const bool bPegasoPeer6 = Pegaso6::IsPseudo(uPegasoPeerIP);
+	if (bPegasoPeer6 && !Pegaso6::AddrOf(uPegasoPeerIP, pegasoPeer6))
+		uPegasoPeerIP = 0;
+	tagcount += 1 + static_cast<uint32>(uPegasoPeerIP != 0) + static_cast<uint32>(bPegasoTell6);
+
 	if (theApp.clientlist->GetBuddy() && theApp.IsFirewalled())
 		tagcount += 2;
 
@@ -1037,6 +1072,22 @@ void CUpDownClient::SendHelloTypePacket(CSafeMemFile &data)
 	// Pegaso: announce the mod name, the usual way for eMule based clients
 	CTag tagModVersion(CT_MOD_VERSION, PEGASO_MOD_VERSION);
 	tagModVersion.WriteTagToFile(data, UTF8strRaw);
+
+	CTag tagPegasoMisc(CT_MOD_MISCOPTIONS, (uint64)MODMISC_IPV6);
+	tagPegasoMisc.WriteTagToFile(data);
+	if (uPegasoPeerIP != 0) {
+		if (bPegasoPeer6) {
+			CTag tagYourIP(CT_MOD_YOUR_IP, pegasoPeer6.u.Byte);
+			tagYourIP.WriteTagToFile(data);
+		} else {
+			CTag tagYourIP(CT_MOD_YOUR_IP, (uint64)uPegasoPeerIP);
+			tagYourIP.WriteTagToFile(data);
+		}
+	}
+	if (bPegasoTell6) {
+		CTag tagOwn6(CT_MOD_IP_V6, pegasoOwn6.u.Byte);
+		tagOwn6.WriteTagToFile(data);
+	}
 
 	uint32 dwIP;
 	uint16 nPort;
@@ -1343,7 +1394,7 @@ bool CUpDownClient::TryToConnect(bool bIgnoreMaxCon, bool bNoCallbacks, CRuntime
 		}
 	}
 
-	if (HasLowID() && GetKadState() != KS_CONNECTING_FWCHECK) {
+	if (HasLowID() && GetKadState() != KS_CONNECTING_FWCHECK && PegasoDialIP6() == 0) {	// Pegaso: an IPv6 address is called directly
 		ASSERT(pClassSocket == NULL);
 		if (!theApp.CanDoCallback(this)) { // lowid2lowid check used for the whole function, don't remove
 			// We cannot reach this client, so we hard fail to connect, if this client should be kept,
@@ -1387,13 +1438,13 @@ bool CUpDownClient::TryToConnect(bool bIgnoreMaxCon, bool bNoCallbacks, CRuntime
 
 	////////////////////////////////////////////////////////////
 	// 3) Normal Outgoing TCP Connection
-	if (!HasLowID() || GetKadState() == KS_CONNECTING_FWCHECK) {
+	if (!HasLowID() || GetKadState() == KS_CONNECTING_FWCHECK || PegasoDialIP6() != 0) {
 		m_eConnectingState = CCS_DIRECTTCP;
 		if (pClassSocket == NULL)
 			pClassSocket = RUNTIME_CLASS(CClientReqSocket);
 		socket = static_cast<CClientReqSocket*>(pClassSocket->CreateObject());
 		socket->SetClient(this);
-		if (socket->Create())
+		if (PegasoDialIP6() != 0 ? socket->CreateIPv6() : socket->Create())
 			Connect();
 		else {
 			socket->Safe_Delete();
@@ -1483,6 +1534,18 @@ bool CUpDownClient::TryToConnect(bool bIgnoreMaxCon, bool bNoCallbacks, CRuntime
 	return true;
 }
 
+// Pegaso: the address to call over IPv6 instead of the usual way. A client with an IPv4 address
+// that can be called keeps being called there; IPv6 is for the ones which otherwise need a
+// callback (low ID) and for those known by their IPv6 only.
+uint32 CUpDownClient::PegasoDialIP6() const
+{
+	if (!HasLowID() && !Pegaso6::IsPseudo(m_nConnectIP))
+		return 0;
+	const uint32 uTarget = m_uPegasoIP6 != 0 ? m_uPegasoIP6 : (Pegaso6::IsPseudo(m_nConnectIP) ? m_nConnectIP : 0);
+	in6_addr own;
+	return uTarget != 0 && Pegaso6::Enabled() && Pegaso6::Own(own) ? uTarget : 0;
+}
+
 void CUpDownClient::Connect()
 {
 	// enable or disable encryption based on our and the remote clients preference
@@ -1494,11 +1557,20 @@ void CUpDownClient::Connect()
 
 	//Try to always tell the socket to WaitForOnConnect before you call Connect.
 	socket->WaitForOnConnect();
-	SOCKADDR_IN sockAddr = {};
-	sockAddr.sin_family = AF_INET;
-	sockAddr.sin_port = htons(GetUserPort());
-	sockAddr.sin_addr.s_addr = GetConnectIP();
-	socket->Connect((LPSOCKADDR)&sockAddr, sizeof sockAddr);
+	in6_addr pegasoAddr6;
+	if (socket->GetFamily() == AF_INET6 && Pegaso6::AddrOf(PegasoDialIP6(), pegasoAddr6)) {	// Pegaso: over IPv6
+		SOCKADDR_IN6 sockAddr6 = {};
+		sockAddr6.sin6_family = AF_INET6;
+		sockAddr6.sin6_port = htons(GetUserPort());
+		sockAddr6.sin6_addr = pegasoAddr6;
+		socket->Connect((LPSOCKADDR)&sockAddr6, sizeof sockAddr6);
+	} else {
+		SOCKADDR_IN sockAddr = {};
+		sockAddr.sin_family = AF_INET;
+		sockAddr.sin_port = htons(GetUserPort());
+		sockAddr.sin_addr.s_addr = GetConnectIP();
+		socket->Connect((LPSOCKADDR)&sockAddr, sizeof sockAddr);
+	}
 	SendHelloPacket();
 }
 

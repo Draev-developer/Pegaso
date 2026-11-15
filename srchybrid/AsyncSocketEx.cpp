@@ -62,6 +62,7 @@ to tim.kosse@filezilla-project.org
 */
 
 #include "stdafx.h"
+#include "PegasoIPv6.h"
 #include "AsyncSocketEx.h"
 
 #include "AsyncSocketExLayer.h"
@@ -1009,6 +1010,20 @@ BOOL CAsyncSocketEx::GetPeerName(LPSOCKADDR lpSockAddr, int *lpSockAddrLen)
 {
 	if (m_pFirstLayer)
 		return m_pFirstLayer->GetPeerName(lpSockAddr, lpSockAddrLen);
+	// Pegaso: eMule asks with room for an IPv4 address only. For a connection over IPv6 it gets
+	// the stand-in of the peer's address (see PegasoIPv6.h), which the rest of the code can keep.
+	if (m_SocketData.nFamily == AF_INET6 && lpSockAddrLen != NULL && *lpSockAddrLen == (int)sizeof(SOCKADDR_IN)) {
+		SOCKADDR_IN6 peer6 = {};
+		int iLen6 = sizeof peer6;
+		if (getpeername(m_SocketData.hSocket, (LPSOCKADDR)&peer6, &iLen6) != 0)
+			return FALSE;
+		SOCKADDR_IN *pOut = (SOCKADDR_IN*)lpSockAddr;
+		memset(pOut, 0, sizeof *pOut);
+		pOut->sin_family = AF_INET;
+		pOut->sin_port = peer6.sin6_port;
+		pOut->sin_addr.s_addr = Pegaso6::PseudoOf(peer6.sin6_addr);
+		return TRUE;
+	}
 	return !getpeername(m_SocketData.hSocket, lpSockAddr, lpSockAddrLen);
 }
 

@@ -15,6 +15,7 @@
 //along with this program; if not, write to the Free Software
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #include "stdafx.h"
+#include "PegasoIPv6.h"
 #include "emule.h"
 #include "ServerSocket.h"
 #include "SearchList.h"
@@ -447,6 +448,9 @@ bool CServerSocket::ProcessPacket(const BYTE *packet, uint32 size, uint8 opcode)
 							if (thePrefs.GetDebugServerTCPLevel() > 0)
 								strInfo.AppendFormat(_T("  Desc=%s"), (LPCTSTR)strDescription);
 						}
+					} else if (tag.GetNameID() == ST_IPV6_STATUS) {	// Pegaso: what the server found out about our IPv6
+						if (tag.IsInt())
+							Pegaso6::NoteServerVerdict((uint8)tag.GetInt());
 					} else if (thePrefs.GetDebugServerTCPLevel() > 0)
 						strInfo.AppendFormat(_T("  ***UnkTag: 0x%02x=%u"), tag.GetNameID(), tag.GetInt());
 				}
@@ -507,6 +511,17 @@ bool CServerSocket::ProcessPacket(const BYTE *packet, uint32 size, uint8 opcode)
 				if (thePrefs.GetVerbose())
 					DebugLogError((LPCTSTR)GetResString(IDS_ERR_BADSERVERLISTRECEIVED));
 				ex->Delete();
+			}
+			break;
+		case OP_CALLBACKREQUESTED_IPV6:	// Pegaso: a client which cannot be called asks us to call its IPv6
+			if (size >= 18) {
+				in6_addr addr6;
+				memcpy(&addr6, packet, sizeof addr6);
+				CUpDownClient *client = Pegaso6::NewSource(NULL, addr6, PeekUInt16(packet + 16));
+				if (client != NULL) {
+					theApp.clientlist->AddClient(client);
+					client->TryToConnect();
+				}
 			}
 			break;
 		case OP_CALLBACKREQUESTED:

@@ -46,6 +46,7 @@ public:
 	//virtual void Close()						{ CAsyncSocketEx::Close(); }
 
 	bool	Create();
+	bool	CreateIPv6();	// Pegaso: for an outgoing connection over IPv6
 	virtual void SendPacket(Packet *packet, bool controlpacket = true, uint32 actualPayloadSize = 0, bool bForceImmediateSend = false);
 	virtual SocketSentBytes SendControlData(uint32 maxNumberOfBytesToSend, uint32 overchargeMaxBytesToSend);
 	virtual SocketSentBytes SendFileAndControlData(uint32 maxNumberOfBytesToSend, uint32 overchargeMaxBytesToSend);

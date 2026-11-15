@@ -15,6 +15,7 @@
 //along with this program; if not, write to the Free Software
 //Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #include "stdafx.h"
+#include "PegasoIPv6.h"
 #include "emule.h"
 #include "ListenSocket.h"
 #include "opcodes.h"
@@ -1817,6 +1818,20 @@ bool CClientReqSocket::Create()
 {
 	theApp.listensocket->AddConnection();
 	return CAsyncSocketEx::Create(0, SOCK_STREAM, FD_WRITE | FD_READ | FD_CLOSE | FD_CONNECT, thePrefs.GetBindAddr());
+}
+
+bool CClientReqSocket::CreateIPv6()
+{
+	theApp.listensocket->AddConnection();
+	// from the address the others are told, so that they see the one they know us by
+	in6_addr own;
+	if (Pegaso6::Own(own)) {
+		char szOwn[64] = {};
+		inet_ntop(AF_INET6, &own, szOwn, sizeof szOwn);
+		if (CAsyncSocketEx::Create(0, SOCK_STREAM, FD_WRITE | FD_READ | FD_CLOSE | FD_CONNECT, CString(szOwn), AF_INET6))
+			return true;
+	}
+	return CAsyncSocketEx::Create(0, SOCK_STREAM, FD_WRITE | FD_READ | FD_CLOSE | FD_CONNECT, CString(), AF_INET6);
 }
 
 SocketSentBytes CClientReqSocket::SendControlData(uint32 maxNumberOfBytesToSend, uint32 overchargeMaxBytesToSend)

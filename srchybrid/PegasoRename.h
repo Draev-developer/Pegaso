@@ -18,6 +18,7 @@
 // RenameMoviesDir, RenameKeyTmdb, RenameKeyOmdb, RenameKeyTvdb
 #pragma once
 #include <memory>
+#include <string>
 #include <vector>
 #include "resource.h"
 
@@ -40,6 +41,7 @@ struct SVideoName
 };
 
 struct SRenameJob;
+struct SMoveJob;
 
 namespace PegasoRename
 {
@@ -48,9 +50,10 @@ namespace PegasoRename
 	SVideoName Parse(const CString &sFileName);
 	// the name of the file as Pegaso writes it, extension included (sExt: with its dot)
 	CString	Build(const SVideoName &name, const CString &sExt);
-	// Gives a finished download another name or folder (complete paths) and keeps it shared
-	// on eD2K/Kad and seeded on BitTorrent. Main thread.
-	bool	MoveFinished(const CString &sOldPath, const CString &sNewPath, CString &sError);
+	// before a file is moved (complete paths): the new place must be free; its folder is made
+	bool	Prepare(const CString &sOldPath, const CString &sNewPath, CString &sError);
+	// after it was moved: eMule learns the new name and place, and the file stays shared
+	void	Moved(const CString &sOldPath, const CString &sNewPath);
 }
 
 class CPegasoRenameDlg : public CDialog
@@ -66,9 +69,14 @@ public:
 	explicit CPegasoRenameDlg(CWnd *pParent = NULL);
 	virtual ~CPegasoRenameDlg();
 
+	// The window does not hold Pegaso while it is open: moving many files takes its time.
+	static void Open(CWnd *pParent);
+
 protected:
 	virtual BOOL OnInitDialog();
 	virtual void OnOK();		// Enter looks the names up
+	virtual void OnCancel();
+	virtual void PostNcDestroy();
 
 	DECLARE_MESSAGE_MAP()
 	afx_msg void OnBnClickedKeys();
@@ -91,10 +99,41 @@ private:
 	void	Scan();
 	void	ShowRow(int iRow);
 	void	SavePrefs();
+	void	NextMove();
+	void	StartMove();
+	void	CompleteMove();
+	void	MoveTick();
+	void	EnableButtons(bool bEnable);
 
 	CListCtrl m_list;
 	std::vector<SRow> m_rows;
 	std::shared_ptr<SRenameJob> m_job;
+
+	// Files are moved one after another, each by a thread of its own, while this window and
+	// the rest of Pegaso go on working.
+	enum EMoveState
+	{
+		MS_IDLE,
+		MS_PAUSING,		// the torrent of the file is letting go of it
+		MS_MOVING
+	};
+	EMoveState m_eMove;
+	std::vector<int> m_queue;	// rows to move
+	size_t	m_uNext;
+	ULONGLONG m_uTotal;			// bytes of all the files of the queue
+	ULONGLONG m_uFinished;		// bytes of the files which are through
+	int		m_iDone;
+	int		m_iFailed;
+	CString	m_sMoviesDir;
+	CString	m_sSeriesDir;
+	std::shared_ptr<SMoveJob> m_move;
+	CString	m_sFrom;
+	CString	m_sTo;
+	ULONGLONG m_uSize;
+	std::string m_torrent;		// the torrent the file belongs to; empty if none
+	int		m_iTorrentFile;
+	bool	m_bWasPaused;
+	DWORD	m_dwSince;
 };
 
 class CPegasoRenameKeysDlg : public CDialog

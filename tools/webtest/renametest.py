@@ -176,6 +176,11 @@ def main():
     torrent = os.path.join(w.RUN, 'sembrado.torrent')
     make_torrent(seeded, torrent)
 
+    # nothing of an earlier run: a torrent left behind would come back with the engine
+    state = os.path.join(w.RUN, 'config', 'torrents')
+    for left in (os.listdir(state) if os.path.isdir(state) else []):
+        os.remove(os.path.join(state, left))
+    check('the profile of the test starts clean', not os.path.isdir(state) or not os.listdir(state))
     fake = ThreadingHTTPServer(('127.0.0.1', DB_PORT), Handler)
     threading.Thread(target=fake.serve_forever, daemon=True).start()
     p = r.start(w.RUN)
@@ -251,8 +256,12 @@ def main():
         time.sleep(6)
         set_text(u.find_child(dlg, IDC_RN_SERIESDIR), series_dir)
         print('    screenshot:', u.screenshot(dlg, 'shot_rename.png'))
+        check('Pegaso can be used while the window is open', bool(u.user32.IsWindowEnabled(hwnd)))
         u.user32.PostMessageW(dlg, u.WM_COMMAND, IDC_RN_APPLY, 0)
-        time.sleep(10)
+        t0 = time.time()
+        while time.time() - t0 < 90 and 'renombrados' not in text_of(u.find_child(dlg, IDC_RN_STATUS)):
+            time.sleep(1)
+        print('    moved in %.0f s' % (time.time() - t0))
         rows = btuitest.rows(lv, mem)
         print('    status:', text_of(u.find_child(dlg, IDC_RN_STATUS)))
         for row in rows:
@@ -307,6 +316,9 @@ def main():
         if not w.close_gracefully(p, 60):
             p.kill()
 
+    if os.environ.get('RENAME_OTHER_DISK'):
+        print('    on the other disk:', sorted(os.listdir(series_dir)))
+        shutil.rmtree(series_dir, ignore_errors=True)   # the folder of the test, nothing else
     print('RESULT', 'PASS' if ok else 'FAIL')
 
 

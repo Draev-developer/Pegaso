@@ -2,6 +2,12 @@
 
 Pegaso parte de eMule 0.72a (edición de la comunidad). El historial de eMule está en `changelog_full.txt`.
 
+## 0.5.1
+
+- Renombrar vídeos: mover muchos archivos, o archivos grandes a otro disco, ya no deja Pegaso parado. Los archivos se mueven uno tras otro en segundo plano, con una barra de avance y el nombre del que se está moviendo, y la ventana ya no retiene al resto de Pegaso: se puede seguir usando mientras tanto.
+- Un archivo de un torrent se mueve igual que los demás, también a otro disco: el torrent lo suelta, el archivo se mueve y el motor toma nota de su sitio nuevo y sigue sembrándolo.
+- Pantalla de arranque: «Pegaso (C) 2026 Draev - eMule (C) 2002-2026 Merkur». El aviso de eMule se conserva, como pide su licencia.
+
 ## 0.5
 
 ### Renombrar vídeos

@@ -2428,6 +2428,7 @@
 #define IDC_RK_TVDB_LBL                 5099
 #define IDC_RK_TVDB                     5100
 #define IDC_RK_HINT                     5101
+#define IDC_RN_PROGRESS                 5102
 #define IDC_WS_QUERY                    5030
 #define IDC_WS_SEARCH                   5031
 #define IDC_WS_PROVIDERS                5032

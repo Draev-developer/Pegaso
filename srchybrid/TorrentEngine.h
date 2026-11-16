@@ -124,6 +124,8 @@ public:
 	void	PollPieces(std::vector<STorrentPiece> &pieces);
 
 	void	Pause(const std::string &id);
+	// true once a torrent which was paused has let go of its files: they can be moved then
+	bool	IsReleased(const std::string &id) const;
 	void	Resume(const std::string &id);
 	void	Remove(const std::string &id, bool deleteFiles);
 	void	SetLimits(int downloadLimit, int uploadLimit);	// bytes per second, 0 = unlimited

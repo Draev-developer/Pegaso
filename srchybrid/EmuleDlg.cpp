@@ -2673,10 +2673,7 @@ BOOL CemuleDlg::OnCommand(WPARAM wParam, LPARAM lParam)
 		}
 		break;
 	case MP_PEGASO_RENAME:	// Pegaso: names for the finished videos
-		{
-			CPegasoRenameDlg dlg(this);
-			dlg.DoModal();
-		}
+		CPegasoRenameDlg::Open(this);
 		break;
 	case MP_PEGASO_DROPPED:	// Pegaso: files dropped from Explorer
 		CMainFrameDropTarget::ProcessDropped();

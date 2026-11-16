@@ -66,6 +66,15 @@ struct SRenameResult
 	CString	text;
 };
 
+struct SMoveJob
+{
+	std::atomic<bool> done{false};
+	std::atomic<bool> cancel{false};
+	std::atomic<ULONGLONG> moved{0};	// bytes of the file which is being moved
+	bool	ok = false;
+	DWORD	error = 0;
+};
+
 struct SRenameJob
 {
 	std::mutex mtx;
@@ -77,6 +86,23 @@ struct SRenameJob
 namespace
 {
 	const UINT_PTR TIMER_POLL = 1;
+	const UINT_PTR TIMER_MOVE = 2;
+
+	DWORD CALLBACK MoveProgress(LARGE_INTEGER, LARGE_INTEGER liMoved, LARGE_INTEGER, LARGE_INTEGER, DWORD, DWORD, HANDLE, HANDLE, LPVOID pData)
+	{
+		SMoveJob *pJob = static_cast<SMoveJob*>(pData);
+		pJob->moved = (ULONGLONG)liMoved.QuadPart;
+		return pJob->cancel ? PROGRESS_CANCEL : PROGRESS_CONTINUE;
+	}
+
+	// To another disk a move is a copy, which takes as long as the file is large.
+	void MoveWorker(std::shared_ptr<SMoveJob> pJob, CString sFrom, CString sTo)
+	{
+		pJob->ok = ::MoveFileWithProgress(sFrom, sTo, MoveProgress, pJob.get(), MOVEFILE_COPY_ALLOWED) != FALSE;
+		if (!pJob->ok)
+			pJob->error = ::GetLastError();
+		pJob->done = true;
+	}
 	const size_t MAX_ANSWER = 4 * 1024 * 1024;
 	const size_t MAX_TITLES = 64 * 1024 * 1024;
 
@@ -810,46 +836,22 @@ CString PegasoRename::Build(const SVideoName &name, const CString &sExt)
 	return Safe(s) + sExt;
 }
 
-bool PegasoRename::MoveFinished(const CString &sOldPath, const CString &sNewPath, CString &sError)
+bool PegasoRename::Prepare(const CString &sOldPath, const CString &sNewPath, CString &sError)
 {
-	if (sOldPath == sNewPath)
-		return true;
-	const CString sNewDir(FolderOf(sNewPath));
-	const CString sOldDir(FolderOf(sOldPath));
 	if (sOldPath.CompareNoCase(sNewPath) != 0 && ::GetFileAttributes(sNewPath) != INVALID_FILE_ATTRIBUTES) {
 		sError = GetPegasoString(PS_RN_EXISTS);
 		return false;
 	}
+	const CString sNewDir(FolderOf(sNewPath));
 	if (::GetFileAttributes(sNewDir) == INVALID_FILE_ATTRIBUTES)
 		::SHCreateDirectoryEx(NULL, sNewDir, NULL);
+	return true;
+}
 
-	CWaitCursor wait;
-	// A file of a torrent is moved by the BitTorrent engine, which then goes on seeding it
-	// under its new name. Anything else is moved here.
-	bool bMoved = false;
-	for (const STorrentStatus &st : theTorrents.GetStatus()) {
-		for (const STorrentFile &f : theTorrents.GetFiles(st.id))
-			if (sOldPath.CompareNoCase(f.fullPath.c_str()) == 0) {
-				if (!st.finished) {
-					sError = GetPegasoString(PS_RN_BUSY);
-					return false;
-				}
-				std::wstring error;
-				if (!theTorrents.Engine().RenameFile(st.id, f.index, std::wstring((LPCTSTR)sNewPath), error)) {
-					sError = error.c_str();
-					return false;
-				}
-				bMoved = true;
-				break;
-			}
-		if (bMoved)
-			break;
-	}
-	if (!bMoved && !::MoveFileEx(sOldPath, sNewPath, MOVEFILE_COPY_ALLOWED)) {
-		sError = GetErrorMessage(::GetLastError());
-		return false;
-	}
-
+void PegasoRename::Moved(const CString &sOldPath, const CString &sNewPath)
+{
+	const CString sNewDir(FolderOf(sNewPath));
+	const CString sOldDir(FolderOf(sOldPath));
 	// eD2K and Kad: the file is known by its hash, which is of its contents. The file which
 	// eMule knows gets its new name and place, so that nothing has to be hashed again.
 	CKnownFile *pKnown = NULL;
@@ -887,7 +889,6 @@ bool PegasoRename::MoveFinished(const CString &sOldPath, const CString &sNewPath
 		}
 	}
 	AddLogLine(false, _T("Renamed: %s -> %s"), (LPCTSTR)sOldPath, (LPCTSTR)sNewPath);
-	return true;
 }
 
 // ---------------------------------------------------------------- CPegasoRenameDlg
@@ -904,8 +905,23 @@ BEGIN_MESSAGE_MAP(CPegasoRenameDlg, CDialog)
 	ON_WM_TIMER()
 END_MESSAGE_MAP()
 
+namespace
+{
+	CPegasoRenameDlg *s_pOpen;
+}
+
 CPegasoRenameDlg::CPegasoRenameDlg(CWnd *pParent)
 	: CDialog(CPegasoRenameDlg::IDD, pParent)
+	, m_eMove(MS_IDLE)
+	, m_uNext()
+	, m_uTotal()
+	, m_uFinished()
+	, m_iDone()
+	, m_iFailed()
+	, m_uSize()
+	, m_iTorrentFile()
+	, m_bWasPaused()
+	, m_dwSince()
 {
 }
 
@@ -913,6 +929,48 @@ CPegasoRenameDlg::~CPegasoRenameDlg()
 {
 	if (m_job)
 		m_job->cancel = true;
+	if (m_move)
+		m_move->cancel = true;	// a copy under way is given up; the file stays where it was
+}
+
+void CPegasoRenameDlg::Open(CWnd *pParent)
+{
+	if (s_pOpen != NULL) {
+		s_pOpen->ShowWindow(SW_RESTORE);
+		s_pOpen->SetForegroundWindow();
+		return;
+	}
+	s_pOpen = new CPegasoRenameDlg(pParent);
+	if (!s_pOpen->Create(CPegasoRenameDlg::IDD, pParent)) {
+		delete s_pOpen;	// not destroyed as a window: there never was one
+		s_pOpen = NULL;
+		return;
+	}
+	s_pOpen->ShowWindow(SW_SHOW);
+}
+
+void CPegasoRenameDlg::OnCancel()
+{
+	if (m_eMove != MS_IDLE) {
+		SetDlgItemText(IDC_RN_STATUS, GetPegasoString(PS_RN_WAIT));
+		return;
+	}
+	DestroyWindow();
+}
+
+void CPegasoRenameDlg::PostNcDestroy()
+{
+	CDialog::PostNcDestroy();
+	if (s_pOpen == this)
+		s_pOpen = NULL;
+	delete this;
+}
+
+void CPegasoRenameDlg::EnableButtons(bool bEnable)
+{
+	GetDlgItem(IDC_RN_APPLY)->EnableWindow(bEnable);
+	GetDlgItem(IDC_RN_LOOKUP)->EnableWindow(bEnable);
+	GetDlgItem(IDC_RN_KEYS)->EnableWindow(bEnable);
 }
 
 BOOL CPegasoRenameDlg::OnInitDialog()
@@ -954,6 +1012,8 @@ BOOL CPegasoRenameDlg::OnInitDialog()
 	m_list.InsertColumn(1, GetPegasoString(PS_RN_COL_OLD), LVCFMT_LEFT, iName);
 	m_list.InsertColumn(2, GetPegasoString(PS_RN_COL_STATE), LVCFMT_LEFT, iState);
 
+	static_cast<CProgressCtrl*>(GetDlgItem(IDC_RN_PROGRESS))->SetRange(0, 1000);
+	GetDlgItem(IDC_RN_PROGRESS)->ShowWindow(SW_HIDE);
 	Scan();
 	if (m_rows.empty())
 		SetDlgItemText(IDC_RN_STATUS, GetPegasoString(PS_RN_NOFILES));
@@ -1036,7 +1096,7 @@ void CPegasoRenameDlg::SavePrefs()
 // looks the names up
 void CPegasoRenameDlg::OnOK()
 {
-	if (m_rows.empty() || (m_job && !m_job->done))
+	if (m_rows.empty() || (m_job && !m_job->done) || m_eMove != MS_IDLE)
 		return;
 	if (theNetGuard.IsBlocked()) {
 		SetDlgItemText(IDC_RN_STATUS, GetPegasoString(PS_WS_BLOCKED));
@@ -1082,6 +1142,10 @@ void CPegasoRenameDlg::OnOK()
 
 void CPegasoRenameDlg::OnTimer(UINT_PTR nIDEvent)
 {
+	if (nIDEvent == TIMER_MOVE) {
+		MoveTick();
+		return;
+	}
 	if (nIDEvent != TIMER_POLL || !m_job) {
 		CDialog::OnTimer(nIDEvent);
 		return;
@@ -1157,40 +1221,170 @@ void CPegasoRenameDlg::OnLvnEndLabelEdit(LPNMHDR pNMHDR, LRESULT *pResult)
 
 void CPegasoRenameDlg::OnBnClickedApply()
 {
-	if (m_job && !m_job->done)
+	if ((m_job && !m_job->done) || m_eMove != MS_IDLE)
 		return;
 	SavePrefs();
-	CString sMoviesDir, sSeriesDir;
-	GetDlgItemText(IDC_RN_MOVIEDIR, sMoviesDir);
-	GetDlgItemText(IDC_RN_SERIESDIR, sSeriesDir);
-	sMoviesDir.Trim();
-	sSeriesDir.Trim();
-	sMoviesDir.TrimRight(_T('\\'));
-	sSeriesDir.TrimRight(_T('\\'));
-	int iDone = 0;
-	int iFailed = 0;
+	GetDlgItemText(IDC_RN_MOVIEDIR, m_sMoviesDir);
+	GetDlgItemText(IDC_RN_SERIESDIR, m_sSeriesDir);
+	m_sMoviesDir.Trim();
+	m_sSeriesDir.Trim();
+	m_sMoviesDir.TrimRight(_T('\\'));
+	m_sSeriesDir.TrimRight(_T('\\'));
+	m_queue.clear();
+	m_uNext = 0;
+	m_uTotal = m_uFinished = 0;
+	m_iDone = m_iFailed = 0;
 	for (int i = 0; i < (int)m_rows.size(); ++i) {
-		SRow &row = m_rows[(size_t)i];
+		const SRow &row = m_rows[(size_t)i];
 		if (!m_list.GetCheck(i) || row.path.IsEmpty() || row.target.IsEmpty())
 			continue;
-		const CString &sMoveTo(row.name.series ? sSeriesDir : sMoviesDir);
-		const CString sNew((sMoveTo.IsEmpty() ? FolderOf(row.path) : sMoveTo) + _T('\\') + row.target);
-		CString sError;
-		if (PegasoRename::MoveFinished(row.path, sNew, sError)) {
-			++iDone;
-			row.path = sNew;
-			row.state = GetPegasoString(PS_RN_DONE);
-			m_list.SetCheck(i, FALSE);
-		} else {
-			++iFailed;
-			row.state = sError;
-		}
-		ShowRow(i);
-		m_list.UpdateWindow();
+		m_queue.push_back(i);
+		WIN32_FILE_ATTRIBUTE_DATA fad;
+		if (::GetFileAttributesEx(row.path, GetFileExInfoStandard, &fad))
+			m_uTotal += ((ULONGLONG)fad.nFileSizeHigh << 32) | fad.nFileSizeLow;
 	}
+	if (m_queue.empty())
+		return;
+	EnableButtons(false);
+	static_cast<CProgressCtrl*>(GetDlgItem(IDC_RN_PROGRESS))->SetPos(0);
+	GetDlgItem(IDC_RN_PROGRESS)->ShowWindow(SW_SHOW);
+	SetTimer(TIMER_MOVE, 100, NULL);
+	NextMove();
+}
+
+// the next file of the queue; when there is none left, the account of what was done
+void CPegasoRenameDlg::NextMove()
+{
+	m_eMove = MS_IDLE;
+	m_move.reset();
+	while (m_uNext < m_queue.size()) {
+		const int iRow = m_queue[m_uNext];
+		SRow &row = m_rows[(size_t)iRow];
+		const CString &sMoveTo(row.name.series ? m_sSeriesDir : m_sMoviesDir);
+		m_sFrom = row.path;
+		m_sTo = (sMoveTo.IsEmpty() ? FolderOf(row.path) : sMoveTo) + _T('\\') + row.target;
+		m_uSize = 0;
+		WIN32_FILE_ATTRIBUTE_DATA fad;
+		if (::GetFileAttributesEx(m_sFrom, GetFileExInfoStandard, &fad))
+			m_uSize = ((ULONGLONG)fad.nFileSizeHigh << 32) | fad.nFileSizeLow;
+
+		CString sError;
+		bool bOk = m_sFrom == m_sTo || PegasoRename::Prepare(m_sFrom, m_sTo, sError);
+		// a file of a torrent: the torrent lets go of it first, and learns its new place afterwards
+		m_torrent.clear();
+		m_bWasPaused = false;
+		for (const STorrentStatus &st : theTorrents.GetStatus()) {
+			for (const STorrentFile &f : theTorrents.GetFiles(st.id))
+				if (m_sFrom.CompareNoCase(f.fullPath.c_str()) == 0) {
+					m_torrent = st.id;
+					m_iTorrentFile = f.index;
+					m_bWasPaused = st.state == TS_PAUSED;
+					if (!st.finished) {
+						sError = GetPegasoString(PS_RN_BUSY);
+						bOk = false;
+					}
+					break;
+				}
+			if (!m_torrent.empty())
+				break;
+		}
+		if (!bOk) {
+			++m_iFailed;
+			row.state = sError;
+			ShowRow(iRow);
+			m_uFinished += m_uSize;
+			++m_uNext;
+			continue;
+		}
+		CString sStatus;
+		sStatus.Format(GetPegasoString(PS_RN_MOVING), (int)m_uNext + 1, (int)m_queue.size(), (LPCTSTR)row.target);
+		SetDlgItemText(IDC_RN_STATUS, sStatus);
+		m_list.EnsureVisible(iRow, FALSE);
+		if (m_sFrom == m_sTo) {
+			m_move = std::make_shared<SMoveJob>();	// nothing to move: already there
+			m_move->ok = true;
+			m_move->done = true;
+			m_eMove = MS_MOVING;
+		} else if (!m_torrent.empty() && !m_bWasPaused) {
+			theTorrents.Pause(m_torrent);
+			m_dwSince = ::GetTickCount();
+			m_eMove = MS_PAUSING;
+		} else
+			StartMove();
+		return;
+	}
+
+	KillTimer(TIMER_MOVE);
+	GetDlgItem(IDC_RN_PROGRESS)->ShowWindow(SW_HIDE);
+	EnableButtons(true);
 	CString sStatus;
-	sStatus.Format(GetPegasoString(PS_RN_SUMMARY), iDone, iFailed);
+	sStatus.Format(GetPegasoString(PS_RN_SUMMARY), m_iDone, m_iFailed);
 	SetDlgItemText(IDC_RN_STATUS, sStatus);
+}
+
+void CPegasoRenameDlg::StartMove()
+{
+	m_move = std::make_shared<SMoveJob>();
+	m_eMove = MS_MOVING;
+	try {
+		std::thread(MoveWorker, m_move, m_sFrom, m_sTo).detach();
+	} catch (const std::system_error&) {
+		m_move->error = ERROR_NOT_ENOUGH_MEMORY;
+		m_move->done = true;
+	}
+}
+
+void CPegasoRenameDlg::MoveTick()
+{
+	if (m_eMove == MS_PAUSING) {
+		// when the engine says the torrent has closed its files - or, should it never say so, after a while
+		if (theTorrents.Engine().IsReleased(m_torrent) || ::GetTickCount() - m_dwSince > 20000)
+			StartMove();
+		return;
+	}
+	if (m_eMove != MS_MOVING || !m_move)
+		return;
+	if (m_uTotal > 0) {
+		const ULONGLONG uNow = min(m_uTotal, m_uFinished + (ULONGLONG)m_move->moved);
+		static_cast<CProgressCtrl*>(GetDlgItem(IDC_RN_PROGRESS))->SetPos((int)(uNow * 1000 / m_uTotal));
+	}
+	if (m_move->done)
+		CompleteMove();
+}
+
+void CPegasoRenameDlg::CompleteMove()
+{
+	const int iRow = m_queue[m_uNext];
+	SRow &row = m_rows[(size_t)iRow];
+	bool bOk = m_move->ok;
+	CString sError(bOk ? CString() : GetErrorMessage(m_move->error));
+	if (!m_torrent.empty()) {
+		if (bOk && m_sFrom != m_sTo) {
+			// the file is at its new place already: the engine only takes note of it
+			std::wstring error;
+			if (!theTorrents.Engine().RenameFile(m_torrent, m_iTorrentFile, std::wstring((LPCTSTR)m_sTo), error)) {
+				bOk = false;
+				sError = error.c_str();
+				::MoveFileEx(m_sTo, m_sFrom, MOVEFILE_COPY_ALLOWED);	// back to where the torrent expects it
+			}
+		}
+		if (!m_bWasPaused)
+			theTorrents.Resume(m_torrent);
+	}
+	if (bOk) {
+		PegasoRename::Moved(m_sFrom, m_sTo);
+		++m_iDone;
+		row.path = m_sTo;
+		row.state = GetPegasoString(PS_RN_DONE);
+		m_list.SetCheck(iRow, FALSE);
+	} else {
+		++m_iFailed;
+		row.state = sError;
+	}
+	ShowRow(iRow);
+	m_uFinished += m_uSize;
+	++m_uNext;
+	NextMove();
 }
 
 void CPegasoRenameDlg::OnBnClickedKeys()

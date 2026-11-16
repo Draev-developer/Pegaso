@@ -150,6 +150,7 @@ struct CTorrentEngine::Impl
 	std::set<std::string> deliver;	// hybrid downloads: torrents whose finished pieces are read back
 	std::vector<STorrentPiece> pieces;	// read back, waiting for PollPieces()
 	std::vector<STorrentEvent> held;	// what happened while RenameFile() was waiting, for the next Poll()
+	std::set<std::string> released;	// paused torrents which have closed their files
 
 	// Name of a torrent; libtorrent 2.1 alerts do not carry it any more.
 	std::string NameOf(const lt::torrent_handle &h)
@@ -268,6 +269,8 @@ struct CTorrentEngine::Impl
 			push(TE_FINISHED, IdOf(p->handle), NameOf(p->handle), std::string());
 			p->handle.save_resume_data(lt::torrent_handle::save_info_dict);
 			++pendingSaves;
+		} else if (auto *p = lt::alert_cast<lt::torrent_paused_alert>(a)) {
+			released.insert(IdOf(p->handle));
 		} else if (auto *p = lt::alert_cast<lt::torrent_error_alert>(a)) {
 			push(TE_ERROR, IdOf(p->handle), NameOf(p->handle), p->error.message());
 		} else if (auto *p = lt::alert_cast<lt::torrent_removed_alert>(a)) {
@@ -498,6 +501,7 @@ void CTorrentEngine::Pause(const std::string &id)
 {
 	lt::torrent_handle h = m->Find(id);
 	if (h.is_valid()) {
+		m->released.erase(id);
 		h.unset_flags(lt::torrent_flags::auto_managed);
 		h.pause();
 		h.save_resume_data(lt::torrent_handle::save_info_dict);
@@ -505,8 +509,14 @@ void CTorrentEngine::Pause(const std::string &id)
 	}
 }
 
+bool CTorrentEngine::IsReleased(const std::string &id) const
+{
+	return m->released.count(id) != 0;
+}
+
 void CTorrentEngine::Resume(const std::string &id)
 {
+	m->released.erase(id);
 	lt::torrent_handle h = m->Find(id);
 	if (h.is_valid()) {
 		h.clear_error();

@@ -166,6 +166,8 @@ enum EPegasoString
 	PS_RK_TITLE,
 	PS_RK_HINT,
 	PS_RN_ANIDB,
+	PS_RN_MOVING,
+	PS_RN_WAIT,
 	PS_COUNT
 };
 

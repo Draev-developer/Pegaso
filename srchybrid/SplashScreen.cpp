@@ -123,7 +123,8 @@ void CSplashScreen::OnPaint()
 			_tcscpy(lf.lfFaceName, _T("Arial"));
 			font.CreateFontIndirect(&lf);
 			pOldFont = dc.SelectObject(&font);
-			dc.DrawText(_T("Copyright (C) 2002-2026 Merkur"), -1, &rc, DT_CENTER | DT_NOPREFIX);
+			// Pegaso is of its author; eMule, which it comes from, stays of its own (its notice is kept, as the GPL asks)
+			dc.DrawText(_T("Pegaso (C) 2026 Draev  -  eMule (C) 2002-2026 Merkur"), -1, &rc, DT_CENTER | DT_NOPREFIX);
 			if (pOldFont)
 				dc.SelectObject(pOldFont);
 			font.DeleteObject();

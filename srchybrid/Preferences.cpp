@@ -2633,6 +2633,19 @@ bool CPreferences::IsShareableDirectory(const CString &rstrDir)
 	return true;
 }
 
+void CPreferences::AddTempDir(const CString &sDir)
+{
+	CString sNew(sDir);
+	sNew.TrimRight(_T('\\'));
+	for (INT_PTR i = tempdir.GetCount(); --i >= 0;) {
+		CString sOld(tempdir[i]);
+		sOld.TrimRight(_T('\\'));
+		if (sOld.CompareNoCase(sNew) == 0)
+			return;
+	}
+	tempdir.Add(sNew + _T('\\'));
+}
+
 void CPreferences::UpdateLastVC()
 {
 	struct tm tmTemp;

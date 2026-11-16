@@ -50,6 +50,7 @@ protected:
 	bool	m_bTracking = false;
 	CRect	m_arcItems[ITEM_COUNT];
 	CRect	m_rcCard, m_rcConnect;
+	CRect	m_rcPrivacy;		// how hidden the address is: a click opens "Check my connection"
 	CString	m_sState;			// what was painted last, to repaint only on changes
 
 	CString	Snapshot() const;

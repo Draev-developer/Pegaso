@@ -48,6 +48,16 @@ def main():
     p = r.start(w.RUN)
     try:
         main_hwnd = u.main_window(p.pid)
+        print('    screenshot:', u.screenshot(main_hwnd, 'shot_main.png'))   # the side bar says how hidden the address is
+        # ---- the automatic folders
+        u.user32.PostMessageW(main_hwnd, u.WM_COMMAND, 10996, 0)
+        time.sleep(3)
+        dlg = vpntest.prefs_window(p.pid, main_hwnd)
+        check('"Automatic folders" opens from the menu command', dlg is not None)
+        if dlg:
+            print('    screenshot:', u.screenshot(dlg, 'shot_folders.png'))
+            u.user32.PostMessageW(dlg, u.WM_COMMAND, 2, 0)  # Cancel
+            time.sleep(1)
         # ---- "Check my connection"
         u.user32.PostMessageW(main_hwnd, u.WM_COMMAND, MP_PEGASO_CONN, 0)
         time.sleep(3)

@@ -1,6 +1,6 @@
 # Privacy in Pegaso
 
-What those you share with know about you, what never leaves your computer, and what you can do so that your address is not seen. It describes version 0.6.2. · [Español](../privacidad.md)
+What those you share with know about you, what never leaves your computer, and what you can do so that your address is not seen. It describes version 0.7. · [Español](../privacidad.md)
 
 ## The essentials
 
@@ -11,6 +11,8 @@ What those you share with know about you, what never leaves your computer, and w
 ## Check my connection
 
 **Tools → Check my connection…** (also in Preferences → Web and BitTorrent) says, in one line per protocol, which way each thing leaves at that moment: through the proxy, only through the VPN adapter, or by the normal route of the system, with the name of the adapter and its address. It also says whether the kill switch is armed and whether everything is stopped. It refreshes by itself: if the VPN drops while the window is open, you see it.
+
+The summary is always in sight in the side bar, in one line with a coloured dot: **green** if everything leaves through the VPN or the proxy, **amber** if the address of your connection is in sight, **red** if everything is stopped. A click on that line opens the window.
 
 What it shows is how Pegaso is set up and which adapter it leaves through; it asks no website to find out your public address.
 
@@ -39,7 +41,8 @@ If you use a VPN **without** tying Pegaso to it, Pegaso still checks which way e
 
 Limits worth knowing:
 
-- The names of the websites (DNS) are looked up by Windows with its own settings. Full-tunnel VPNs carry those queries too; with "split tunnelling" they may go to your provider, who would see which site you go to, though not what you download.
+- The names of the websites (DNS) are asked by Pegaso of the DNS servers of the VPN adapter and of no other. If that adapter has no DNS servers of its own, Windows looks them up with its own settings, and "Check my connection" says so.
+- That holds for the web requests. BitTorrent looks the names of its trackers up with the settings of Windows: with a "split tunnelling" VPN those queries may go to your provider, who would see which tracker you go to, though not what you download.
 - The VPN takes the place of your provider as the witness: choose one you trust.
 
 ## Hiding your address: proxy
@@ -107,5 +110,5 @@ Uninstalling keeps the configuration folder; delete it by hand if you want nothi
 The installer is not digitally signed, so Windows may warn when you open it. Each release publishes the SHA-256 fingerprint of its installer on the releases page; to check it:
 
 ```
-certutil -hashfile Pegaso-0.6.2-setup.exe SHA256
+certutil -hashfile Pegaso-0.7-setup.exe SHA256
 ```

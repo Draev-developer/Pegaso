@@ -5,7 +5,8 @@
 // speak to a SOCKS proxy. Whenever Pegaso is tied to an adapter or a proxy is set in the
 // preferences, Windows is told to use a proxy on this computer - the bridge - and the bridge
 // makes the connection the way Pegaso wants it:
-//  - from the address of the adapter Pegaso is tied to (IPv4 only), or
+//  - from the address of the adapter Pegaso is tied to (IPv4 only), looking the names up on
+//    the DNS servers of that adapter and of no other (if it has any), or
 //  - through the SOCKS4a / SOCKS5 proxy of the preferences, which also looks the names up, or
 //  - through the HTTP proxy of the preferences, with its user and password.
 // While the VPN protection or the scheduler holds everything, the bridge answers 503.

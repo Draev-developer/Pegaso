@@ -15,13 +15,6 @@ Segunda versión de Pegaso, el cliente P2P libre para Windows que descarga de la
 
 La lista completa está en [CHANGELOG.md](https://github.com/Draev-developer/Pegaso/blob/main/CHANGELOG.md).
 
-## A tener en cuenta
-
-- La apertura automática de puertos queda activada también en instalaciones anteriores la primera vez que arranca esta versión. Se desactiva en Preferencias → Conexión.
-- Los datos de países son de noviembre de 2026; las direcciones cambian de manos con el tiempo.
-- Las fuentes web añadidas a una descarga de eMule solo admiten `http://`.
-- El límite de ratio de siembra se cambia en `preferences.ini` (`TorrentSeedRatio`).
-
 ## Licencia y créditos
 
 GNU GPL v2. Pegaso deriva de eMule 0.72a (edición de la comunidad); el código fuente completo está en este repositorio.

@@ -67,6 +67,13 @@ public:
 	~CDownloadQueue();
 
 	void	Init();
+	// Pegaso: many downloads added in a row. The list is put in order, the disk space looked at
+	// and the list of part files written once, when the last one is in - not once per download.
+	void	BeginBatch();
+	void	EndBatch();
+	// Pegaso: takes the unfinished downloads of a folder of eMule and goes on with them where
+	// they are; the folder becomes one more temporary folder. Gives back how many were added.
+	int		ImportTempDir(const CString &sDir, int &iKnown, int &iFailed);
 	void	Process();
 
 	// add/remove entries
@@ -174,6 +181,8 @@ private:
 	CPartFile *m_lastfile;
 	DWORD	m_dwLastA4AFtime; // ZZ:DownloadManager
 	DWORD	m_lastcheckdiskspacetime;
+	int		m_iBatch;		// Pegaso: downloads are being added in a row
+	int		m_iBatchAdded;
 	DWORD	m_lastudpsearchtime;
 	DWORD	m_lastudpstattime;
 	DWORD	m_lastkademliafilerequest;
@@ -185,4 +194,14 @@ private:
 	uint32	m_nUDPFileReasks;
 	uint32	m_nFailedUDPFileReasks;
 	uint32	m_datarate;
+};
+
+// Pegaso: for as long as one of these lives, downloads are added in a row (see BeginBatch)
+class CDownloadBatch
+{
+public:
+	CDownloadBatch();
+	~CDownloadBatch();
+	CDownloadBatch(const CDownloadBatch&) = delete;
+	CDownloadBatch& operator=(const CDownloadBatch&) = delete;
 };

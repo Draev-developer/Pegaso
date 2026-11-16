@@ -19,14 +19,6 @@ Pegaso es el cliente P2P libre para Windows que descarga de las redes eMule (eD2
 
 La lista completa está en [CHANGELOG.md](https://github.com/Draev-developer/Pegaso/blob/main/CHANGELOG.md).
 
-## A tener en cuenta
-
-- El interior de las secciones (búsqueda, servidores, Kad, estadísticas, preferencias) conserva los controles de siempre.
-- La búsqueda en webs solo ve lo que la página trae en su HTML: no ejecuta JavaScript, no inicia sesión y no pasa captchas.
-- El mapa de partes de cada descarga ya no se ve en la lista; sigue en los detalles del archivo.
-- La columna de botones pequeños junto a las descargas queda oculta de serie; se recupera en Preferencias → Mostrar. Sus acciones siguen en el menú contextual.
-- Las conexiones entre ID bajas a través de Kad solo sirven con fuentes que hablen el mismo dialecto (Pegaso, eMule Qt, eMuleAI) y se han probado entre dos Pegaso, no todavía con otros programas.
-
 ## Licencia y créditos
 
 GNU GPL v2. Pegaso deriva de eMule 0.72a (edición de la comunidad); el código fuente completo está en este repositorio.

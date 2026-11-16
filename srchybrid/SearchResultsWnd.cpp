@@ -49,6 +49,7 @@
 #include "WebSearch.h"
 #include "PegasoTrust.h"
 #include "PegasoStrings.h"
+#include <vector>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -522,43 +523,75 @@ void CSearchResultsWnd::DownloadSelected()
 void CSearchResultsWnd::DownloadSelected(bool bPaused)
 {
 	CWaitCursor curWait;
+	// Pegaso: the results selected, by what they are and not by their place in the list (which
+	// moves while they are added)
+	std::vector<const CSearchFile*> selected;
 	for (POSITION pos = searchlistctrl.GetFirstSelectedItemPosition(); pos != NULL;) {
 		int iIndex = searchlistctrl.GetNextSelectedItem(pos);
-		if (iIndex >= 0) {
-			// get selected listview item (may be a child item from an expanded search result)
-			const CSearchFile *sel_file = reinterpret_cast<CSearchFile*>(searchlistctrl.GetItemData(iIndex));
+		if (iIndex >= 0)
+			selected.push_back(reinterpret_cast<CSearchFile*>(searchlistctrl.GetItemData(iIndex)));
+	}
+	// Pegaso: with several of them not looking like what their names say, one question for all
+	// instead of one window per file
+	int iSuspicious = 0;
+	if (selected.size() > 1)
+		for (const CSearchFile *sel_file : selected) {
+			const CSearchFile *parent = sel_file->GetListParent() != NULL ? sel_file->GetListParent() : sel_file;
+			iSuspicious += static_cast<int>(PegasoTrustOfSearchFile(parent, sel_file->GetFileName()).IsSuspicious());
+		}
+	int iAnswerForAll = 0;
+	if (iSuspicious > 1) {
+		CString strMsg;
+		strMsg.Format(GetPegasoString(PS_TRUST_ASK_MANY), iSuspicious, (int)selected.size());
+		iAnswerForAll = AfxMessageBox(strMsg, MB_ICONWARNING | MB_YESNOCANCEL | MB_DEFBUTTON2);
+		if (iAnswerForAll == IDCANCEL)
+			return;
+	}
 
-			// get parent
-			const CSearchFile *parent = sel_file->GetListParent();
-			if (parent == NULL)
-				parent = sel_file;
+	// Pegaso: the queue is put in order and saved once, when the last one is in
+	CDownloadBatch batch;
+	const bool bMany = selected.size() > 8;
+	if (bMany)
+		searchlistctrl.SetRedraw(FALSE);
+	for (const CSearchFile *sel_file : selected) {
+		// get parent (the selected item may be a child item from an expanded search result)
+		const CSearchFile *parent = sel_file->GetListParent();
+		if (parent == NULL)
+			parent = sel_file;
 
-			if (parent->IsComplete() == 0 && parent->GetSourceCount() >= 50) {
-				CString strMsg;
-				strMsg.Format(GetResString(IDS_ASKDLINCOMPLETE), (LPCTSTR)sel_file->GetFileName());
-				if (AfxMessageBox(strMsg, MB_ICONQUESTION | MB_YESNO | MB_DEFBUTTON2) != IDYES)
-					continue;
-			}
+		if (parent->IsComplete() == 0 && parent->GetSourceCount() >= 50) {
+			CString strMsg;
+			strMsg.Format(GetResString(IDS_ASKDLINCOMPLETE), (LPCTSTR)sel_file->GetFileName());
+			if (AfxMessageBox(strMsg, MB_ICONQUESTION | MB_YESNO | MB_DEFBUTTON2) != IDYES)
+				continue;
+		}
 
-			// Pegaso: a result which does not look like what its name says - warn, the user decides
-			const SPegasoTrust trust(PegasoTrustOfSearchFile(parent, sel_file->GetFileName()));
-			if (trust.IsSuspicious()) {
+		// Pegaso: a result which does not look like what its name says - warn, the user decides
+		const SPegasoTrust trust(PegasoTrustOfSearchFile(parent, sel_file->GetFileName()));
+		if (trust.IsSuspicious()) {
+			if (iAnswerForAll == IDNO)
+				continue;
+			if (iAnswerForAll != IDYES) {
 				CString strMsg;
 				strMsg.Format(GetPegasoString(PS_TRUST_ASK), (LPCTSTR)sel_file->GetFileName(), (LPCTSTR)PegasoTrustLabel(trust), (LPCTSTR)trust.reasons);
 				if (AfxMessageBox(strMsg, MB_ICONWARNING | MB_YESNO | MB_DEFBUTTON2) != IDYES)
 					continue;
 			}
-
-			// create new DL queue entry with all properties of parent (e.g. already received sources!)
-			// but with the filename of the selected listview item.
-			CSearchFile tempFile(parent);
-			tempFile.SetAFileName(sel_file->GetFileName());
-			tempFile.SetStrTagValue(FT_FILENAME, sel_file->GetFileName());
-			theApp.downloadqueue->AddSearchToDownload(&tempFile, bPaused, GetSelectedCat());
-
-			// update parent and all children
-			searchlistctrl.UpdateSources(parent);
 		}
+
+		// create new DL queue entry with all properties of parent (e.g. already received sources!)
+		// but with the filename of the selected listview item.
+		CSearchFile tempFile(parent);
+		tempFile.SetAFileName(sel_file->GetFileName());
+		tempFile.SetStrTagValue(FT_FILENAME, sel_file->GetFileName());
+		theApp.downloadqueue->AddSearchToDownload(&tempFile, bPaused, GetSelectedCat());
+
+		// update parent and all children
+		searchlistctrl.UpdateSources(parent);
+	}
+	if (bMany) {
+		searchlistctrl.SetRedraw(TRUE);
+		searchlistctrl.Invalidate();
 	}
 }
 

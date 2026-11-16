@@ -947,6 +947,7 @@ void CDownloadListCtrl::OnContextMenu(CWnd*, CPoint point)
 				menu.AppendMenu(MF_STRING, MP_CANCEL, GetResString(IDS_MAIN_BTN_CANCEL));
 				menu.AppendMenu(MF_SEPARATOR);
 				menu.AppendMenu(MF_STRING | (GetSelectedCount() == 1 ? MF_ENABLED : MF_GRAYED), MP_TORRENT_FILES, GetPegasoString(PS_TORRENT_FILES));
+				menu.AppendMenu(MF_STRING | (GetSelectedCount() == 1 ? MF_ENABLED : MF_GRAYED), MP_PEGASO_PLAY, GetPegasoString(PS_PLAY_MENU));
 				menu.AppendMenu(MF_STRING | (GetSelectedCount() == 1 ? MF_ENABLED : MF_GRAYED), MP_PEGASO_ADDWEBSRC, GetPegasoString(PS_SRC_ADD_WEB));
 				menu.AppendMenu(MF_STRING | (GetSelectedCount() == 1 ? MF_ENABLED : MF_GRAYED), MP_PEGASO_RATE, GetPegasoString(PS_RATE_MENU));
 				menu.AppendMenu(MF_STRING, MP_OPENFOLDER, GetResString(IDS_OPENFOLDER));
@@ -1374,6 +1375,13 @@ BOOL CDownloadListCtrl::OnCommand(WPARAM wParam, LPARAM)
 				case MP_TORRENT_FILES:
 					if (file->IsTorrent())
 						ShowTorrentFiles(file);
+					break;
+				case MP_PEGASO_PLAY:	// its video or audio, while it downloads
+					if (file->IsTorrent()) {
+						CString sMessage;
+						if (!theTorrents.Play(file->GetTorrentId(), sMessage))
+							AfxMessageBox(sMessage, MB_OK | MB_ICONINFORMATION);
+					}
 					break;
 				case MP_PEGASO_RATE:	// verdict on the torrent, for the other users of Pegaso
 					if (file->IsTorrent()) {
@@ -1838,6 +1846,21 @@ void CDownloadListCtrl::ClearCompleted(const CPartFile *pFile)
 				RemoveFile(pCurFile);
 				return;
 			}
+		}
+	}
+}
+
+void CDownloadListCtrl::PegasoClearCompletedAt(const CString &sPath)
+{
+	for (ListItems::const_iterator it = m_ListItems.begin(); it != m_ListItems.end(); ++it) {
+		const CtrlItem_Struct *cur_item = it->second;
+		if (cur_item->type != FILE_TYPE)
+			continue;
+		const CPartFile *pFile = static_cast<CPartFile*>(cur_item->value);
+		if (!pFile->IsPartFile() && !pFile->IsTorrent() && pFile->GetFilePath().CompareNoCase(sPath) == 0) {
+			RemoveFile(pFile);
+			ShowFilesCount();
+			return;
 		}
 	}
 }

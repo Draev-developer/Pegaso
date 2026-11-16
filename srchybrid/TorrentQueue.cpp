@@ -17,6 +17,10 @@
 #include "StringConversion.h"
 #include "emuleDlg.h"
 #include "TransferDlg.h"
+#include "PegasoAuto.h"
+#include "PegasoStrings.h"
+#include "SharedFileList.h"
+#include "Opcodes.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -146,6 +150,7 @@ void CTorrentQueue::Start()
 	m_bNetPaused = false;
 	settings.ipv6 = m_bIPv6 = Pegaso6::Allowed();
 	m_sProxy = ProxyText();
+	LoadHidden();
 	const ProxySettings &proxy = thePrefs.GetProxySettings();
 	if (proxy.bUseProxy) {
 		// the proxy of the preferences is for everything, not for eD2K alone
@@ -199,6 +204,8 @@ void CTorrentQueue::SyncDownloadList()
 	std::map<std::string, CPartFile*> gone(m_proxies);
 	for (const STorrentStatus &st : m_status) {
 		if (theHybrid.IsHelper(st.id))	// a source of another download: no row of its own
+			continue;
+		if (st.finished && m_hidden.count(st.id) != 0)	// its files were taken elsewhere by the user: see HideIfMoved()
 			continue;
 		const auto it = m_proxies.find(st.id);
 		if (it != m_proxies.end()) {
@@ -261,6 +268,120 @@ bool CTorrentQueue::AddLink(const CString &sLink)
 	return true;
 }
 
+namespace
+{
+	bool IsMedia(const std::wstring &path)
+	{
+		const CString sType(GetFileTypeByName(path.c_str()));
+		return sType == _T(ED2KFTSTR_VIDEO) || sType == _T(ED2KFTSTR_AUDIO);
+	}
+
+	// what has to be there of a file before a player is given it
+	int64_t PlayNeeded(int64_t size)
+	{
+		return min(size, max((int64_t)8 * 1024 * 1024, size / 50));
+	}
+
+	void OpenForPlaying(const std::wstring &path)
+	{
+		if (theApp.GetProfileInt(_T("eMule"), _T("PlayDryRun"), 0) != 0) {
+			AddLogLine(false, _T("Play: would open %s"), path.c_str());
+			return;
+		}
+		AddLogLine(true, _T("Playing %s"), path.c_str());
+		::ShellExecute(NULL, _T("open"), path.c_str(), NULL, NULL, SW_SHOWNORMAL);
+	}
+
+	const STorrentFile* LargestWanted(const std::vector<STorrentFile> &files, bool bMediaOnly)
+	{
+		const STorrentFile *pBest = NULL;
+		for (const STorrentFile &file : files)
+			if (file.wanted && (!bMediaOnly || IsMedia(file.path)) && (pBest == NULL || file.size > pBest->size))
+				pBest = &file;
+		return pBest;
+	}
+}
+
+void CTorrentQueue::LoadHidden()
+{
+	m_hidden.clear();
+	CStdioFile file;
+	if (!file.Open(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + _T("torrents\\hidden.txt"), CFile::modeRead | CFile::typeText))
+		return;
+	CString sLine;
+	while (file.ReadString(sLine))
+		if (sLine.Trim().GetLength() == 40)
+			m_hidden.insert(std::string(CStringA(sLine)));
+}
+
+void CTorrentQueue::SaveHidden() const
+{
+	CStdioFile file;
+	if (!file.Open(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + _T("torrents\\hidden.txt"), CFile::modeCreate | CFile::modeWrite | CFile::typeText))
+		return;
+	for (const std::string &id : m_hidden)
+		file.WriteString(CString(id.c_str()) + _T("\n"));
+}
+
+void CTorrentQueue::HideIfMoved(const std::string &id)
+{
+	if (SeedRatioInPrefs() == 0 || m_hidden.count(id) != 0)
+		return;
+	bool bFinished = false;
+	std::wstring name;
+	for (const STorrentStatus &st : m_status)
+		if (st.id == id) {
+			bFinished = st.finished;
+			name = st.name;
+		}
+	if (!bFinished)
+		return;
+	// every video it brought has a place of its own now (a full path, as opposed to one inside the torrent)
+	int iVideos = 0;
+	for (const STorrentFile &file : m_engine.GetFiles(id)) {
+		if (!file.wanted || CString(GetFileTypeByName(file.path.c_str())) != _T(ED2KFTSTR_VIDEO))
+			continue;
+		++iVideos;
+		const bool bPlaced = file.path.size() > 2 && (file.path[1] == L':' || (file.path[0] == L'\\' && file.path[1] == L'\\'));
+		if (!bPlaced)
+			return;
+	}
+	if (iVideos == 0)
+		return;
+	m_hidden.insert(id);
+	SaveHidden();
+	AddLogLine(true, _T("Torrent \"%s\": its videos have been moved, so it leaves the download list; it stays seeded until it has shared %u%% of its size"), name.c_str(), SeedRatioInPrefs());
+	SyncDownloadList();
+}
+
+int CTorrentQueue::HiddenSeeds() const
+{
+	int iCount = 0;
+	for (const STorrentStatus &st : m_status)
+		iCount += static_cast<int>(st.finished && m_hidden.count(st.id) != 0);
+	return iCount;
+}
+
+bool CTorrentQueue::Play(const std::string &id, CString &sMessage)
+{
+	const std::vector<STorrentFile> files(m_engine.GetFiles(id));
+	const STorrentFile *pFile = LargestWanted(files, true);
+	const int64_t iReady = pFile != NULL ? m_engine.PlayFile(id, pFile->index) : -1;
+	if (iReady < 0) {
+		sMessage = GetPegasoString(PS_PLAY_NONE);
+		return false;
+	}
+	const int64_t iNeeded = PlayNeeded(pFile->size);
+	if (iReady >= iNeeded) {
+		m_play.erase(id);
+		OpenForPlaying(pFile->fullPath);
+		return true;
+	}
+	m_play[id] = pFile->index;
+	sMessage.Format(GetPegasoString(PS_PLAY_WAIT), (LPCTSTR)CastItoXBytes((uint64)iReady), (LPCTSTR)CastItoXBytes((uint64)iNeeded));
+	return false;
+}
+
 void CTorrentQueue::Process()
 {
 	if (!m_bStartTried)
@@ -313,9 +434,54 @@ void CTorrentQueue::Process()
 			for (const STorrentFile &file : m_engine.GetFiles(ev.id))
 				if (file.wanted)
 					PegasoMarkFromInternet(thePrefs.GetMuleDirectory(EMULE_INCOMINGDIR) + file.path.c_str());
-			// what landed in the incoming folder is offered on the ed2k and Kad networks as well
-			if (theApp.sharedfiles != NULL)
+			{
+				// downloaded in this session (not one which was complete already): it goes whole to
+				// the folder set for the type of its largest file
+				CString sFolder;
+				if (m_unfinished.erase(ev.id) != 0 || ev.text == L"downloaded") {
+					const std::vector<STorrentFile> files(m_engine.GetFiles(ev.id));
+					const STorrentFile *pLargest = LargestWanted(files, false);
+					if (pLargest != NULL)
+						sFolder = PegasoAuto::TypeFolder(pLargest->path.c_str());
+				}
+				if (!sFolder.IsEmpty()) {
+					// its files are offered on eD2K from there, once they have arrived: looked at
+					// here and now, they would be in use when the engine comes to move them
+					AddLogLine(false, _T("Torrent \"%s\" goes to %s"), ev.name.c_str(), (LPCTSTR)sFolder);
+					SMove move = {sFolder, ::GetTickCount() + 1500, 0, false};
+					m_moves[ev.id] = move;
+				} else if (theApp.sharedfiles != NULL)
+					theApp.sharedfiles->Reload();	// what landed in the incoming folder is offered on the ed2k and Kad networks as well
+			}
+			break;
+		case TE_MOVE_FAILED:
+			{
+				const std::map<std::string, SMove>::iterator it = m_moves.find(ev.id);
+				if (it != m_moves.end() && ++it->second.tries < 8) {
+					it->second.asked = false;
+					it->second.due = ::GetTickCount() + 8000;
+				} else {
+					LogError(LOG_STATUSBAR, _T("Torrent \"%s\" stays where it is, its files could not be moved: %s"), ev.name.c_str(), ev.text.c_str());
+					if (it != m_moves.end())
+						m_moves.erase(it);
+					if (theApp.sharedfiles != NULL)
+						theApp.sharedfiles->Reload();
+				}
+			}
+			break;
+		case TE_MOVED:
+			m_moves.erase(ev.id);
+			// outside of the shared folders, its files are shared on eD2K one by one
+			if (theApp.sharedfiles != NULL) {
+				for (const STorrentFile &file : m_engine.GetFiles(ev.id)) {
+					const CString sPath(file.fullPath.c_str());
+					const CString sDir(sPath.Left(sPath.ReverseFind(_T('\\'))));
+					if (file.wanted && !theApp.sharedfiles->ShouldBeShared(sDir, sPath, false))
+						theApp.sharedfiles->AddSingleSharedFile(sPath, true);
+				}
+				theApp.sharedfiles->Save();
 				theApp.sharedfiles->Reload();
+			}
 			break;
 		case TE_REMOVED:
 			AddLogLine(false, _T("Torrent removed: %s"), ev.name.c_str());
@@ -329,6 +495,30 @@ void CTorrentQueue::Process()
 	}
 
 	m_status = m_engine.GetStatus();
+	for (const STorrentStatus &st : m_status)
+		if (st.state == TS_DOWNLOADING && !st.finished && st.done < st.size)
+			m_unfinished.insert(st.id);
+	for (std::map<std::string, SMove>::iterator it = m_moves.begin(); it != m_moves.end(); ++it)
+		if (!it->second.asked && (int)(dwNow - it->second.due) >= 0) {
+			it->second.asked = true;
+			m_engine.MoveStorage(it->first, std::wstring((LPCTSTR)it->second.folder));
+		}
+	// the torrents asked to be played: as soon as the beginning of the file is there
+	for (std::map<std::string, int>::iterator it = m_play.begin(); it != m_play.end();) {
+		const int64_t iReady = m_engine.PlayFile(it->first, it->second);
+		const STorrentFile *pFile = NULL;
+		const std::vector<STorrentFile> files(iReady >= 0 ? m_engine.GetFiles(it->first) : std::vector<STorrentFile>());
+		for (const STorrentFile &file : files)
+			if (file.index == it->second)
+				pFile = &file;
+		if (pFile == NULL)
+			it = m_play.erase(it);
+		else if (iReady >= PlayNeeded(pFile->size)) {
+			OpenForPlaying(pFile->fullPath);
+			it = m_play.erase(it);
+		} else
+			++it;
+	}
 	theHybrid.Process(m_engine, m_status);
 	SyncDownloadList();
 	uint32 uRate = 0;
@@ -341,6 +531,14 @@ void CTorrentQueue::Process()
 		if (uSeedRatio > 0 && st.state == TS_SEEDING && st.size > 0 && !theHybrid.IsHelper(st.id)
 			&& (double)st.uploaded * 100.0 >= (double)st.size * uSeedRatio && m_ratioStopped.insert(st.id).second)
 		{
+			if (m_hidden.count(st.id) != 0) {
+				// out of the list, nobody could resume it or take it away: it is let go of (its files stay)
+				m_engine.Remove(st.id, false);
+				m_hidden.erase(st.id);	// here and nowhere else: the engine also says "removed" of every torrent when it stops
+				SaveHidden();
+				AddLogLine(false, _T("Torrent \"%s\": shared %u%% of its size; it is no longer seeded"), st.name.c_str(), uSeedRatio);
+				continue;
+			}
 			m_engine.Pause(st.id);
 			AddLogLine(false, _T("Torrent \"%s\": shared %u%% of its size, seeding stopped"), st.name.c_str(), uSeedRatio);
 		}

@@ -13,6 +13,8 @@ Herramientas → «Renombrar vídeos…» da a los vídeos terminados el nombre 
 4. Si quieres moverlos, escribe o elige una carpeta para las películas y otra para las series. Vacío: se quedan donde están.
 5. Pulsa «Renombrar». Puedes seguir usando Pegaso mientras se mueven.
 
+Lo renombrado sale de la lista de descargas: ya no es una descarga. Los archivos de eMule y de la web siguen en **Compartidos**. Un torrent sale de la lista cuando todos sus vídeos tienen ya su sitio, y se sigue sembrando hasta el límite de ratio (200 % de serie; `TorrentSeedRatio` en `preferences.ini`); al alcanzarlo, Pegaso lo suelta y los archivos se quedan donde están.
+
 Qué es cada archivo se lee de su nombre: `S01E05`, `1x05`, `Cap.105`, «Temporada 1 Capítulo 5» o, en una película, el año. Con nombres que no dicen nada no hay nada que buscar.
 
 ## Qué bases de datos piden clave

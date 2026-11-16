@@ -24,13 +24,14 @@ All answers are JSON. Errors carry `{"error": "..."}` and the matching HTTP code
 
 | Method and address | What it does |
 |---|---|
-| `GET /api/v1/status` | Version, state of eD2K and Kad, speeds, number of downloads and of shared files |
+| `GET /api/v1/status` | Version, state of eD2K and Kad, speeds, number of downloads and of shared files, and `hiddenSeeds`: torrents seeded out of the download list because their videos have been renamed or moved |
 | `GET /api/v1/connection` | `{"report": "…"}`: the text of "Check my connection" — which way each protocol leaves right now (proxy, VPN adapter or system route), in the language of the program |
 | `GET /api/v1/downloads` | List of downloads |
 | `POST /api/v1/downloads` | Adds downloads. Body: `{"links": ["ed2k://…", "magnet:…", "https://…"]}`. The web address of a `.torrent` file is added as a torrent; with `"kind": "torrent"` every web address is taken for a `.torrent` file, even if it does not look like one. A web address with a range, `…/part[01-20].zip`, stands for the whole series |
 | `GET /api/v1/downloads/{hash}` | One download |
 | `POST /api/v1/downloads/{hash}/pause` | Pauses |
 | `POST /api/v1/downloads/{hash}/resume` | Resumes |
+| `POST /api/v1/downloads/{hash}/play` | Plays a torrent while it downloads: fetches it in order and opens its largest video or audio when the beginning has arrived. Returns `{"opened": true}` if it has been opened already, or `false` with a `message` saying how much is missing |
 | `DELETE /api/v1/downloads/{hash}` | Removes the download. What was received of an unfinished download is deleted |
 | `GET /api/v1/shared` | Shared files, with their ed2k link (up to 1000) |
 | `POST /api/v1/searches` | Starts a search. Body: `{"query": "…", "network": "server"｜"global"｜"kad", "type": "video"｜"audio"｜…}`. Returns `{"id": n}` |

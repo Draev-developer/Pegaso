@@ -15,12 +15,6 @@ Versión de mejora de Pegaso, el cliente P2P libre para Windows que descarga de 
 
 La lista completa está en [CHANGELOG.md](https://github.com/Draev-developer/Pegaso/blob/main/CHANGELOG.md).
 
-## A tener en cuenta
-
-- Las dos vías de Kad solo sirven con fuentes que hablen el mismo dialecto (Pegaso, eMule Qt, eMuleAI). Se han probado entre dos Pegaso con un nodo Kad y un compañero simulados; no todavía con otros programas ni a través de routers reales.
-- Sigue faltando la presentación a través de servidores Lugdunum.
-- Lo dicho en la 0.3 sobre IPv6, VPN y el filtro de IP sigue valiendo.
-
 ## Licencia y créditos
 
 GNU GPL v2. Pegaso deriva de eMule 0.72a (edición de la comunidad); el código fuente completo está en este repositorio.

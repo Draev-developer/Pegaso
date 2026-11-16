@@ -15,6 +15,7 @@
 #include "SharedFileList.h"
 #include "UploadQueue.h"
 #include "NetGuard.h"
+#include "PegasoPrivacy.h"
 #include "TorrentQueue.h"
 #include "TransferDlg.h"
 #include "DownloadListCtrl.h"
@@ -215,6 +216,9 @@ CString CPegasoSideBar::Snapshot() const
 		(int)theApp.serverconnect->IsConnected(), (int)theApp.serverconnect->IsConnecting(), (int)(theApp.serverconnect->IsConnected() && theApp.serverconnect->IsLowID()),
 		(int)Kademlia::CKademlia::IsRunning(), (int)Kademlia::CKademlia::IsConnected(), (int)Kademlia::CKademlia::IsFirewalled(),
 		(int)theTorrents.IsRunning(), (int)theNetGuard.IsActive() + 2 * (int)theNetGuard.IsBlocked() + 4 * (int)CNetGuard::KasperskyInstalled());
+	CString sPrivacy;
+	const int iPrivacy = PegasoPrivacyState(sPrivacy);
+	s.AppendFormat(_T("|%d%s"), iPrivacy, (LPCTSTR)sPrivacy);
 	return s;
 }
 
@@ -244,8 +248,8 @@ void CPegasoSideBar::Layout()
 	GetClientRect(&rc);
 	const int iMargin = Scale(12);
 	int y = Scale(68);
-	const int iLines = 2 + (theNetGuard.IsActive() || CNetGuard::KasperskyInstalled() ? 1 : 0) + 1;	// eD2K, Kad, BitTorrent and, if in use, the VPN
-	const int iCard = Scale(12) + Scale(22) + Scale(6) + iLines * Scale(19) + Scale(10) + Scale(36) + Scale(12);
+	const int iLines = 3;	// eD2K, Kad, BitTorrent; below them, how hidden the address is
+	const int iCard = Scale(12) + Scale(22) + Scale(6) + iLines * Scale(19) + Scale(23) + Scale(10) + Scale(36) + Scale(12);
 	// in a low window the items stand closer, so that the card below them still fits
 	const int iStep = max(Scale(30), min(Scale(42), (rc.bottom - iMargin - iCard - Scale(8) - y) / ITEM_COUNT));
 	for (int i = 0; i < ITEM_COUNT; ++i) {
@@ -269,6 +273,8 @@ int CPegasoSideBar::HitTest(CPoint pt) const
 	for (int i = 0; i < ITEM_COUNT; ++i)
 		if (m_arcItems[i].PtInRect(pt))
 			return i;
+	if (m_rcPrivacy.PtInRect(pt))
+		return ITEM_COUNT + 1;
 	return m_rcConnect.PtInRect(pt) ? ITEM_COUNT : -1;
 }
 
@@ -300,7 +306,7 @@ void CPegasoSideBar::OnLButtonDown(UINT nFlags, CPoint point)
 	static const UINT s_auCommand[ITEM_COUNT] = {MP_PEGASO_NAV_DOWNLOADS, MP_HM_SEARCH, MP_HM_FILES, MP_PEGASO_NAV_UPLOADS, MP_HM_SRVR, MP_HM_KAD, MP_HM_STATS, MP_PEGASO_CONTACT};
 	const int iHit = HitTest(point);
 	if (iHit >= 0 && GetParent() != NULL)
-		GetParent()->PostMessage(WM_COMMAND, iHit == ITEM_COUNT ? MP_HM_CON : s_auCommand[iHit], 0);
+		GetParent()->PostMessage(WM_COMMAND, iHit == ITEM_COUNT + 1 ? MP_PEGASO_CONN : (iHit == ITEM_COUNT ? MP_HM_CON : s_auCommand[iHit]), 0);
 	CWnd::OnLButtonDown(nFlags, point);
 }
 
@@ -395,13 +401,23 @@ void CPegasoSideBar::OnPaint()
 	asLine[iLines++] = _T("Kad: ") + (bKad ? NoAmpersand(Kademlia::CKademlia::IsFirewalled() ? IDS_FIREWALLED : IDS_KADOPEN)
 		: NoAmpersand(Kademlia::CKademlia::IsRunning() ? IDS_CONNECTING : IDS_DISCONNECTED));
 	asLine[iLines++] = GetPegasoString(theTorrents.IsRunning() ? PS_UI_BT_ON : PS_UI_BT_OFF);
-	if (theNetGuard.IsActive())
-		asLine[iLines++] = GetPegasoString(theNetGuard.IsBlocked() ? PS_UI_VPN_BLOCKED : PS_UI_VPN_OK);
-	else if (CNetGuard::KasperskyInstalled())
-		asLine[iLines++] = GetPegasoString(PS_UI_VPN_UNTIED);	// there is a VPN here and Pegaso does not use it: say so
 	for (int i = 0; i < iLines; ++i) {
 		Text(dc, asLine[i], CRect(x, y, m_rcCard.right - Scale(8), y + Scale(19)), FONT_SMALL, CR_MUTED);
 		y += Scale(19);
+	}
+	// how hidden the address is, always in sight: green through the VPN or the proxy, amber with
+	// the address of the connection in sight, red while everything is stopped. A click tells the rest.
+	{
+		static const COLORREF s_acrPrivacy[3] = {RGB(0x1E, 0x9E, 0x5A), RGB(0xD9, 0x8E, 0x04), RGB(0xD1, 0x34, 0x38)};
+		CString sPrivacy;
+		const int iPrivacy = PegasoPrivacyState(sPrivacy);
+		m_rcPrivacy.SetRect(x - Scale(5), y + Scale(1), m_rcCard.right - Scale(7), y + Scale(22));
+		if (m_iHover == ITEM_COUNT + 1)
+			RoundRect(dc, m_rcPrivacy, Scale(6), CR_HOVER);
+		const int iMark = Scale(8);
+		const int iTop = m_rcPrivacy.top + (m_rcPrivacy.Height() - iMark) / 2;
+		RoundRect(dc, CRect(x, iTop, x + iMark, iTop + iMark), iMark / 2, s_acrPrivacy[iPrivacy]);
+		Text(dc, sPrivacy, CRect(x + iMark + Scale(6), m_rcPrivacy.top, m_rcPrivacy.right - Scale(2), m_rcPrivacy.bottom), FONT_SMALL, CR_TEXT);
 	}
 
 	const bool bHover = m_iHover == ITEM_COUNT;

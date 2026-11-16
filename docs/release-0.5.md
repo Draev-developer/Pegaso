@@ -16,14 +16,6 @@ Pegaso es el cliente P2P libre para Windows que descarga de las redes eMule (eD2
 
 La lista completa está en [CHANGELOG.md](https://github.com/Draev-developer/Pegaso/blob/main/CHANGELOG.md).
 
-## A tener en cuenta
-
-- TVmaze y AniDB no piden clave. TheMovieDB, OMDb y TheTVDB dan una gratis a quien se registra en su web; Pegaso no trae ninguna: se escriben en «Claves…».
-- AniDB pone en algunas conexiones una comprobación para navegadores delante de su lista de títulos. Pegaso no la salta: en ese caso, baja `anime-titles.dat.gz` de anidb.net con el navegador y guárdalo en la carpeta de configuración de Pegaso (la ventana te dice cuál es).
-- Lo que es cada archivo se lee de su nombre (`S01E05`, `1x05`, `Cap.105`, el año de una película). Con nombres que no dicen nada no hay nada que buscar: se pueden escribir a mano.
-- Mover un archivo grande a otro disco tarda lo que tarda la copia, y Pegaso espera mientras tanto.
-- Las búsquedas con TheMovieDB, OMDb y TheTVDB se han probado con respuestas simuladas, no con sus servidores.
-
 ## Licencia y créditos
 
 GNU GPL v2. Pegaso deriva de eMule 0.72a (edición de la comunidad); el código fuente completo está en este repositorio.

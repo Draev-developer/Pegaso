@@ -22,14 +22,6 @@ Pegaso es el cliente P2P libre para Windows que descarga de las redes eMule (eD2
 
 La lista completa está en [CHANGELOG.md](https://github.com/Draev-developer/Pegaso/blob/main/CHANGELOG.md) y la explicación de cada protección en [docs/privacidad.md](https://github.com/Draev-developer/Pegaso/blob/main/docs/privacidad.md).
 
-## A tener en cuenta
-
-- Las claves cifradas solo las lee tu cuenta de Windows en ese equipo: si copias la configuración a otro, tendrás que volver a escribirlas (y la extensión del navegador necesitará la clave nueva de la API).
-- Con la protección VPN, los nombres de las webs (DNS) los sigue resolviendo Windows; con túnel dividido pueden ir a tu operador.
-- Con proxy, Kad sigue sin funcionar: es todo UDP.
-- Sin probar con una VPN o un proxy reales de terceros: las pruebas se han hecho con proxies SOCKS5 y HTTP simulados y con los adaptadores de un equipo.
-- Compartir entre pares no es anónimo: sin VPN ni proxy, quien comparte contigo ve tu dirección IP.
-
 ---
 
 ## English

@@ -24,13 +24,14 @@ Todas las respuestas son JSON. Los errores llevan `{"error": "..."}` y el códig
 
 | Método y dirección | Qué hace |
 |---|---|
-| `GET /api/v1/status` | Versión, estado de eD2K y Kad, velocidades, número de descargas y de archivos compartidos |
+| `GET /api/v1/status` | Versión, estado de eD2K y Kad, velocidades, número de descargas y de archivos compartidos, y `hiddenSeeds`: torrents que se siembran fuera de la lista de descargas porque sus vídeos se han renombrado o movido |
 | `GET /api/v1/connection` | `{"report": "…"}`: el texto de «Comprobar mi conexión» — por dónde sale cada protocolo en ese momento (proxy, adaptador de la VPN o ruta del sistema), en el idioma del programa |
 | `GET /api/v1/downloads` | Lista de descargas |
 | `POST /api/v1/downloads` | Añade descargas. Cuerpo: `{"links": ["ed2k://…", "magnet:…", "https://…"]}`. La dirección web de un archivo `.torrent` se añade como torrent; con `"kind": "torrent"` todas las direcciones web se toman por archivos `.torrent`, aunque no lo parezcan. Una dirección web con un rango, `…/parte[01-20].zip`, vale por toda la serie |
 | `GET /api/v1/downloads/{hash}` | Una descarga |
 | `POST /api/v1/downloads/{hash}/pause` | Pausa |
 | `POST /api/v1/downloads/{hash}/resume` | Reanuda |
+| `POST /api/v1/downloads/{hash}/play` | Reproduce un torrent mientras descarga: lo baja en orden y abre su vídeo o audio más grande cuando ha llegado el comienzo. Devuelve `{"opened": true}` si ya se ha abierto, o `false` con un `message` que dice cuánto falta |
 | `DELETE /api/v1/downloads/{hash}` | Quita la descarga. Lo recibido de una descarga sin terminar se borra |
 | `GET /api/v1/shared` | Archivos compartidos, con su enlace ed2k (hasta 1000) |
 | `POST /api/v1/searches` | Empieza una búsqueda. Cuerpo: `{"query": "…", "network": "server"｜"global"｜"kad", "type": "video"｜"audio"｜…}`. Devuelve `{"id": n}` |

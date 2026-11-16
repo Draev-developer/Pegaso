@@ -1,6 +1,6 @@
 # Privacidad en Pegaso
 
-Qué sabe de ti quien comparte contigo, qué no sale nunca de tu equipo y qué puedes hacer para que tu dirección no se vea. Corresponde a la versión 0.6.2. · [English](en/privacy.md)
+Qué sabe de ti quien comparte contigo, qué no sale nunca de tu equipo y qué puedes hacer para que tu dirección no se vea. Corresponde a la versión 0.7. · [English](en/privacy.md)
 
 ## Lo esencial
 
@@ -11,6 +11,8 @@ Qué sabe de ti quien comparte contigo, qué no sale nunca de tu equipo y qué p
 ## Comprobar mi conexión
 
 **Herramientas → Comprobar mi conexión…** (también en Preferencias → Web y BitTorrent) dice en una línea por protocolo por dónde sale cada cosa en ese momento: por el proxy, solo por el adaptador de la VPN, o por la ruta normal del sistema, con el nombre del adaptador y su dirección. También dice si el corte de emergencia está armado y si todo está detenido. Se actualiza sola: si la VPN se cae con la ventana abierta, lo ves.
+
+El resumen está siempre a la vista en la barra lateral, en una línea con un punto de color: **verde** si todo sale por la VPN o el proxy, **ámbar** si la dirección de tu conexión está a la vista, **rojo** si está todo detenido. Un clic en esa línea abre la ventana.
 
 Lo que muestra es cómo está configurado Pegaso y por qué adaptador sale; no consulta ninguna web para averiguar tu dirección pública.
 
@@ -39,7 +41,8 @@ Si usas una VPN **sin** atar Pegaso a ella, Pegaso comprueba igualmente por dón
 
 Límites que conviene conocer:
 
-- Los nombres de las webs (DNS) los resuelve Windows con su configuración. Las VPN de túnel completo llevan también esas consultas; con «túnel dividido» pueden ir a tu operador, que vería a qué web vas, aunque no lo que descargas.
+- Los nombres de las webs (DNS) los pregunta Pegaso a los servidores DNS del adaptador de la VPN y a ningún otro. Si ese adaptador no tiene servidores DNS propios, los resuelve Windows con su configuración, y «Comprobar mi conexión» lo dice.
+- Eso vale para las peticiones web. BitTorrent resuelve los nombres de sus rastreadores con la configuración de Windows: con una VPN de «túnel dividido», esas consultas pueden ir a tu operador, que vería a qué rastreador vas, aunque no lo que descargas.
 - La VPN sustituye a tu operador como testigo: elige una en la que confíes.
 
 ## Ocultar tu dirección: proxy
@@ -107,5 +110,5 @@ Al desinstalar, la carpeta de configuración se conserva; bórrala a mano si qui
 El instalador no está firmado digitalmente, así que Windows puede avisar al abrirlo. Cada versión publica la huella SHA-256 de su instalador en la página de versiones; para comprobarla:
 
 ```
-certutil -hashfile Pegaso-0.6.2-setup.exe SHA256
+certutil -hashfile Pegaso-0.7-setup.exe SHA256
 ```

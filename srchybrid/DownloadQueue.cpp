@@ -18,12 +18,15 @@
 #include "PegasoIPv6.h"
 #include "PegasoNat.h"
 #include <io.h>
+#include <algorithm>
+#include <vector>
 #include "emule.h"
 #include "UpDownClient.h"
 #include "DownloadQueue.h"
 #include "WebDownload.h"
 #include "TorrentQueue.h"
 #include "NetGuard.h"
+#include "PegasoAuto.h"
 #include "PegasoDefaults.h"
 #include "PegasoScan.h"
 #include "PegasoRating.h"
@@ -64,6 +67,8 @@ CDownloadQueue::CDownloadQueue()
 	, m_lastfile()
 	, m_dwLastA4AFtime()
 	, m_lastcheckdiskspacetime()
+	, m_iBatch()
+	, m_iBatchAdded()
 	, m_lastudpsearchtime()
 	, m_lastudpstattime()
 	, m_dwNextTCPSrcReq()
@@ -169,6 +174,42 @@ void CDownloadQueue::Init()
 	VERIFY(m_srcwnd.CreateEx(0, AfxRegisterWndClass(0), _T("eMule Async DNS Resolve Socket Wnd #2"), WS_OVERLAPPED, 0, 0, 0, 0, NULL, NULL));
 
 	ExportPartMetFilesOverview();
+}
+
+int CDownloadQueue::ImportTempDir(const CString &sDir, int &iKnown, int &iFailed)
+{
+	int iAdded = 0;
+	iKnown = iFailed = 0;
+	CFileFind ff;
+	for (BOOL bFound = ff.FindFile(sDir + _T("*.part.met")); bFound;) {
+		bFound = ff.FindNextFile();
+		if (ff.IsDirectory())
+			continue;
+		CPartFile *toadd = new CPartFile();
+		if (toadd->LoadPartFile(sDir, ff.GetFileName()) != PLR_LOADSUCCESS) {
+			delete toadd;
+			++iFailed;
+			continue;
+		}
+		if (GetFileByID(toadd->GetFileHash()) != NULL || theApp.sharedfiles->GetFileByID(toadd->GetFileHash()) != NULL) {
+			delete toadd;	// it is being downloaded here, or it is here already
+			++iKnown;
+			continue;
+		}
+		filelist.AddTail(toadd);
+		if (toadd->GetStatus(true) == PS_READY)
+			theApp.sharedfiles->SafeAddKFile(toadd);	// part files are always shared files
+		theApp.emuledlg->transferwnd->GetDownloadList().AddFile(toadd);
+		++iAdded;
+	}
+	ff.Close();
+	if (iAdded > 0) {
+		thePrefs.AddTempDir(sDir);	// they are looked for there at the next start as well
+		thePrefs.Save();
+		SortByPriority();
+		CheckDiskspace();
+	}
+	return iAdded;
 }
 
 CDownloadQueue::~CDownloadQueue()
@@ -336,6 +377,12 @@ void CDownloadQueue::AddDownload(CPartFile *newfile, bool paused)
 	SetAutoCat(newfile);// HoaX_69 / Slugfiller: AutoCat
 
 	filelist.AddTail(newfile);
+	if (m_iBatch > 0) {	// Pegaso: one of many - the rest is done once, by EndBatch()
+		++m_iBatchAdded;
+		theApp.emuledlg->transferwnd->GetDownloadList().AddFile(newfile);
+		AddLogLine(false, GetResString(IDS_NEWDOWNLOAD), (LPCTSTR)newfile->GetFileName());
+		return;
+	}
 	SortByPriority();
 	CheckDiskspace();
 	theApp.emuledlg->transferwnd->GetDownloadList().AddFile(newfile);
@@ -345,6 +392,39 @@ void CDownloadQueue::AddDownload(CPartFile *newfile, bool paused)
 	msgTemp += _T("\n");
 	theApp.emuledlg->ShowNotifier(msgTemp, TBN_DOWNLOADADDED);
 	ExportPartMetFilesOverview();
+}
+
+void CDownloadQueue::BeginBatch()
+{
+	if (m_iBatch++ == 0)
+		m_iBatchAdded = 0;
+}
+
+void CDownloadQueue::EndBatch()
+{
+	if (m_iBatch <= 0 || --m_iBatch > 0 || m_iBatchAdded == 0)
+		return;
+	SortByPriority();
+	CheckDiskspace();
+	ExportPartMetFilesOverview();
+	AddLogLine(true, _T("%d downloads added"), m_iBatchAdded);
+	m_iBatchAdded = 0;
+}
+
+CDownloadBatch::CDownloadBatch()
+{
+	theApp.downloadqueue->BeginBatch();
+	if (theApp.emuledlg != NULL && theApp.emuledlg->transferwnd != NULL && theApp.emuledlg->transferwnd->GetDownloadList().m_hWnd != NULL)
+		theApp.emuledlg->transferwnd->GetDownloadList().SetRedraw(FALSE);
+}
+
+CDownloadBatch::~CDownloadBatch()
+{
+	theApp.downloadqueue->EndBatch();
+	if (theApp.emuledlg != NULL && theApp.emuledlg->transferwnd != NULL && theApp.emuledlg->transferwnd->GetDownloadList().m_hWnd != NULL) {
+		theApp.emuledlg->transferwnd->GetDownloadList().SetRedraw(TRUE);
+		theApp.emuledlg->transferwnd->GetDownloadList().Invalidate();
+	}
 }
 
 bool CDownloadQueue::IsFileExisting(const uchar *fileid, bool bLogWarnings) const
@@ -374,6 +454,7 @@ void CDownloadQueue::Process()
 	theWebDownloads.Process();	// Pegaso: turn pending web addresses into downloads
 	theTorrents.Process();		// Pegaso: BitTorrent engine
 	PegasoDefaultsProcess();
+	PegasoAuto::Process();		// Pegaso: the watched folder
 	PegasoScanProcess();
 	PegasoRatingProcess();
 	PegasoTrustProcess();
@@ -991,15 +1072,24 @@ void CDownloadQueue::HeapSort(UINT first, UINT last)
 
 void CDownloadQueue::SortByPriority()
 {
-	UINT n = (UINT)filelist.GetCount();
-	if (!n)
+	// Pegaso: eMule sorted the list where it is, and the list is a chain: to reach each place
+	// it walked the chain from its beginning, so the time went up with the square of the number
+	// of downloads - and this is called for every download added. With some hundreds of them
+	// the program stood still for minutes. The files are taken out, sorted and put back.
+	const INT_PTR n = filelist.GetCount();
+	if (n < 2)
 		return;
-	for (UINT i = n / 2; i--;)
-		HeapSort(i, n - 1);
-	for (UINT i = n; --i;) {
-		SwapParts(filelist.FindIndex(0), filelist.FindIndex(i));
-		HeapSort(0, i - 1);
-	}
+	std::vector<CPartFile*> files;
+	files.reserve((size_t)n);
+	for (POSITION pos = filelist.GetHeadPosition(); pos != NULL;)
+		files.push_back(filelist.GetNext(pos));
+	// the one with the higher priority first; among equals, the order they had
+	std::stable_sort(files.begin(), files.end(), [](CPartFile *pLeft, CPartFile *pRight) {
+		return CPartFile::RightFileHasHigherPrio(pRight, pLeft);
+	});
+	size_t i = 0;
+	for (POSITION pos = filelist.GetHeadPosition(); pos != NULL; filelist.GetNext(pos))
+		filelist.SetAt(pos, files[i++]);
 }
 
 void CDownloadQueue::CheckDiskspaceTimed()

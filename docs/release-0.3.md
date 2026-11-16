@@ -14,13 +14,6 @@ Tercera versión de Pegaso, el cliente P2P libre para Windows que descarga de la
 
 La lista completa está en [CHANGELOG.md](https://github.com/Draev-developer/Pegaso/blob/main/CHANGELOG.md).
 
-## A tener en cuenta
-
-- IPv6 no se usa cuando Pegaso está atado a un adaptador de red (protección VPN) o pasa por un proxy, para que nada salga por fuera de ellos. Las conexiones entre ID bajas sí funcionan con VPN: salen por el adaptador atado.
-- A los clientes conocidos solo por su dirección IPv6 no se les aplica el filtro de IP, que solo contiene rangos IPv4. La lista de vetados sí se les aplica.
-- Las conexiones entre ID bajas son nuevas: se han probado entre dos Pegaso, no todavía con otros programas.
-- Las fuentes web añadidas a una descarga de eMule solo admiten `http://`.
-
 ## Licencia y créditos
 
 GNU GPL v2. Pegaso deriva de eMule 0.72a (edición de la comunidad); el código fuente completo está en este repositorio.

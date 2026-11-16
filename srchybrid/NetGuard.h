@@ -18,6 +18,8 @@ struct SNetAdapter
 	CString	description;
 	CString	ipv4;			// empty if it has no address
 	bool	up;
+	DWORD	ifIndex;		// its number in Windows
+	bool	hasDns;			// it has DNS servers of its own
 };
 
 class CNetGuard
@@ -53,6 +55,9 @@ public:
 	bool	IsUp() const								{ return m_bUp; }
 	bool	HasKillSwitch() const						{ return m_bKillSwitch; }
 	const CString& GetAdapter() const					{ return m_sAdapter; }
+	// the adapter Pegaso is tied to, while it is connected: its number, and whether names can be asked of its own DNS servers
+	DWORD	GetIfIndex() const							{ return m_dwIfIndex; }
+	bool	HasAdapterDns() const						{ return m_bAdapterDns; }
 	// The scheduler pauses everything: no eD2K, Kad, BitTorrent or web until it is over.
 	void	SetHeld(bool bHeld);
 	bool	IsHeld() const								{ return m_bHeld; }
@@ -71,6 +76,8 @@ private:
 	bool	m_bBlocked;
 	bool	m_bUp;
 	bool	m_bHeld;
+	DWORD	m_dwIfIndex;
+	bool	m_bAdapterDns;
 	bool	m_bReconnect;	// the networks were connected when the hold began
 };
 

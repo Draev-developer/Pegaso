@@ -90,8 +90,10 @@ enum ETorrentEvent
 {
 	TE_ADDED,
 	TE_METADATA,		// name and size are known now
-	TE_FINISHED,
+	TE_FINISHED,		// 'text' is "downloaded" if something of it arrived in this session
 	TE_REMOVED,
+	TE_MOVED,			// its files are in another folder now ('text')
+	TE_MOVE_FAILED,		// they could not be taken there ('text' says why): a file may be in use for a moment
 	TE_ERROR,			// 'text' explains; the torrent may be gone (id empty) or stopped
 	TE_INFO				// engine level message, e.g. the listen port
 };
@@ -154,6 +156,15 @@ public:
 	void	Resume(const std::string &id);
 	void	Remove(const std::string &id, bool deleteFiles);
 	void	SetLimits(int downloadLimit, int uploadLimit);	// bytes per second, 0 = unlimited
+	// Fetches the pieces of the torrent in order, the beginning of this file first of all and
+	// its end next (players read the index of many formats from there). Gives back how many
+	// bytes of the file are there from its beginning on; -1 if there is no such file.
+	int64_t	PlayFile(const std::string &id, int index);
+	// Takes all the files of the torrent to another folder; a file which is already there is kept.
+	void	MoveStorage(const std::string &id, const std::wstring &folder);
+	// A torrent of another program which uses the same engine, with what that program knew of
+	// it (its "fastresume" file; may be empty): where the files are, which are wanted, what is there.
+	bool	AddFromResume(const std::wstring &resumePath, const std::wstring &torrentPath, std::wstring &error);
 	void	SetNoRootFolder(bool on);	// for the torrents added from now on
 	void	PauseSession(bool pause);	// stops all network activity without touching the torrents
 

@@ -45,6 +45,7 @@
 #include "PegasoUi.h"
 #include "NetGuard.h"
 #include "PegasoPrivacy.h"
+#include "PegasoAuto.h"
 #include "PegasoDefaults.h"
 #include "otherfunctions.h"
 #include "ServerWnd.h"
@@ -2684,6 +2685,18 @@ BOOL CemuleDlg::OnCommand(WPARAM wParam, LPARAM lParam)
 			dlg.DoModal();
 		}
 		break;
+	case MP_PEGASO_FOLDERS:	// Pegaso: the watched folder and the folders by type
+		{
+			CPegasoFoldersDlg dlg(this);
+			dlg.DoModal();
+		}
+		break;
+	case MP_PEGASO_IMPORT:	// Pegaso: downloads of eMule and qBittorrent
+		{
+			CPegasoImportDlg dlg(this);
+			dlg.DoModal();
+		}
+		break;
 	case MP_PEGASO_CLEAR:	// Pegaso: search history, finished and cancelled downloads, logs
 		PegasoClearTracesAsk(this);
 		break;
@@ -2817,6 +2830,8 @@ void CemuleDlg::ShowToolPopup(bool toolsonly)
 	menu.AppendMenu(MF_STRING, MP_PEGASO_WEBSEARCH, GetPegasoString(PS_WS_MENU), _T("SEARCH"));	// Pegaso
 	menu.AppendMenu(MF_STRING, MP_PEGASO_RENAME, GetPegasoString(PS_RN_MENU));	// Pegaso
 	menu.AppendMenu(MF_STRING, MP_PEGASO_CREATE, GetPegasoString(PS_CR_MENU));	// Pegaso
+	menu.AppendMenu(MF_STRING, MP_PEGASO_FOLDERS, GetPegasoString(PS_AF_MENU) + CString(_T("...")));	// Pegaso
+	menu.AppendMenu(MF_STRING, MP_PEGASO_IMPORT, GetPegasoString(PS_IM_MENU) + CString(_T("...")));	// Pegaso
 	menu.AppendMenu(MF_STRING, MP_PEGASO_CONN, GetPegasoString(PS_CC_MENU) + CString(_T("...")));	// Pegaso
 	menu.AppendMenu(MF_STRING, MP_PEGASO_CLEAR, GetPegasoString(PS_CT_MENU) + CString(_T("...")));	// Pegaso
 

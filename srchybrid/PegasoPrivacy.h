@@ -20,6 +20,9 @@ CString PegasoUnprotect(const CString &sStored);
 void	PegasoMigrateSecrets();		// at startup: whatever is still in clear is written encrypted
 
 CString PegasoConnectionReport();	// lines ending in \r\n; main thread
+// How hidden the address is, in one word and three colours: 0 nothing leaves but through the VPN or
+// the proxy, 1 the address of the connection is in sight, 2 everything is stopped. Main thread.
+int		PegasoPrivacyState(CString &sText);
 
 void	PegasoClearTraces();
 void	PegasoClearTracesAsk(CWnd *pParent);	// says what goes, asks, clears, says so

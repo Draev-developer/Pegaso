@@ -36,6 +36,8 @@ CNetGuard::CNetGuard()
 	, m_bBlocked()
 	, m_bUp()
 	, m_bHeld()
+	, m_dwIfIndex()
+	, m_bAdapterDns()
 	, m_bReconnect()
 {
 }
@@ -51,7 +53,7 @@ std::vector<SNetAdapter> CNetGuard::ListAdapters()
 	DWORD dwResult = ERROR_BUFFER_OVERFLOW;
 	for (int i = 0; i < 4 && dwResult == ERROR_BUFFER_OVERFLOW; ++i) {
 		buffer.resize(uSize);
-		dwResult = ::GetAdaptersAddresses(AF_INET, GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_SKIP_DNS_SERVER
+		dwResult = ::GetAdaptersAddresses(AF_INET, GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST
 			, NULL, reinterpret_cast<PIP_ADAPTER_ADDRESSES>(buffer.data()), &uSize);
 	}
 	if (dwResult != ERROR_SUCCESS)
@@ -63,6 +65,8 @@ std::vector<SNetAdapter> CNetGuard::ListAdapters()
 		adapter.name = p->FriendlyName;
 		adapter.description = p->Description;
 		adapter.up = p->OperStatus == IfOperStatusUp;
+		adapter.ifIndex = p->IfIndex;
+		adapter.hasDns = p->FirstDnsServerAddress != NULL;
 		for (PIP_ADAPTER_UNICAST_ADDRESS pAddr = p->FirstUnicastAddress; pAddr != NULL; pAddr = pAddr->Next)
 			if (pAddr->Address.lpSockaddr != NULL && pAddr->Address.lpSockaddr->sa_family == AF_INET) {
 				const sockaddr_in *sin = reinterpret_cast<const sockaddr_in*>(pAddr->Address.lpSockaddr);
@@ -228,6 +232,8 @@ void CNetGuard::Refresh(bool bLog)
 {
 	bool bUp = false;
 	CString sAddress;
+	m_dwIfIndex = 0;
+	m_bAdapterDns = false;
 	if (IsActive()) {
 		// "*text" stands for whichever adapter has that text in its description and is connected:
 		// a VPN may bring its own adapter along each time it connects, under one name or another
@@ -236,6 +242,8 @@ void CNetGuard::Refresh(bool bLog)
 			if (bByDescription ? adapter.description.Find(m_sAdapter.Mid(1)) >= 0 : adapter.name.CompareNoCase(m_sAdapter) == 0) {
 				bUp = adapter.up && !adapter.ipv4.IsEmpty();
 				sAddress = adapter.ipv4;
+				m_dwIfIndex = bUp ? adapter.ifIndex : 0;
+				m_bAdapterDns = bUp && adapter.hasDns;
 				if (bUp || !bByDescription)
 					break;
 			}

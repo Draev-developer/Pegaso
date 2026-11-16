@@ -60,6 +60,7 @@
 #include "CollectionViewDialog.h"
 #include "uploaddiskiothread.h"
 #include "PartFileWriteThread.h"
+#include "PegasoAuto.h"
 #ifndef XP_BUILD
 #include <urlmon.h>
 #endif
@@ -549,11 +550,17 @@ void CPartFile::CreatePartFile(UINT cat)
 	const CString &tempdirtouse(theApp.downloadqueue->GetOptimalTempDir(cat, m_nFileSize));
 
 	// use the lowest free part file number for a file name (InterCeptor)
+	// Pegaso: looked for from the last number given in this folder on, not from 1 each time:
+	// with many downloads added in a row that was one question to the disk per existing file,
+	// per download
+	static CMap<CString, LPCTSTR, int, int> s_lastNumber;
 	CString filename;
 	int i = 0;
+	s_lastNumber.Lookup(tempdirtouse, i);
 	do
 		filename.Format(_T("%s%03i.part"), (LPCTSTR)tempdirtouse, ++i);
 	while (::PathFileExists(filename));
+	s_lastNumber[tempdirtouse] = i;
 	SetPath(tempdirtouse);
 	m_partmetfilename.Format(_T("%03i.part.met"), i);
 	m_fullname.Format(_T("%s%s"), (LPCTSTR)tempdirtouse, (LPCTSTR)m_partmetfilename);
@@ -3071,6 +3078,12 @@ BOOL CPartFile::PerformFileComplete()
 		indir = thePrefs.GetCategory(GetCategory())->strIncomingPath;
 	else
 		indir = thePrefs.GetMuleDirectory(EMULE_INCOMINGDIR);
+	// Pegaso: a download without a category of its own goes to the folder set for its type
+	if (GetCategory() == 0) {
+		const CString sTypeDir(PegasoAuto::TypeFolder(GetFileName()));
+		if (!sTypeDir.IsEmpty())
+			indir = sTypeDir;
+	}
 	ASSERT(indir.Right(1) == _T("\\"));
 	// close permanent handle
 	try {
@@ -3231,6 +3244,14 @@ void CPartFile::PerformFileCompleteEnd(DWORD dwResult)
 			PegasoMarkFromInternet(GetFilePath(), sSourceUrl);
 		}
 		theApp.knownfiles->SafeAddKFile(this);
+		{	// Pegaso: in the folder of its type, outside of the shared folders, it stays shared on its own
+			CString sDir(GetPath());
+			sDir.TrimRight(_T('\\'));
+			if (!theApp.sharedfiles->ShouldBeShared(sDir, GetFilePath(), false)) {
+				theApp.sharedfiles->AddSingleSharedFile(GetFilePath(), true);
+				theApp.sharedfiles->Save();
+			}
+		}
 		ASSERT(!nInUse);
 		theApp.downloadqueue->RemoveFile(this);
 		CUploadDiskIOThread::DissociateFile(this); //file has moved, a new handle would be required

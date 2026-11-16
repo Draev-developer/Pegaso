@@ -673,6 +673,7 @@ public:
 
 	static LPCTSTR	GetTempDir(INT_PTR id = 0)			{ return (LPCTSTR)tempdir[(id < tempdir.GetCount()) ? id : 0]; }
 	static INT_PTR	GetTempDirCount()					{ return tempdir.GetCount(); }
+	static void		AddTempDir(const CString &sDir);	// Pegaso: one more, unless it is one already
 	static bool		CanFSHandleLargeFiles(int nForCat);
 	static LPCTSTR	GetConfigFile();
 	static const CString& GetFileCommentsFilePath()		{ return m_strFileCommentsFilePath; }

@@ -1,6 +1,6 @@
 # Compilar Pegaso
 
-Pegaso se compila para Windows de 64 bits con Visual Studio 2026 (conjunto de herramientas v145). El programa enlaza todas sus bibliotecas de forma estática, así que el resultado es un único `Pegaso.exe` más las DLL de idioma.
+Pegaso se compila para Windows de 64 bits con Visual Studio 2026 (conjunto de herramientas v145). El programa enlaza todas sus bibliotecas de forma estática, así que el resultado es un único `Pegaso.exe` más las DLL de idioma. · [English](BUILDING.en.md)
 
 ## Requisitos
 
@@ -84,6 +84,11 @@ python -I browser-extension\build.py           # empaqueta la extensión del nav
 python -I tools\webtest\exttest.py           # la extensión cargada en Edge y lo que la API hace por ella (Node 22 o posterior)
 python -I tools\webtest\createtest.py        # crear torrents de archivos propios y descargas web en serie
 python -I tools\webtest\renametest.py        # renombrar vídeos con las bases de datos (simuladas) y moverlos sin dejar de compartir
+python -I tools\webtest\proxytest.py         # el proxy de las preferencias lo lleva todo (proxies SOCKS5 y HTTP simulados)
+python -I tools\webtest\privtest.py          # claves cifradas, aviso de versión, rastro, web atada al adaptador, pausa del programador
+python    tools\webtest\privuitest.py        # las ventanas de las opciones de privacidad, con capturas (necesita Pillow)
+python -I tools\webtest\autotest.py          # carpeta vigilada, carpetas por tipo, reproducir, importar, nombres por el adaptador
+python -I tools\webtest\manytest.py 1500     # descargar de una vez muchos resultados de una búsqueda
 python -I tools\webtest\droptest.py          # archivos arrastrados desde el Explorador (mueve el ratón unos segundos)
 python -I tools\webtest\kvpntest.py          # oferta de Kaspersky VPN (solo si está instalado; no lo toca)
 python -I tools\webtest\nattest.py           # dos ID bajas presentadas por un servidor simulado
@@ -94,8 +99,11 @@ python -I tools\webtest\nettest.py           # Conectar, contra las redes reales
 
 Casi todas usan solo servidores simulados en el propio equipo. `nettest.py` y las que necesitan Kad se conectan a las redes reales.
 
+Con una VPN conectada, Windows puede rechazar las conexiones a una dirección de sus propios adaptadores: las pruebas que llaman al servidor web local por la dirección de la tarjeta de red pueden fallar solo por eso.
+
 ## Notas sobre el código
 
 - Los fuentes heredados de eMule usan finales de línea CRLF y codificación Latin-1; conviene respetarlos para que los diffs sean legibles.
 - `TorrentEngine.cpp` se compila aparte (C++17, sin cabecera precompilada) y es el único fichero que incluye libtorrent y Boost.
 - Las etiquetas del árbol de Preferencias se asignan por posición (`uids` en `PreferencesDlg.cpp`): al añadir o quitar páginas hay que actualizar esa lista.
+- `preferences.ini` tiene dos escritores. eMule lee el archivo entero en memoria al arrancar (`CPreferences::prefsIni`) y lo reescribe entero al guardar; las opciones de Pegaso se escriben directamente en el archivo con `theApp.WriteProfile…`. `SavePreferences` relee el archivo antes de escribir (`CIni::Reload`), para no devolver esas opciones al valor que tenían al arrancar.

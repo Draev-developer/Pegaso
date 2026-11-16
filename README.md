@@ -26,6 +26,9 @@ Pegaso es un cliente P2P libre para Windows, derivado de [eMule](https://www.emu
 | **Renombrar vídeos** | Da a los vídeos terminados el nombre de su película o serie (`Nombre (año)`, `Nombre - 1x05`) con TheMovieDB, OMDb, TheTVDB, TVmaze o AniDB, y los mueve a la carpeta que elijas sin que dejen de compartirse en eD2K ni de sembrarse en BitTorrent. Cómo conseguir las claves: [docs/renombrar-videos.md](docs/renombrar-videos.md). |
 | **IPv6 e ID bajas** | Llama directamente por IPv6 a quien tiene ID baja pero dirección IPv6 pública, y conecta a dos clientes con ID baja a través de sus routers (QUIC) cuando el servidor sabe presentarlos. Compatible con eMule Qt, eMuleAI y aMule. |
 | **API local** | REST y MCP para scripts y asistentes de IA del mismo equipo: descargas, búsquedas y conexión. Desactivada de serie, con clave secreta y solo en 127.0.0.1. Ver [docs/api.md](docs/api.md). |
+| **Reproducir mientras descarga** | Un torrent se baja en orden y su vídeo se abre en cuanto ha llegado el comienzo. |
+| **Carpetas automáticas** | Una carpeta vigilada de la que se añaden solos los `.torrent` y las listas de enlaces, y una carpeta para lo terminado según su tipo, sin dejar de compartir. |
+| **Importar** | Continúa las descargas a medias de eMule y trae los torrents de qBittorrent con lo que ya tenían. |
 | **Programador** | Límites de velocidad por hora y día para todas las redes, y una acción «Pausar todo». |
 | **Idiomas** | Español, inglés, francés, italiano, portugués, alemán y ruso. |
 

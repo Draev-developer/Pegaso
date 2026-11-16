@@ -236,6 +236,9 @@ CString PegasoConnectionReport()
 		line(_T("BitTorrent DHT"), bHeld ? sHeld : (!proxy.bUseProxy ? sAdapter : (proxy.type == PROXYTYPE_SOCKS5 ? sByProxy : sNotUsed)));
 	}
 	line(GetPegasoString(PS_CC_WEB), bHeld ? sHeld : (PegasoBridge::Port() < 0 ? sNotUsed : (proxy.bUseProxy ? sByProxy : sAdapter)));
+	// who is asked for the address behind the name of a website
+	line(GetPegasoString(PS_CC_DNS), bHeld ? sHeld : (PegasoBridge::Port() < 0 ? sNotUsed : (proxy.bUseProxy ? sByProxy
+		: ((bBound && theNetGuard.HasAdapterDns()) ? sAdapter : CString(GetPegasoString(PS_CC_DNS_SYSTEM))))));
 	CString sRoute6Name, sRoute6Address;
 	if (Pegaso6::Enabled() && !bHeld && BestRoute(AF_INET6, sRoute6Name, sRoute6Address))
 		line(_T("IPv6"), Formatted(PS_CC_VIA_SYSTEM, sRoute6Name, sRoute6Address));
@@ -248,6 +251,32 @@ CString PegasoConnectionReport()
 	else if (proxy.bUseProxy && !CNetGuard::UdpHeldByProxy())
 		sReport += _T("\r\n") + CString(GetPegasoString(PS_CC_UDP_ROUND)) + _T("\r\n");
 	return sReport;
+}
+
+int PegasoPrivacyState(CString &sText)
+{
+	const ProxySettings &proxy = thePrefs.GetProxySettings();
+	EPegasoString id;
+	int iState;
+	if (theNetGuard.IsHeld()) {
+		id = PS_UI_PRIV_STOPPED;
+		iState = 2;
+	} else if (theNetGuard.IsBlocked()) {
+		id = PS_UI_VPN_BLOCKED;
+		iState = 2;
+	} else if (theNetGuard.IsActive() && theNetGuard.IsUp()) {
+		id = PS_UI_VPN_OK;
+		iState = 0;
+	} else if (proxy.bUseProxy) {
+		iState = CNetGuard::UdpHeldByProxy() ? 0 : 1;
+		id = iState == 0 ? PS_UI_PRIV_PROXY : PS_UI_PRIV_PROXY_UDP;
+	} else {
+		// a VPN on this computer which Pegaso is not tied to is worth a word of its own
+		id = (!theNetGuard.IsActive() && CNetGuard::KasperskyInstalled()) ? PS_UI_VPN_UNTIED : PS_UI_PRIV_NONE;
+		iState = 1;
+	}
+	sText = GetPegasoString(id);
+	return iState;
 }
 
 // ---------------------------------------------------------------- CPegasoConnDlg

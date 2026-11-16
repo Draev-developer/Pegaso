@@ -436,6 +436,7 @@
     <ClCompile Include="WebDownload.cpp" />
     <ClCompile Include="WebSearch.cpp" />
     <ClCompile Include="PegasoRename.cpp" />
+    <ClCompile Include="PegasoAuto.cpp" />
     <ClCompile Include="PegasoBridge.cpp" />
     <ClCompile Include="PegasoPrivacy.cpp" />
     <ClCompile Include="PegasoTorrentCreate.cpp" />
@@ -745,6 +746,7 @@
     <ClInclude Include="WebDownload.h" />
     <ClInclude Include="WebSearch.h" />
     <ClInclude Include="PegasoRename.h" />
+    <ClInclude Include="PegasoAuto.h" />
     <ClInclude Include="PegasoBridge.h" />
     <ClInclude Include="PegasoPrivacy.h" />
     <ClInclude Include="PegasoTorrentCreate.h" />

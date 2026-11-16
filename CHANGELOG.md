@@ -2,6 +2,32 @@
 
 Pegaso parte de eMule 0.72a (edición de la comunidad). El historial de eMule está en `changelog_full.txt`.
 
+## 0.7
+
+· [English](CHANGELOG.en.md)
+
+### Uso diario
+- **Reproducir mientras descarga.** Botón derecho sobre un torrent → «Reproducir mientras descarga»: Pegaso baja sus piezas en orden, primero el comienzo y el final del vídeo o audio más grande, y lo abre con el reproductor de Windows en cuanto ha llegado el comienzo. Si aún no hay bastante, se abre solo cuando lo haya. En las descargas de eMule sigue estando «Vista previa».
+- **Carpeta vigilada.** Herramientas → «Carpetas automáticas…»: los archivos `.torrent`, y los `.txt` con un enlace por línea, que dejes en la carpeta que elijas se añaden solos. Lo añadido pasa a su subcarpeta `added`.
+- **Lo terminado, a su carpeta según el tipo.** En la misma ventana, una carpeta para vídeos, audio, imágenes, documentos, archivos comprimidos y programas. Vale para eMule, web y BitTorrent; un torrent va entero a la carpeta de su archivo más grande. Lo movido sigue compartido en eD2K y sembrado. Las descargas con categoría propia van a la carpeta de su categoría, como siempre.
+- **Importar de eMule y de qBittorrent.** Herramientas → «Importar de eMule o qBittorrent…». De eMule, Pegaso continúa las descargas sin terminar donde están (su carpeta Temp pasa a ser una carpeta temporal más de Pegaso; no se copia nada). De qBittorrent, añade los torrents de su carpeta `BT_backup` con lo que qBittorrent sabía de ellos: dónde están los archivos, cuáles se quieren y qué hay ya bajado.
+
+- **Lo renombrado sale de Descargas.** Un vídeo al que «Renombrar vídeos» ha dado nombre o sitio ya no queda en la lista de descargas, donde parecía que no se había movido. Si venía de eMule o de la web sigue en Compartidos. Si era de un torrent, el torrent sale de la lista cuando todos sus vídeos tienen ya su sitio y se sigue sembrando hasta alcanzar el límite de ratio de las preferencias; entonces Pegaso lo suelta (los archivos se quedan). Con el límite de ratio a 0 (sembrar siempre) el torrent se queda en la lista, para que nada se siembre sin fin fuera de la vista.
+
+### Privacidad
+- **Indicador siempre a la vista.** La barra lateral dice en una línea cómo de oculta está tu dirección: verde si todo sale por la VPN o el proxy, ámbar si la dirección de tu conexión está a la vista, rojo si está todo detenido. Un clic abre «Comprobar mi conexión».
+- **Los nombres de las webs, por la VPN.** Con la protección VPN, Pegaso pregunta los nombres de las webs (DNS) a los servidores del adaptador de la VPN y a ningún otro, en vez de dejarlo en manos de Windows. Si ese adaptador no tiene servidores DNS propios sigue resolviendo Windows, y «Comprobar mi conexión» lo dice.
+
+### Corregido
+- **Descargar muchos resultados a la vez dejaba Pegaso sin responder.** Al añadir cientos de archivos desde una búsqueda, la cola de descargas se reordenaba entera por cada archivo, con un método cuyo coste crecía con el cuadrado de la lista (heredado de eMule), y el índice de descargas se reescribía cada vez. Ahora se ordena y se guarda una sola vez, al final: 1500 descargas pasan de 53 segundos de bloqueo a 8.
+- Con varios resultados sospechosos entre los elegidos, Pegaso hace una sola pregunta para todos (todos, solo los demás, o cancelar) en vez de abrir una ventana por archivo.
+
+### API
+- `POST /api/v1/downloads/{hash}/play`: reproduce un torrent mientras descarga.
+
+### Documentación
+- `BUILDING.en.md` y `CHANGELOG.en.md`: en inglés lo que faltaba.
+
 ## 0.6.2
 
 Remata la revisión de privacidad de la 0.6.1. Todo está explicado en [docs/privacidad.md](docs/privacidad.md) ([English](docs/en/privacy.md)).

@@ -101,6 +101,7 @@ public:
 	bool	RemoveFile(const CPartFile *toremove);
 	void	ClearCompleted(int incat = -2);
 	void	ClearCompleted(const CPartFile *pFile);
+	void	PegasoClearCompletedAt(const CString &sPath);	// Pegaso: the finished download whose file this is
 	void	ShowTorrentFiles(const CPartFile *pFile);	// Pegaso
 	void	SetStyle();
 	void	CreateMenus();

@@ -26,6 +26,9 @@ Pegaso is a free P2P client for Windows, derived from [eMule](https://www.emule-
 | **Renaming videos** | Gives finished videos the name of their film or series (`Name (year)`, `Name - 1x05`) with TheMovieDB, OMDb, TheTVDB, TVmaze or AniDB, and moves them to the folder you choose without ceasing to share them on eD2K or to seed them on BitTorrent. How to get the keys: [docs/en/rename-videos.md](docs/en/rename-videos.md). |
 | **IPv6 and low IDs** | Calls directly over IPv6 whoever has a low ID but a public IPv6 address, and connects two low-ID clients through their routers (QUIC) when the server can introduce them. Compatible with eMule Qt, eMuleAI and aMule. |
 | **Local API** | REST and MCP for scripts and AI assistants on the same computer: downloads, searches and connection. Off by default, with a secret key and on 127.0.0.1 only. See [docs/en/api.md](docs/en/api.md). |
+| **Play while downloading** | A torrent is fetched in order and its video opens as soon as the beginning has arrived. |
+| **Automatic folders** | A watched folder from which `.torrent` files and lists of links are added by themselves, and a folder for finished downloads by type, still shared. |
+| **Import** | Goes on with the unfinished downloads of eMule and brings the torrents of qBittorrent with what they had. |
 | **Scheduler** | Speed limits by time and day for every network, and a "Pause everything" action. |
 | **Languages** | Spanish, English, French, Italian, Portuguese, German and Russian. |
 
@@ -76,7 +79,7 @@ On the networks: [X @draev_developer](https://x.com/draev_developer) · [Instagr
 
 ## Building
 
-The instructions are in [BUILDING.md](BUILDING.md) (in Spanish; the commands need no translation). Visual Studio 2026 with the MFC component is required.
+The instructions are in [BUILDING.en.md](BUILDING.en.md). Visual Studio 2026 with the MFC component is required.
 
 ## Licence and credits
 
@@ -88,4 +91,4 @@ Pegaso is distributed under the **GNU General Public License, version 2** ([lice
 - It also uses Crypto++, mbed TLS, miniupnpc, zlib, id3lib and ResizableLib.
 - Country flags: address data from [IP Geolocation by DB-IP](https://db-ip.com) ("IP to Country Lite" database, CC BY 4.0 licence) and flag icons by Mark James (famfamfam.com, public domain).
 
-The changes with respect to eMule 0.72a are in [CHANGELOG.md](CHANGELOG.md) (in Spanish) and in the history of this repository.
+The changes with respect to eMule 0.72a are in [CHANGELOG.en.md](CHANGELOG.en.md) and in the history of this repository.

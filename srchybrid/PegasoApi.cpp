@@ -429,6 +429,7 @@ namespace
 			kad.Bool("firewalled", Kademlia::CKademlia::IsFirewalled());
 		return CObj().Str("name", PEGASO_NAME).Str("version", PEGASO_VERSION_NAME)
 			.Raw("ed2k", ed2k.Done()).Raw("kad", kad.Done())
+			.Num("hiddenSeeds", (uint64)theTorrents.HiddenSeeds())
 			.Num("downloadRate", theApp.downloadqueue->GetDatarate())
 			.Num("uploadRate", theApp.uploadqueue->GetDatarate())
 			.Num("downloads", (uint64)theApp.downloadqueue->GetFileCount())
@@ -906,7 +907,14 @@ namespace
 			req.reply = DownloadJson(DownloadByHash(parts[3]));
 		else if (sWhat == "downloads" && n == 4 && req.method == "DELETE")
 			req.reply = DownloadAction(parts[3], "remove");
-		else if (sWhat == "downloads" && n == 5 && bPost && (parts[4] == "pause" || parts[4] == "resume"))
+		else if (sWhat == "downloads" && n == 5 && bPost && parts[4] == "play") {
+			CPartFile *pFile = DownloadByHash(parts[3]);
+			if (!pFile->IsTorrent())
+				throw SApiError{400, _T("only a torrent can be played while it downloads")};
+			CString sMessage;
+			const bool bOpened = theTorrents.Play(pFile->GetTorrentId(), sMessage);
+			req.reply = CObj().Bool("opened", bOpened).Str("message", sMessage).Done();
+		} else if (sWhat == "downloads" && n == 5 && bPost && (parts[4] == "pause" || parts[4] == "resume"))
 			req.reply = DownloadAction(parts[3], parts[4]);
 		else if (sWhat == "shared" && n == 3 && bGet)
 			req.reply = SharedJson();

@@ -75,6 +75,9 @@
 #define MP_PEGASO_CREATE		10993	// Pegaso: make a torrent
 #define MP_PEGASO_CONN		10994	// Pegaso: by which way each protocol leaves
 #define MP_PEGASO_CLEAR		10995	// Pegaso: clear local traces
+#define MP_PEGASO_FOLDERS	10996	// Pegaso: watched folder, folders by type
+#define MP_PEGASO_IMPORT	10997	// Pegaso: downloads of eMule and qBittorrent
+#define MP_PEGASO_PLAY		10998	// Pegaso: play a torrent while it downloads
 #define MP_PEGASO_CONTACT	10992	// Pegaso: the contact window
 #define MP_PEGASO_RENAME		10991	// Pegaso: names for the finished videos
 #define MP_PEGASO_DROPPED	10990	// Pegaso: files dropped from Explorer, to be opened

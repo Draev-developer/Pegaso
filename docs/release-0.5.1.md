@@ -14,11 +14,6 @@ Versión de mejora de Pegaso, el cliente P2P libre para Windows que descarga de 
 
 Lo demás es lo de la [0.5](https://github.com/Draev-developer/Pegaso/releases/tag/v0.5). La lista completa está en [CHANGELOG.md](https://github.com/Draev-developer/Pegaso/blob/main/CHANGELOG.md).
 
-## A tener en cuenta
-
-- La ventana de renombrar no se cierra mientras se está moviendo un archivo; se cierra cuando acaba.
-- Si se cierra Pegaso a mitad de una copia a otro disco, esa copia se abandona y el archivo queda donde estaba.
-
 ## Licencia y créditos
 
 GNU GPL v2. Pegaso deriva de eMule 0.72a (edición de la comunidad); el código fuente completo está en este repositorio.

@@ -43,6 +43,17 @@ public:
 
 	CTorrentEngine& Engine()							{ return m_engine; }
 	bool	AddWebSeed(const std::string &id, const CString &sUrl);
+	// Plays the largest video or audio of the torrent while it downloads: the pieces are fetched
+	// in order and the file is opened as soon as its beginning is there. false: sMessage says
+	// why not, or that it will open by itself. preferences.ini: PlayDryRun (tests: nothing is opened)
+	bool	Play(const std::string &id, CString &sMessage);
+	// A finished torrent whose videos have all been renamed or moved elsewhere by the user leaves
+	// the download list - shown there, it would look as if they had not been moved. It stays
+	// seeded until it has given back the ratio of the preferences, and is then let go of; with
+	// no ratio set (seeding for ever) it stays in the list, so that nothing is seeded out of
+	// sight without an end. Kept in <config>\torrents\hidden.txt.
+	void	HideIfMoved(const std::string &id);
+	int		HiddenSeeds() const;	// how many are being seeded out of the list right now
 	void	Pause(const std::string &id)				{ m_engine.Pause(id); }
 	void	Resume(const std::string &id)				{ m_engine.Resume(id); }
 	void	Remove(const std::string &id, bool bDeleteFiles) { m_engine.Remove(id, bDeleteFiles); }
@@ -59,6 +70,21 @@ private:
 	uint32	m_uDatarate;
 	uint32	m_uUpDatarate;
 	std::set<std::string> m_ratioStopped;	// stopped once for having reached the seed ratio
+	std::set<std::string> m_hidden;			// finished torrents which are not shown in the download list
+	void	LoadHidden();
+	void	SaveHidden() const;
+	std::map<std::string, int> m_play;		// torrents to be played when the beginning of that file is there
+	std::set<std::string> m_unfinished;		// seen downloading in this session: the ones which go to the folder of their type
+	// Finished torrents on their way to the folder of their type. A file may be in use for a
+	// moment (the antivirus, a player): the move is tried again a few times.
+	struct SMove
+	{
+		CString	folder;
+		DWORD	due;		// when to ask the engine
+		int		tries;
+		bool	asked;		// the engine has been asked and has not answered yet
+	};
+	std::map<std::string, SMove> m_moves;
 	bool	m_bStartTried;
 	bool	m_bNetPaused;		// VPN protection has stopped the engine's traffic
 	CString	m_sBoundTo;			// bind address the engine was started with

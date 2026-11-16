@@ -13,6 +13,8 @@ Tools → "Rename videos…" gives finished videos the name of the film or serie
 4. If you want them moved, type or choose a folder for the films and another for the series. Empty: they stay where they are.
 5. Press "Rename". You can go on using Pegaso while they are moved.
 
+What has been renamed leaves the download list: it is no longer a download. Files from eMule and the web are still under **Shared**. A torrent leaves the list once all its videos have their place, and goes on being seeded up to the ratio limit (200 % by default; `TorrentSeedRatio` in `preferences.ini`); when it gets there, Pegaso lets go of it and the files stay where they are.
+
 What each file is, is read from its name: `S01E05`, `1x05`, `Cap.105`, "Temporada 1 Capítulo 5" or, for a film, the year. With names that say nothing there is nothing to look up.
 
 ## Which databases ask for a key

@@ -181,6 +181,11 @@ def torrents():
     return [d for d in listed['downloads'] if d.get('kind') == 'torrent'] if status == 200 else []
 
 
+def hidden_seeds():
+    status, state = apitest.call('GET', '/api/v1/status')
+    return state.get('hiddenSeeds') if status == 200 else None
+
+
 def main():
     sys.stdout.reconfigure(encoding='utf-8', errors='replace')
     ok = True
@@ -349,7 +354,8 @@ def main():
         time.sleep(4)
         seeding = torrents()
         print('    torrent:', [(t['name'], t.get('complete')) for t in seeding])
-        check('... and the torrents go on seeding', len(seeding) == 2 and all(t.get('complete') for t in seeding), seeding)
+        check('... the torrents whose videos were moved leave the download list', seeding == [], seeding)
+        check('... and go on being seeded, out of it', hidden_seeds() == 2, hidden_seeds())
     finally:
         if mem:
             mem.close()
@@ -362,7 +368,7 @@ def main():
         u.main_window(p.pid)
         t0 = time.time()
         moved_names = [n for n in after if after[n].get('path', '').lower().startswith(series_dir.lower())]
-        while time.time() - t0 < 60 and (not all(n in shared() for n in moved_names) or len([t for t in torrents() if t.get('complete')]) < 2):
+        while time.time() - t0 < 60 and (not all(n in shared() for n in moved_names) or hidden_seeds() != 2):
             time.sleep(2)
         again = shared()
         print('    shared after a restart:', sorted(again))
@@ -370,8 +376,8 @@ def main():
               and all(n in again and again[n]['hash'] == after[n]['hash'] for n in moved_names), (moved_names, sorted(again)))
         seeding = torrents()
         print('    torrent:', [(t['name'], t.get('complete')) for t in seeding])
-        check('... and the torrents seed from the new places: nothing is downloaded again', len(seeding) == 2 and all(t.get('complete') for t in seeding)
-              and not os.path.exists(seeded) and os.path.isfile(moved) and not os.path.exists(pack), seeding)
+        check('... and the torrents seed from the new places, out of the download list: nothing is downloaded again', seeding == [] and hidden_seeds() == 2
+              and not os.path.exists(seeded) and os.path.isfile(moved) and not os.path.exists(pack), (seeding, hidden_seeds()))
         check('still running', p.poll() is None)
     finally:
         if not w.close_gracefully(p, 60):

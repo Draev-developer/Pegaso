@@ -13,11 +13,6 @@ Versión de mejora de Pegaso, el cliente P2P libre para Windows que descarga de 
 
 Lo demás es lo de la [0.5](https://github.com/Draev-developer/Pegaso/releases/tag/v0.5) y la [0.5.1](https://github.com/Draev-developer/Pegaso/releases/tag/v0.5.1). La lista completa está en [CHANGELOG.md](https://github.com/Draev-developer/Pegaso/blob/main/CHANGELOG.md).
 
-## A tener en cuenta
-
-- Una carpeta donde queda otro vídeo no se toca, y las carpetas de descargas en sí no se quitan nunca.
-- Quitar la carpeta se puede desactivar en la propia ventana de renombrar.
-
 ## Licencia y créditos
 
 GNU GPL v2. Pegaso deriva de eMule 0.72a (edición de la comunidad); el código fuente completo está en este repositorio.

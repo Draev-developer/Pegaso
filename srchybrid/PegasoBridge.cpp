@@ -1,6 +1,7 @@
 // Pegaso: the way out of the web requests. See PegasoBridge.h.
 #include "stdafx.h"
 #include <ws2tcpip.h>
+#include <windns.h>
 #include <atomic>
 #include <mutex>
 #include <string>
@@ -12,6 +13,8 @@
 #include "NetGuard.h"
 #include "Opcodes.h"
 #include "StringConversion.h"
+
+#pragma comment(lib, "dnsapi.lib")
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -39,6 +42,7 @@ namespace
 		std::string	password;
 		bool		auth = false;
 		std::string	bind;		// IPv4 address of the adapter, or empty
+		unsigned long ifIndex = 0;	// that adapter, if it has DNS servers of its own: names are asked of them only
 		bool		blocked = false;
 	};
 
@@ -120,10 +124,90 @@ namespace
 		return false;
 	}
 
-	// A TCP connection to host:port. With an adapter address, only over IPv4 and from that
-	// address - but for a destination on this computer itself, which no adapter carries.
-	SOCKET Connect(const std::string &host, int port, const std::string &bind)
+	// One attempt, with a time limit. With an adapter address, from that address - but for a
+	// destination on this computer itself, which no adapter carries.
+	SOCKET ConnectTo(const sockaddr *addr, int len, const std::string &bind)
 	{
+		const SOCKET s = ::socket(addr->sa_family, SOCK_STREAM, IPPROTO_TCP);
+		if (s == INVALID_SOCKET)
+			return INVALID_SOCKET;
+		bool bOk = true;
+		if (!bind.empty() && !IsLoopback(addr)) {
+			sockaddr_in local = {};
+			local.sin_family = AF_INET;
+			bOk = addr->sa_family == AF_INET && ::inet_pton(AF_INET, bind.c_str(), &local.sin_addr) == 1
+				&& ::bind(s, reinterpret_cast<const sockaddr*>(&local), sizeof local) == 0;
+		}
+		if (bOk) {
+			u_long uNonBlocking = 1;
+			::ioctlsocket(s, FIONBIO, &uNonBlocking);
+			bOk = ::connect(s, addr, len) == 0;
+			if (!bOk && ::WSAGetLastError() == WSAEWOULDBLOCK) {
+				fd_set setWrite, setError;
+				FD_ZERO(&setWrite);
+				FD_ZERO(&setError);
+				FD_SET(s, &setWrite);
+				FD_SET(s, &setError);
+				timeval tv = {CONNECT_SECONDS, 0};
+				bOk = ::select(0, NULL, &setWrite, &setError, &tv) > 0 && FD_ISSET(s, &setWrite);
+			}
+			uNonBlocking = 0;
+			::ioctlsocket(s, FIONBIO, &uNonBlocking);
+		}
+		if (!bOk) {
+			::closesocket(s);
+			return INVALID_SOCKET;
+		}
+		SetTimeouts(s, HANDSHAKE_SECONDS);
+		return s;
+	}
+
+	// The IPv4 addresses of a name, asked of the DNS servers of one adapter and of no other:
+	// the question does not go to the servers of the connection the VPN is there to hide from.
+	bool ResolveOn(unsigned long ifIndex, const std::string &host, std::vector<in_addr> &found)
+	{
+		const CStringW sName(host.c_str());
+		DNS_QUERY_REQUEST request = {};
+		request.Version = DNS_QUERY_REQUEST_VERSION1;
+		request.QueryName = sName;
+		request.QueryType = DNS_TYPE_A;
+		request.QueryOptions = DNS_QUERY_STANDARD;
+		request.InterfaceIndex = ifIndex;
+		DNS_QUERY_RESULT result = {};
+		result.Version = DNS_QUERY_RESULTS_VERSION1;
+		if (::DnsQueryEx(&request, &result, NULL) != ERROR_SUCCESS)
+			return false;
+		for (const DNS_RECORD *p = result.pQueryRecords; p != NULL; p = p->pNext)
+			if (p->wType == DNS_TYPE_A) {
+				in_addr addr;
+				addr.s_addr = p->Data.A.IpAddress;
+				found.push_back(addr);
+			}
+		if (result.pQueryRecords != NULL)
+			::DnsRecordListFree(result.pQueryRecords, DnsFreeRecordList);
+		return !found.empty();
+	}
+
+	// A TCP connection to host:port. With an adapter address, only over IPv4 and from it; with
+	// the number of the adapter as well, its name is asked of the DNS servers of that adapter.
+	SOCKET Connect(const std::string &host, int port, const std::string &bind, unsigned long ifIndex)
+	{
+		in_addr literal;
+		if (!bind.empty() && ifIndex != 0 && ::inet_pton(AF_INET, host.c_str(), &literal) != 1) {
+			std::vector<in_addr> found;
+			if (!ResolveOn(ifIndex, host, found))
+				return INVALID_SOCKET;	// not asked of anyone else
+			for (const in_addr &addr : found) {
+				sockaddr_in to = {};
+				to.sin_family = AF_INET;
+				to.sin_addr = addr;
+				to.sin_port = htons((u_short)port);
+				const SOCKET s = ConnectTo(reinterpret_cast<const sockaddr*>(&to), sizeof to, bind);
+				if (s != INVALID_SOCKET)
+					return s;
+			}
+			return INVALID_SOCKET;
+		}
 		addrinfo hints = {};
 		hints.ai_socktype = SOCK_STREAM;
 		hints.ai_family = bind.empty() ? AF_UNSPEC : AF_INET;
@@ -133,42 +217,9 @@ namespace
 		if (::getaddrinfo(host.c_str(), szPort, &hints, &pList) != 0 || pList == NULL)
 			return INVALID_SOCKET;
 		SOCKET s = INVALID_SOCKET;
-		for (const addrinfo *p = pList; p != NULL && s == INVALID_SOCKET; p = p->ai_next) {
-			s = ::socket(p->ai_family, SOCK_STREAM, IPPROTO_TCP);
-			if (s == INVALID_SOCKET)
-				continue;
-			bool bOk = true;
-			if (!bind.empty() && !IsLoopback(p->ai_addr)) {
-				sockaddr_in local = {};
-				local.sin_family = AF_INET;
-				bOk = ::inet_pton(AF_INET, bind.c_str(), &local.sin_addr) == 1
-					&& ::bind(s, reinterpret_cast<const sockaddr*>(&local), sizeof local) == 0;
-			}
-			if (bOk) {
-				// with a time limit: not blocking until it is connected
-				u_long uNonBlocking = 1;
-				::ioctlsocket(s, FIONBIO, &uNonBlocking);
-				bOk = ::connect(s, p->ai_addr, (int)p->ai_addrlen) == 0;
-				if (!bOk && ::WSAGetLastError() == WSAEWOULDBLOCK) {
-					fd_set setWrite, setError;
-					FD_ZERO(&setWrite);
-					FD_ZERO(&setError);
-					FD_SET(s, &setWrite);
-					FD_SET(s, &setError);
-					timeval tv = {CONNECT_SECONDS, 0};
-					bOk = ::select(0, NULL, &setWrite, &setError, &tv) > 0 && FD_ISSET(s, &setWrite);
-				}
-				uNonBlocking = 0;
-				::ioctlsocket(s, FIONBIO, &uNonBlocking);
-			}
-			if (!bOk) {
-				::closesocket(s);
-				s = INVALID_SOCKET;
-			}
-		}
+		for (const addrinfo *p = pList; p != NULL && s == INVALID_SOCKET; p = p->ai_next)
+			s = ConnectTo(p->ai_addr, (int)p->ai_addrlen, bind);
 		::freeaddrinfo(pList);
-		if (s != INVALID_SOCKET)
-			SetTimeouts(s, HANDSHAKE_SECONDS);
 		return s;
 	}
 
@@ -403,9 +454,9 @@ namespace
 		SOCKET up;
 		bool bOk = true;
 		if (cfg.mode == MODE_DIRECT)
-			up = Connect(host, port, cfg.bind);
+			up = Connect(host, port, cfg.bind, cfg.ifIndex);
 		else {
-			up = Connect(cfg.host, cfg.port, cfg.bind);
+			up = Connect(cfg.host, cfg.port, cfg.bind, cfg.ifIndex);
 			if (up != INVALID_SOCKET)
 				switch (cfg.mode) {
 				case MODE_SOCKS5:
@@ -542,8 +593,11 @@ void PegasoBridge::Sync()
 		cfg.password = (LPCSTR)StrToUtf8(proxy.password);
 	}
 	cfg.blocked = theNetGuard.IsBlocked();
-	if (!cfg.blocked)
+	if (!cfg.blocked) {
 		cfg.bind = (LPCSTR)CStringA(theNetGuard.GetBindAddress());
+		if (!cfg.bind.empty() && theNetGuard.HasAdapterDns())
+			cfg.ifIndex = theNetGuard.GetIfIndex();
+	}
 
 	const bool bNeeded = cfg.mode != MODE_DIRECT || !cfg.bind.empty() || cfg.blocked;
 	if (bNeeded && s_iListenPort == 0)

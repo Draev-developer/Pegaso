@@ -16,6 +16,9 @@
 #include "KnownFileList.h"
 #include "SharedFileList.h"
 #include "TorrentQueue.h"
+#include "emuleDlg.h"
+#include "TransferDlg.h"
+#include "DownloadListCtrl.h"
 #include "WebDownload.h"
 #include "NetGuard.h"
 #include "PegasoPrivacy.h"
@@ -1560,6 +1563,14 @@ void CPegasoRenameDlg::CompleteMove()
 	}
 	if (bOk) {
 		PegasoRename::Moved(m_sFrom, m_sTo);
+		// what has been given its name and its place is no longer a download: left in that list,
+		// it would look as if it had not been moved
+		if (!m_torrent.empty())
+			theTorrents.HideIfMoved(m_torrent);
+		else if (theApp.emuledlg != NULL && theApp.emuledlg->transferwnd != NULL && theApp.emuledlg->transferwnd->GetDownloadList().m_hWnd != NULL) {
+			theApp.emuledlg->transferwnd->GetDownloadList().PegasoClearCompletedAt(m_sFrom);
+			theApp.emuledlg->transferwnd->GetDownloadList().PegasoClearCompletedAt(m_sTo);
+		}
 		if (FolderOf(m_sFrom).CompareNoCase(FolderOf(m_sTo)) != 0)
 			m_left.push_back(FolderOf(m_sFrom));
 		++m_iDone;

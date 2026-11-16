@@ -848,6 +848,164 @@ bool PegasoRename::Prepare(const CString &sOldPath, const CString &sNewPath, CSt
 	return true;
 }
 
+namespace
+{
+	CString Plain(CString sDir)
+	{
+		sDir.TrimRight(_T('\\'));
+		return sDir.MakeLower();
+	}
+
+	// inside one of the folders downloads end up in - and not one of them
+	bool InsideDownloads(const CString &sDir)
+	{
+		const CString sPlain(Plain(sDir));
+		std::vector<CString> roots;
+		roots.push_back(Plain(thePrefs.GetMuleDirectory(EMULE_INCOMINGDIR)));
+		for (INT_PTR i = 1; i < thePrefs.GetCatCount(); ++i)
+			roots.push_back(Plain(thePrefs.GetCatPath(i)));
+		bool bInside = false;
+		for (const CString &sRoot : roots) {
+			if (sRoot.IsEmpty())
+				continue;
+			if (sPlain == sRoot)
+				return false;
+			if (sPlain.Left(sRoot.GetLength() + 1) == sRoot + _T('\\'))
+				bInside = true;
+		}
+		return bInside;
+	}
+
+	// all the files of a folder, those of the folders inside it included; false if there are too many
+	bool FilesOf(const CString &sDir, std::vector<CString> &files, int iDepth = 0)
+	{
+		CFileFind ff;
+		for (BOOL bMore = ff.FindFile(sDir + _T("\\*")); bMore;) {
+			bMore = ff.FindNextFile();
+			if (ff.IsDots())
+				continue;
+			if (ff.IsDirectory()) {
+				if (iDepth >= 8 || !FilesOf(ff.GetFilePath(), files, iDepth + 1))
+					return false;
+			} else {
+				if (files.size() >= 2000)
+					return false;
+				files.push_back(ff.GetFilePath());
+			}
+		}
+		return true;
+	}
+
+	bool IsEmptyFolder(const CString &sDir)
+	{
+		std::vector<CString> files;
+		if (!FilesOf(sDir, files) || !files.empty())
+			return false;
+		CFileFind ff;
+		for (BOOL bMore = ff.FindFile(sDir + _T("\\*")); bMore;) {
+			bMore = ff.FindNextFile();
+			if (!ff.IsDots())
+				return false;	// a folder inside
+		}
+		return true;
+	}
+
+	// Windows does not remove a folder which is marked read-only, and many are
+	bool RemoveFolder(const CString &sDir)
+	{
+		const DWORD dwAttributes = ::GetFileAttributes(sDir);
+		if (dwAttributes != INVALID_FILE_ATTRIBUTES && (dwAttributes & FILE_ATTRIBUTE_READONLY) != 0)
+			::SetFileAttributes(sDir, dwAttributes & ~FILE_ATTRIBUTE_READONLY);
+		if (::RemoveDirectory(sDir))
+			return true;
+		if (dwAttributes != INVALID_FILE_ATTRIBUTES)
+			::SetFileAttributes(sDir, dwAttributes);	// as it was
+		return false;
+	}
+
+	// a folder with nothing but folders in it, the folders inside first
+	void RemoveEmptyTree(const CString &sDir)
+	{
+		CFileFind ff;
+		for (BOOL bMore = ff.FindFile(sDir + _T("\\*")); bMore;) {
+			bMore = ff.FindNextFile();
+			if (!ff.IsDots() && ff.IsDirectory())
+				RemoveEmptyTree(ff.GetFilePath());
+		}
+		ff.Close();
+		RemoveFolder(sDir);
+	}
+}
+
+bool PegasoRename::CleanFolder(const CString &sFolder)
+{
+	CString sDir(sFolder);
+	sDir.TrimRight(_T('\\'));
+	if (!InsideDownloads(sDir) || ::GetFileAttributes(sDir) == INVALID_FILE_ATTRIBUTES)
+		return false;
+	std::vector<CString> files;
+	if (!FilesOf(sDir, files))
+		return false;
+	// another video in it: the folder is still in use. The short samples some bring do not count.
+	for (const CString &sFile : files)
+		if (IsVideo(sFile) && CString(NameOf(sFile)).MakeLower().Find(_T("sample")) < 0)
+			return false;
+
+	// What is left and belongs to a torrent of the list is part of what that torrent offers:
+	// without it the torrent would break. It is kept for the torrent with the state of the engine.
+	struct STorrentRef
+	{
+		std::string id;
+		int index;
+		bool finished;
+	};
+	std::map<CString, STorrentRef> ofTorrents;
+	for (const STorrentStatus &st : theTorrents.GetStatus())
+		for (const STorrentFile &f : theTorrents.GetFiles(st.id))
+			ofTorrents[CString(f.fullPath.c_str()).MakeLower()] = STorrentRef{st.id, f.index, st.finished};
+	for (const CString &sFile : files) {
+		const auto it = ofTorrents.find(CString(sFile).MakeLower());
+		if (it != ofTorrents.end() && !it->second.finished)
+			return false;	// still on its way
+	}
+	bool bOthers = false;
+	for (const CString &sFile : files) {
+		const auto it = ofTorrents.find(CString(sFile).MakeLower());
+		if (it == ofTorrents.end()) {
+			bOthers = true;
+			continue;
+		}
+		const CString sKeep(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + _T("torrents\\files\\") + CString(it->second.id.c_str()) + sFile.Mid(sDir.GetLength()));
+		::SHCreateDirectoryEx(NULL, FolderOf(sKeep), NULL);
+		std::wstring error;
+		if (!theTorrents.Engine().RenameFile(it->second.id, it->second.index, std::wstring((LPCTSTR)sKeep), error)) {
+			AddLogLine(false, _T("Folder kept, a file of a torrent could not be put aside: %s (%s)"), (LPCTSTR)sFile, error.c_str());
+			return false;
+		}
+	}
+	if (bOthers) {
+		// to the Recycle Bin: what Pegaso takes for leftovers may matter to the user
+		std::vector<TCHAR> from((LPCTSTR)sDir, (LPCTSTR)sDir + sDir.GetLength());
+		from.push_back(_T('\0'));
+		from.push_back(_T('\0'));
+		SHFILEOPSTRUCT op = {};
+		op.wFunc = FO_DELETE;
+		op.pFrom = from.data();
+		op.fFlags = FOF_ALLOWUNDO | FOF_NOCONFIRMATION | FOF_SILENT | FOF_NOERRORUI | FOF_WANTNUKEWARNING;
+		if (::SHFileOperation(&op) != 0 || op.fAnyOperationsAborted)
+			return false;
+	} else
+		RemoveEmptyTree(sDir);
+	if (::GetFileAttributes(sDir) != INVALID_FILE_ATTRIBUTES)
+		return false;
+	// the folders above it which are left with nothing
+	for (CString sUp(FolderOf(sDir)); InsideDownloads(sUp) && IsEmptyFolder(sUp); sUp = FolderOf(sUp))
+		if (!RemoveFolder(sUp))
+			break;
+	AddLogLine(false, _T("Folder removed: %s"), (LPCTSTR)sDir);
+	return true;
+}
+
 void PegasoRename::Moved(const CString &sOldPath, const CString &sNewPath)
 {
 	const CString sNewDir(FolderOf(sNewPath));
@@ -1001,6 +1159,8 @@ BOOL CPegasoRenameDlg::OnInitDialog()
 	for (ERenameDb db : aMovies)
 		pMovies->SetItemData(pMovies->AddString(DbName(db)), (DWORD_PTR)db);
 	pMovies->SetCurSel(min(1, max(0, (int)theApp.GetProfileInt(_T("eMule"), _T("RenameMoviesDb"), 0))));
+	SetDlgItemText(IDC_RN_CLEAN, GetPegasoString(PS_RN_CLEAN));
+	CheckDlgButton(IDC_RN_CLEAN, theApp.GetProfileInt(_T("eMule"), _T("RenameClean"), 1) != 0 ? BST_CHECKED : BST_UNCHECKED);
 	SetDlgItemText(IDC_RN_MOVIEDIR, ProfileText(_T("RenameMoviesDir")));
 	SetDlgItemText(IDC_RN_SERIESDIR, ProfileText(_T("RenameSeriesDir")));
 
@@ -1086,6 +1246,7 @@ void CPegasoRenameDlg::SavePrefs()
 {
 	theApp.WriteProfileInt(_T("eMule"), _T("RenameSeriesDb"), static_cast<CComboBox*>(GetDlgItem(IDC_RN_SERIES_DB))->GetCurSel());
 	theApp.WriteProfileInt(_T("eMule"), _T("RenameMoviesDb"), static_cast<CComboBox*>(GetDlgItem(IDC_RN_MOVIES_DB))->GetCurSel());
+	theApp.WriteProfileInt(_T("eMule"), _T("RenameClean"), IsDlgButtonChecked(IDC_RN_CLEAN) ? 1 : 0);
 	CString s;
 	GetDlgItemText(IDC_RN_MOVIEDIR, s);
 	WriteProfileText(_T("RenameMoviesDir"), s.Trim());
@@ -1231,6 +1392,7 @@ void CPegasoRenameDlg::OnBnClickedApply()
 	m_sMoviesDir.TrimRight(_T('\\'));
 	m_sSeriesDir.TrimRight(_T('\\'));
 	m_queue.clear();
+	m_left.clear();
 	m_uNext = 0;
 	m_uTotal = m_uFinished = 0;
 	m_iDone = m_iFailed = 0;
@@ -1315,6 +1477,15 @@ void CPegasoRenameDlg::NextMove()
 	}
 
 	KillTimer(TIMER_MOVE);
+	// the folders the videos were taken out of
+	if (IsDlgButtonChecked(IDC_RN_CLEAN)) {
+		bool bGone = false;
+		for (const CString &sLeft : m_left)
+			bGone |= PegasoRename::CleanFolder(sLeft);
+		if (bGone)
+			theApp.sharedfiles->Reload();	// what was in them is not shared any more
+	}
+	m_left.clear();
 	GetDlgItem(IDC_RN_PROGRESS)->ShowWindow(SW_HIDE);
 	EnableButtons(true);
 	CString sStatus;
@@ -1373,6 +1544,8 @@ void CPegasoRenameDlg::CompleteMove()
 	}
 	if (bOk) {
 		PegasoRename::Moved(m_sFrom, m_sTo);
+		if (FolderOf(m_sFrom).CompareNoCase(FolderOf(m_sTo)) != 0)
+			m_left.push_back(FolderOf(m_sFrom));
 		++m_iDone;
 		row.path = m_sTo;
 		row.state = GetPegasoString(PS_RN_DONE);
@@ -1413,6 +1586,28 @@ void CPegasoRenameDlg::OnBnClickedSeriesDir()
 
 IMPLEMENT_DYNAMIC(CPegasoRenameKeysDlg, CDialog)
 
+BEGIN_MESSAGE_MAP(CPegasoRenameKeysDlg, CDialog)
+	ON_BN_CLICKED(IDC_RK_TMDB_OPEN, OnBnClickedTmdb)
+	ON_BN_CLICKED(IDC_RK_OMDB_OPEN, OnBnClickedOmdb)
+	ON_BN_CLICKED(IDC_RK_TVDB_OPEN, OnBnClickedTvdb)
+END_MESSAGE_MAP()
+
+// the page of each service where its key is asked for, in the browser of the user
+void CPegasoRenameKeysDlg::OnBnClickedTmdb()
+{
+	::ShellExecute(NULL, _T("open"), _T("https://www.themoviedb.org/settings/api"), NULL, NULL, SW_SHOWNORMAL);
+}
+
+void CPegasoRenameKeysDlg::OnBnClickedOmdb()
+{
+	::ShellExecute(NULL, _T("open"), _T("https://www.omdbapi.com/apikey.aspx"), NULL, NULL, SW_SHOWNORMAL);
+}
+
+void CPegasoRenameKeysDlg::OnBnClickedTvdb()
+{
+	::ShellExecute(NULL, _T("open"), _T("https://thetvdb.com/api-information"), NULL, NULL, SW_SHOWNORMAL);
+}
+
 CPegasoRenameKeysDlg::CPegasoRenameKeysDlg(CWnd *pParent)
 	: CDialog(CPegasoRenameKeysDlg::IDD, pParent)
 {
@@ -1427,6 +1622,12 @@ BOOL CPegasoRenameKeysDlg::OnInitDialog()
 	SetDlgItemText(IDC_RK_TMDB_LBL, _T("TheMovieDB (themoviedb.org)"));
 	SetDlgItemText(IDC_RK_OMDB_LBL, _T("OMDb (omdbapi.com)"));
 	SetDlgItemText(IDC_RK_TVDB_LBL, _T("TheTVDB (thetvdb.com)"));
+	SetDlgItemText(IDC_RK_TMDB_HELP, GetPegasoString(PS_RK_TMDB_HELP));
+	SetDlgItemText(IDC_RK_OMDB_HELP, GetPegasoString(PS_RK_OMDB_HELP));
+	SetDlgItemText(IDC_RK_TVDB_HELP, GetPegasoString(PS_RK_TVDB_HELP));
+	SetDlgItemText(IDC_RK_TMDB_OPEN, GetPegasoString(PS_RK_OPEN));
+	SetDlgItemText(IDC_RK_OMDB_OPEN, GetPegasoString(PS_RK_OPEN));
+	SetDlgItemText(IDC_RK_TVDB_OPEN, GetPegasoString(PS_RK_OPEN));
 	SetDlgItemText(IDC_RK_TMDB, ProfileText(_T("RenameKeyTmdb")));
 	SetDlgItemText(IDC_RK_OMDB, ProfileText(_T("RenameKeyOmdb")));
 	SetDlgItemText(IDC_RK_TVDB, ProfileText(_T("RenameKeyTvdb")));

@@ -15,7 +15,7 @@
 // of a torrent is renamed by the BitTorrent engine itself, which goes on seeding it.
 //
 // preferences.ini, section [eMule]: RenameSeriesDb, RenameMoviesDb, RenameSeriesDir,
-// RenameMoviesDir, RenameKeyTmdb, RenameKeyOmdb, RenameKeyTvdb
+// RenameMoviesDir, RenameClean (1), RenameKeyTmdb, RenameKeyOmdb, RenameKeyTvdb
 #pragma once
 #include <memory>
 #include <string>
@@ -54,6 +54,11 @@ namespace PegasoRename
 	bool	Prepare(const CString &sOldPath, const CString &sNewPath, CString &sError);
 	// after it was moved: eMule learns the new name and place, and the file stays shared
 	void	Moved(const CString &sOldPath, const CString &sNewPath);
+	// After a video was moved out of a folder inside the download folders: if no other video
+	// is left in it, the folder goes. What a torrent of the list still needs is kept for it
+	// elsewhere, so that it goes on seeding; the rest goes to the Recycle Bin with the folder.
+	// Returns true if the folder is gone.
+	bool	CleanFolder(const CString &sFolder);
 }
 
 class CPegasoRenameDlg : public CDialog
@@ -119,6 +124,7 @@ private:
 	};
 	EMoveState m_eMove;
 	std::vector<int> m_queue;	// rows to move
+	std::vector<CString> m_left;	// folders videos were moved out of
 	size_t	m_uNext;
 	ULONGLONG m_uTotal;			// bytes of all the files of the queue
 	ULONGLONG m_uFinished;		// bytes of the files which are through
@@ -151,4 +157,9 @@ public:
 protected:
 	virtual BOOL OnInitDialog();
 	virtual void OnOK();
+
+	DECLARE_MESSAGE_MAP()
+	afx_msg void OnBnClickedTmdb();
+	afx_msg void OnBnClickedOmdb();
+	afx_msg void OnBnClickedTvdb();
 };

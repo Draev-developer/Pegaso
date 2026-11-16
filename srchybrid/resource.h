@@ -2429,6 +2429,13 @@
 #define IDC_RK_TVDB                     5100
 #define IDC_RK_HINT                     5101
 #define IDC_RN_PROGRESS                 5102
+#define IDC_RK_TMDB_HELP                5103
+#define IDC_RK_TMDB_OPEN                5104
+#define IDC_RK_OMDB_HELP                5105
+#define IDC_RK_OMDB_OPEN                5106
+#define IDC_RK_TVDB_HELP                5107
+#define IDC_RK_TVDB_OPEN                5108
+#define IDC_RN_CLEAN                    5109
 #define IDC_WS_QUERY                    5030
 #define IDC_WS_SEARCH                   5031
 #define IDC_WS_PROVIDERS                5032

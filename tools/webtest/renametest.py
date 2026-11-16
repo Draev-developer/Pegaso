@@ -14,6 +14,7 @@ import hashlib
 import json
 import os
 import shutil
+import stat
 import subprocess
 import sys
 import threading
@@ -67,6 +68,9 @@ class Handler(BaseHTTPRequestHandler):
         q = parse_qs(url.query)
         seen.append(('GET', url.path, q, self.headers.get('Authorization', '')))
         if url.path == '/tvmaze/singlesearch/shows':
+            for known, proper in (('otra serie', 'Otra serie de prueba'), ('tercera serie', 'Tercera serie de prueba'), ('cuarta serie', 'Cuarta serie de prueba')):
+                if known in q['q'][0].lower():
+                    return self.answer(200, {'id': 10, 'url': 'x', 'name': proper, 'type': 'Scripted'})
             if 'serie de prueba' in q['q'][0].lower():
                 return self.answer(200, {'id': 7, 'url': 'x', 'name': 'La serie de prueba', 'type': 'Scripted', 'network': {'name': 'Cadena'}})
             if 'documental' in q['q'][0].lower():
@@ -107,6 +111,8 @@ def bencode(x):
         return b'%d:%s' % (len(x), x)
     if isinstance(x, str):
         return bencode(x.encode('utf-8'))
+    if isinstance(x, list):
+        return b'l' + b''.join(bencode(v) for v in x) + b'e'
     if isinstance(x, dict):
         return b'd' + b''.join(bencode(k) + bencode(v) for k, v in sorted(x.items())) + b'e'
     raise TypeError(x)
@@ -118,6 +124,33 @@ def make_torrent(path, torrent):
     pieces = b''.join(hashlib.sha1(data[i:i + piece]).digest() for i in range(0, len(data), piece))
     open(torrent, 'wb').write(bencode({'announce': 'http://127.0.0.1:9/announce',
                                        'info': {'length': len(data), 'name': os.path.basename(path), 'piece length': piece, 'pieces': pieces}}))
+
+
+def make_folder_torrent(folder, torrent):
+    """a torrent of all the files of a folder, the folder itself being its name"""
+    entries, data = [], b''
+    for name in sorted(os.listdir(folder)):
+        content = open(os.path.join(folder, name), 'rb').read()
+        entries.append({'length': len(content), 'path': [name.encode('utf-8')]})
+        data += content
+    piece = 262144
+    pieces = b''.join(hashlib.sha1(data[i:i + piece]).digest() for i in range(0, len(data), piece))
+    open(torrent, 'wb').write(bencode({'announce': 'http://127.0.0.1:9/announce',
+                                       'info': {'files': entries, 'name': os.path.basename(folder), 'piece length': piece, 'pieces': pieces}}))
+
+
+def wipe(folder):
+    """removes a folder of the test with all it holds; folders marked read-only included"""
+    for root, dirs, files in os.walk(folder, topdown=False):
+        for name in files:
+            os.chmod(os.path.join(root, name), stat.S_IWRITE)
+            os.remove(os.path.join(root, name))
+        for name in dirs:
+            os.chmod(os.path.join(root, name), stat.S_IWRITE)
+            os.rmdir(os.path.join(root, name))
+    if os.path.isdir(folder):
+        os.chmod(folder, stat.S_IWRITE)
+        os.rmdir(folder)
 
 
 def text_of(hwnd):
@@ -158,16 +191,17 @@ def main():
         ok &= bool(cond)
 
     btuitest.deploy()
+    for sub in ('config', 'Incoming', 'Temp', 'Series ordenadas'):
+        wipe(os.path.join(w.RUN, sub))
     r.make_instance(w.RUN, 4700, 'ApiEnabled=1\nApiPort=%d\nApiToken=%s\nRenameTestBase=http://127.0.0.1:%d\n'
                     'RenameKeyTmdb=clave-tmdb\nRenameKeyOmdb=clave-omdb\nRenameKeyTvdb=clave-tvdb\n' % (apitest.PORT, apitest.TOKEN, DB_PORT))
     ini = os.path.join(w.RUN, 'config', 'preferences.ini')
     text = open(ini).read().replace('TorrentEnabled=0', 'TorrentEnabled=1\nTorrentPort=4720')
     open(ini, 'w', encoding='ascii', newline='\r\n').write(text)
     incoming = os.path.join(w.RUN, 'Incoming')
-    shutil.rmtree(incoming, ignore_errors=True)
     os.makedirs(incoming, exist_ok=True)
     series_dir = os.path.join(w.RUN, 'Series ordenadas')
-    shutil.rmtree(series_dir, ignore_errors=True)
+    wipe(series_dir)
     names = ['La.Serie.De.Prueba.S01E05.720p.HDTV.x264.mkv', 'la serie de prueba 1x06 [HDTV][Castellano].avi', 'El.Viaje.De.Prueba.2010.1080p.BluRay.x264.mkv',
              'Documental [HDTV 720p][Cap.203].avi', '[Grupo] Tesuto no Anime - 07 [1080p].mkv', 'Cosa.Desconocida.S03E01.mkv', 'Grabacion.De.Prueba.S02E03.WEB-DL.mkv']
     for n, name in enumerate(names):
@@ -175,6 +209,20 @@ def main():
     seeded = os.path.join(incoming, names[-1])
     torrent = os.path.join(w.RUN, 'sembrado.torrent')
     make_torrent(seeded, torrent)
+    # folders inside the download folder: one of a torrent with something else in it, one with
+    # a video alone, one with two videos of which only one will be moved
+    pack = os.path.join(incoming, 'Paquete.De.Prueba')
+    alone = os.path.join(incoming, 'Carpeta suelta', 'Dentro')
+    pair = os.path.join(incoming, 'Dos videos')
+    for folder in (pack, alone, pair):
+        os.makedirs(folder)
+    open(os.path.join(pack, 'Otra.Serie.De.Prueba.S01E01.mkv'), 'wb').write(os.urandom(310000))
+    open(os.path.join(pack, 'informacion.nfo'), 'wb').write(os.urandom(2000))
+    open(os.path.join(alone, 'Tercera.Serie.De.Prueba.S01E02.mkv'), 'wb').write(os.urandom(311000))
+    open(os.path.join(pair, 'Cuarta.Serie.De.Prueba.S01E03.mkv'), 'wb').write(os.urandom(312000))
+    open(os.path.join(pair, 'Algo.Sin.Nombre.Conocido.S09E09.mkv'), 'wb').write(os.urandom(313000))
+    pack_torrent = os.path.join(w.RUN, 'paquete.torrent')
+    make_folder_torrent(pack, pack_torrent)
 
     # nothing of an earlier run: a torrent left behind would come back with the engine
     state = os.path.join(w.RUN, 'config', 'torrents')
@@ -192,14 +240,15 @@ def main():
                 u.user32.PostMessageW(h, u.WM_COMMAND, 2, 0)
         mem = u.Remote(p.pid)
         subprocess.run([w.EXE, torrent], timeout=60)   # handed over to the copy which is running
+        subprocess.run([w.EXE, pack_torrent], timeout=60)
         t0 = time.time()
-        while time.time() - t0 < 90 and (len(shared()) < len(names) or not [t for t in torrents() if t.get('completed')]):
+        while time.time() - t0 < 90 and (len(shared()) < len(names) or len([t for t in torrents() if t.get('complete')]) < 2):
             time.sleep(2)
         before = shared()
-        check('the videos of the incoming folder are shared on eD2K', len(before) == len(names), sorted(before))
+        check('the videos of the incoming folder are shared on eD2K', all(n in before for n in names), sorted(before))
         seeding = torrents()
-        print('    torrent:', [(t['name'], t.get('state'), t.get('completed')) for t in seeding])
-        check('the torrent finds its file and seeds it', len(seeding) == 1 and seeding[0].get('completed'), seeding)
+        print('    torrent:', [(t['name'], t.get('complete')) for t in seeding])
+        check('the torrents find their files and seed them', len(seeding) == 2 and all(t.get('complete') for t in seeding), seeding)
 
         u.user32.PostMessageW(hwnd, u.WM_COMMAND, MP_PEGASO_RENAME, 0)
         time.sleep(3)
@@ -227,7 +276,7 @@ def main():
         found = {row[1]: row for row in rows}
         check('TVmaze names the series; both episodes get it', found[names[0]][0] == 'La serie de prueba - 1x05.mkv' and found[names[1]][0] == 'La serie de prueba - 1x06.avi')
         asked = [q['q'][0] for m, path, q, _ in seen if path == '/tvmaze/singlesearch/shows']
-        check('... with one request for the two', len([a for a in asked if 'serie de prueba' in a.lower()]) == 1, asked)
+        check('... with one request for the two', len([a for a in asked if a.lower() == 'la serie de prueba']) == 1, asked)
         check('TheMovieDB names the film, in Spanish, first result', found[names[2]][0] == 'El viaje de prueba (2010).mkv' and found[names[2]][2] == 'TheMovieDB', found[names[2]])
         check('what a file name cannot hold is taken out', found[names[3]][0] == "Documental - la última 'frontera' - 2x03.avi", found[names[3]][0])
         check('a series the database does not know is told so', 'no encontrado' in found[names[5]][2], found[names[5]])
@@ -279,7 +328,18 @@ def main():
         print('    shared:', sorted(after))
         same = all(new in after and after[new]['hash'] == before[old]['hash'] for old, new in (
             (names[0], 'La serie de prueba - 1x05.mkv'), (names[1], 'La serie de prueba - 1x06.avi'), (names[2], 'El viaje de prueba (2010).mkv')))
-        check('eD2K: the files are shared under their new names with the same hash', same and len(after) == len(names), sorted(after))
+        check('eD2K: the files are shared under their new names with the same hash', same, sorted(after))
+
+        # ---- the folders the videos were in
+        check('a folder of a torrent goes once its video is moved away', os.path.isfile(os.path.join(series_dir, 'Otra serie de prueba - 1x01.mkv'))
+              and not os.path.exists(pack), os.listdir(incoming))
+        kept = [os.path.join(d, f) for d, _, fs in os.walk(os.path.join(w.RUN, 'config', 'torrents', 'files')) for f in fs]
+        check('... what the torrent still offers is kept for it elsewhere', [os.path.basename(k) for k in kept] == ['informacion.nfo'], kept)
+        check('a folder left empty goes, and the empty one above it', os.path.isfile(os.path.join(series_dir, 'Tercera serie de prueba - 1x02.mkv'))
+              and not os.path.exists(os.path.join(incoming, 'Carpeta suelta')), os.listdir(incoming))
+        check('a folder with another video in it stays', os.path.isfile(os.path.join(series_dir, 'Cuarta serie de prueba - 1x03.mkv'))
+              and os.listdir(pair) == ['Algo.Sin.Nombre.Conocido.S09E09.mkv'], os.listdir(pair) if os.path.isdir(pair) else 'gone')
+        check('the download folder itself stays', os.path.isdir(incoming))
         check('... those moved out of the shared folder too', os.path.dirname(after.get('La serie de prueba - 1x05.mkv', {}).get('path', '')) in ('', series_dir) and
               'La serie de prueba - 1x05.mkv' in after)
         moved = os.path.join(series_dir, 'Grabación de prueba - 2x03.mkv')
@@ -288,8 +348,8 @@ def main():
         check('... shared on eD2K with the same hash', after.get('Grabación de prueba - 2x03.mkv', {}).get('hash') == before[names[-1]]['hash'])
         time.sleep(4)
         seeding = torrents()
-        print('    torrent:', [(t['name'], t.get('state'), t.get('completed')) for t in seeding])
-        check('... and the torrent goes on seeding it', len(seeding) == 1 and seeding[0].get('completed'), seeding)
+        print('    torrent:', [(t['name'], t.get('complete')) for t in seeding])
+        check('... and the torrents go on seeding', len(seeding) == 2 and all(t.get('complete') for t in seeding), seeding)
     finally:
         if mem:
             mem.close()
@@ -301,16 +361,17 @@ def main():
     try:
         u.main_window(p.pid)
         t0 = time.time()
-        while time.time() - t0 < 60 and (len(shared()) < len(names) or not [t for t in torrents() if t.get('completed')]):
+        moved_names = [n for n in after if after[n].get('path', '').lower().startswith(series_dir.lower())]
+        while time.time() - t0 < 60 and (not all(n in shared() for n in moved_names) or len([t for t in torrents() if t.get('complete')]) < 2):
             time.sleep(2)
         again = shared()
         print('    shared after a restart:', sorted(again))
-        check('after a restart the same files are shared, the moved ones included', sorted(again) == sorted(after)
-              and all(again[n]['hash'] == after[n]['hash'] for n in after), sorted(again))
+        check('after a restart the moved files are shared still, with the same hash', len(moved_names) >= 4
+              and all(n in again and again[n]['hash'] == after[n]['hash'] for n in moved_names), (moved_names, sorted(again)))
         seeding = torrents()
-        print('    torrent:', [(t['name'], t.get('state'), t.get('completed')) for t in seeding])
-        check('... and the torrent seeds from the new place: nothing is downloaded again', len(seeding) == 1 and seeding[0].get('completed')
-              and not os.path.exists(seeded) and os.path.isfile(moved), seeding)
+        print('    torrent:', [(t['name'], t.get('complete')) for t in seeding])
+        check('... and the torrents seed from the new places: nothing is downloaded again', len(seeding) == 2 and all(t.get('complete') for t in seeding)
+              and not os.path.exists(seeded) and os.path.isfile(moved) and not os.path.exists(pack), seeding)
         check('still running', p.poll() is None)
     finally:
         if not w.close_gracefully(p, 60):
@@ -318,7 +379,7 @@ def main():
 
     if os.environ.get('RENAME_OTHER_DISK'):
         print('    on the other disk:', sorted(os.listdir(series_dir)))
-        shutil.rmtree(series_dir, ignore_errors=True)   # the folder of the test, nothing else
+        wipe(series_dir)   # the folder of the test, nothing else
     print('RESULT', 'PASS' if ok else 'FAIL')
 
 

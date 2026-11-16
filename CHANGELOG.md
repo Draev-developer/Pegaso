@@ -2,6 +2,12 @@
 
 Pegaso parte de eMule 0.72a (edición de la comunidad). El historial de eMule está en `changelog_full.txt`.
 
+## 0.5.2
+
+- Renombrar vídeos: al mover un vídeo a otra carpeta, la carpeta donde estaba se quita si no queda en ella ningún otro vídeo (las muestras, «sample», no cuentan). Lo que sobre va a la papelera de reciclaje con la carpeta. Lo que un torrent de la lista sigue ofreciendo (un .nfo, unos subtítulos) no se borra: se guarda aparte, con el estado del motor, y el torrent sigue completo y sembrando. Las carpetas de descargas en sí no se tocan nunca. Se puede desactivar en la propia ventana.
+- Las carpetas marcadas como de solo lectura, que Windows no deja quitar sin más, se quitan también.
+- Claves: la ventana «Claves…» explica cómo conseguir la de cada servicio y abre su web. Hay una guía en `docs/renombrar-videos.md`.
+
 ## 0.5.1
 
 - Renombrar vídeos: mover muchos archivos, o archivos grandes a otro disco, ya no deja Pegaso parado. Los archivos se mueven uno tras otro en segundo plano, con una barra de avance y el nombre del que se está moviendo, y la ventana ya no retiene al resto de Pegaso: se puede seguir usando mientras tanto.

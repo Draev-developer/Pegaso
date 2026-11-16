@@ -1,6 +1,6 @@
 # API local de Pegaso (REST y MCP)
 
-Pegaso puede atender a otros programas del mismo equipo: scripts, y asistentes de IA mediante el protocolo MCP. Con la API se ven y se manejan las descargas, se busca en eD2K y Kad, y se conecta o desconecta el programa.
+Pegaso puede atender a otros programas del mismo equipo: scripts, y asistentes de IA mediante el protocolo MCP. Con la API se ven y se manejan las descargas, se busca en eD2K y Kad, y se conecta o desconecta el programa. · [English](en/api.md)
 
 ## Activarla
 
@@ -8,7 +8,7 @@ Pegaso puede atender a otros programas del mismo equipo: scripts, y asistentes d
 
 - Dirección REST: `http://127.0.0.1:4780/api/v1`
 - Dirección MCP: `http://127.0.0.1:4780/mcp`
-- El puerto se cambia con `ApiPort` en `preferences.ini`; la clave es `ApiToken`.
+- El puerto se cambia con `ApiPort` en `preferences.ini`. La clave se guarda ahí como `ApiToken`, cifrada para tu cuenta de Windows; para verla de nuevo, abre la misma opción del menú.
 
 ## Seguridad
 
@@ -25,6 +25,7 @@ Todas las respuestas son JSON. Los errores llevan `{"error": "..."}` y el códig
 | Método y dirección | Qué hace |
 |---|---|
 | `GET /api/v1/status` | Versión, estado de eD2K y Kad, velocidades, número de descargas y de archivos compartidos |
+| `GET /api/v1/connection` | `{"report": "…"}`: el texto de «Comprobar mi conexión» — por dónde sale cada protocolo en ese momento (proxy, adaptador de la VPN o ruta del sistema), en el idioma del programa |
 | `GET /api/v1/downloads` | Lista de descargas |
 | `POST /api/v1/downloads` | Añade descargas. Cuerpo: `{"links": ["ed2k://…", "magnet:…", "https://…"]}`. La dirección web de un archivo `.torrent` se añade como torrent; con `"kind": "torrent"` todas las direcciones web se toman por archivos `.torrent`, aunque no lo parezcan. Una dirección web con un rango, `…/parte[01-20].zip`, vale por toda la serie |
 | `GET /api/v1/downloads/{hash}` | Una descarga |

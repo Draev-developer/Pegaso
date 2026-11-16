@@ -6,6 +6,7 @@
 #include "TorrentQueue.h"
 #include "WebDownload.h"
 #include "NetGuard.h"
+#include "PegasoPrivacy.h"
 #include "OtherFunctions.h"
 
 #ifdef _DEBUG
@@ -25,6 +26,10 @@ BEGIN_MESSAGE_MAP(CPPgPegaso, CPropertyPage)
 	ON_EN_CHANGE(IDC_PG_WEB_CONN, OnChanged)
 	ON_CBN_SELCHANGE(IDC_PG_VPN_ADAPTER, OnCbnSelChangeAdapter)
 	ON_BN_CLICKED(IDC_PG_VPN_KILL, OnChanged)
+	ON_BN_CLICKED(IDC_PG_BT_NOFOLDER, OnChanged)
+	ON_BN_CLICKED(IDC_PG_CLEAR_EXIT, OnChanged)
+	ON_BN_CLICKED(IDC_PG_CLEAR_NOW, OnBnClickedClearNow)
+	ON_BN_CLICKED(IDC_PG_CONN, OnBnClickedConn)
 END_MESSAGE_MAP()
 
 CPPgPegaso::CPPgPegaso()
@@ -42,6 +47,8 @@ BOOL CPPgPegaso::OnInitDialog()
 	CheckDlgButton(IDC_PG_BT_ENABLE, CTorrentQueue::IsEnabledInPrefs() ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(IDC_PG_BT_ENCRYPT, CTorrentQueue::RequireEncryptionInPrefs() ? BST_CHECKED : BST_UNCHECKED);
 	SetDlgItemInt(IDC_PG_BT_PORT, CTorrentQueue::PortInPrefs(), FALSE);
+	CheckDlgButton(IDC_PG_BT_NOFOLDER, CTorrentQueue::NoFolderInPrefs() ? BST_CHECKED : BST_UNCHECKED);
+	CheckDlgButton(IDC_PG_CLEAR_EXIT, PegasoClearTracesOnExit() ? BST_CHECKED : BST_UNCHECKED);
 	SetDlgItemInt(IDC_PG_WEB_CONN, theWebDownloads.GetMaxConnections(), FALSE);
 	OnBnClickedEnable();
 
@@ -83,11 +90,23 @@ void CPPgPegaso::OnCbnSelChangeAdapter()
 	SetModified(TRUE);
 }
 
+void CPPgPegaso::OnBnClickedClearNow()
+{
+	PegasoClearTracesAsk(this);
+}
+
+void CPPgPegaso::OnBnClickedConn()
+{
+	CPegasoConnDlg dlg(this);
+	dlg.DoModal();
+}
+
 void CPPgPegaso::OnBnClickedEnable()
 {
 	const BOOL bEnabled = IsDlgButtonChecked(IDC_PG_BT_ENABLE) == BST_CHECKED;
 	GetDlgItem(IDC_PG_BT_PORT)->EnableWindow(bEnabled);
 	GetDlgItem(IDC_PG_BT_ENCRYPT)->EnableWindow(bEnabled);
+	GetDlgItem(IDC_PG_BT_NOFOLDER)->EnableWindow(bEnabled);
 	SetModified(TRUE);
 }
 
@@ -107,6 +126,8 @@ BOOL CPPgPegaso::OnApply()
 		, IsDlgButtonChecked(IDC_PG_VPN_KILL) == BST_CHECKED);
 	theWebDownloads.SetMaxConnections(uConnections);
 	theTorrents.ApplyPrefs(IsDlgButtonChecked(IDC_PG_BT_ENABLE) == BST_CHECKED, uPort, IsDlgButtonChecked(IDC_PG_BT_ENCRYPT) == BST_CHECKED);
+	theTorrents.SetNoFolder(IsDlgButtonChecked(IDC_PG_BT_NOFOLDER) == BST_CHECKED);
+	PegasoSetClearTracesOnExit(IsDlgButtonChecked(IDC_PG_CLEAR_EXIT) == BST_CHECKED);
 
 	SetModified(FALSE);
 	return CPropertyPage::OnApply();
@@ -125,6 +146,11 @@ void CPPgPegaso::Localize()
 		SetDlgItemText(IDC_PG_VPN_GROUP, GetPegasoString(PS_OPT_VPN_GROUP));
 		SetDlgItemText(IDC_PG_VPN_ADAPTER_LBL, GetPegasoString(PS_OPT_VPN_ADAPTER));
 		SetDlgItemText(IDC_PG_VPN_KILL, GetPegasoString(PS_OPT_VPN_KILL));
+		SetDlgItemText(IDC_PG_BT_NOFOLDER, GetPegasoString(PS_OPT_BT_NOFOLDER));
+		SetDlgItemText(IDC_PG_PRIV_GROUP, GetPegasoString(PS_OPT_PRIV_GROUP));
+		SetDlgItemText(IDC_PG_CLEAR_EXIT, GetPegasoString(PS_OPT_CLEAR_EXIT));
+		SetDlgItemText(IDC_PG_CLEAR_NOW, GetPegasoString(PS_CT_MENU) + CString(_T("...")));
+		SetDlgItemText(IDC_PG_CONN, GetPegasoString(PS_CC_MENU) + CString(_T("...")));
 	}
 }
 

@@ -3,8 +3,8 @@
 // The user may tie Pegaso to one network adapter (typically the one of a VPN):
 //  - ed2k/Kad and BitTorrent sockets are bound to the address of that adapter, so their
 //    traffic cannot leave through another one;
-//  - web downloads go through WinHTTP, which cannot be bound; they follow the routing of
-//    the system and are stopped by the kill switch;
+//  - web requests are made by Windows, which cannot be bound: they are sent through the
+//    bridge of Pegaso (PegasoBridge.h), which connects from the address of that adapter;
 //  - with the kill switch on, all transfers stop while the adapter is not connected.
 //
 // preferences.ini, section [eMule]: PegasoBindAdapter (name, empty = off), PegasoKillSwitch (1)
@@ -50,7 +50,13 @@ public:
 	void	KasperskyDialog(CWnd *pParent);
 
 	bool	IsActive() const							{ return !m_sAdapter.IsEmpty(); }
-	// true while nothing may be transferred (adapter down and kill switch on)
+	bool	IsUp() const								{ return m_bUp; }
+	bool	HasKillSwitch() const						{ return m_bKillSwitch; }
+	const CString& GetAdapter() const					{ return m_sAdapter; }
+	// The scheduler pauses everything: no eD2K, Kad, BitTorrent or web until it is over.
+	void	SetHeld(bool bHeld);
+	bool	IsHeld() const								{ return m_bHeld; }
+	// true while nothing may be transferred (adapter down and kill switch on, or held)
 	bool	IsBlocked() const							{ return m_bBlocked; }
 	// address the sockets have to be bound to; empty if Pegaso is not tied to an adapter
 	const CString& GetBindAddress() const				{ return m_sBindAddress; }
@@ -64,6 +70,8 @@ private:
 	bool	m_bKillSwitch;
 	bool	m_bBlocked;
 	bool	m_bUp;
+	bool	m_bHeld;
+	bool	m_bReconnect;	// the networks were connected when the hold began
 };
 
 extern CNetGuard theNetGuard;

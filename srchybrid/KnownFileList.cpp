@@ -30,6 +30,7 @@
 #include "MD5Sum.h"
 #include "SharedFilesWnd.h"
 #include "SharedFilesCtrl.h"
+#include "PartFile.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -262,6 +263,27 @@ void CKnownFileList::Clear()
 		delete pFile;
 	}
 	m_Files_map.RemoveAll();
+}
+
+void CKnownFileList::ClearHistory()
+{
+	m_mapCancelledFiles.RemoveAll();
+	CCKey key;
+	for (POSITION pos = m_Files_map.GetStartPosition(); pos != NULL;) {
+		CKnownFile *pFile;
+		m_Files_map.GetNextAssoc(pos, key, pFile);
+		// shared files stay, and so does whatever the download list still shows
+		if (pFile->IsKindOf(RUNTIME_CLASS(CPartFile)) || theApp.sharedfiles == NULL || theApp.sharedfiles->GetFileByID(pFile->GetFileHash()) != NULL)
+			continue;
+		if (pFile->GetFileIdentifier().HasAICHHash()) {
+			const KnonwFilesByAICHMap::CPair *pair = m_mapKnownFilesByAICH.PLookup(pFile->GetFileIdentifier().GetAICHHash());
+			if (pair != NULL && pair->value == pFile)
+				m_mapKnownFilesByAICH.RemoveKey(pFile->GetFileIdentifier().GetAICHHash());
+		}
+		m_Files_map.RemoveKey(CCKey(pFile->GetFileHash()));
+		delete pFile;
+	}
+	Save();
 }
 
 void CKnownFileList::Process()

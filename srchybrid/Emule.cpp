@@ -30,6 +30,7 @@
 #include "WebDownload.h"
 #include "TorrentQueue.h"
 #include "NetGuard.h"
+#include "PegasoPrivacy.h"
 #include "opcodes.h"
 #include "ini2.h"
 #include "mdump.h"
@@ -511,6 +512,7 @@ BOOL CemuleApp::InitInstance()
 
 	// create & initialize all the important stuff
 	thePrefs.Init();
+	PegasoMigrateSecrets();	// Pegaso: no key or token stays in clear in preferences.ini
 	theNetGuard.Init();	// Pegaso: VPN protection decides the bind address before any socket exists
 	theStats.Init();
 

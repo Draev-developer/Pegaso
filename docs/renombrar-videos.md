@@ -1,6 +1,6 @@
 # Renombrar vídeos
 
-Herramientas → «Renombrar vídeos…» da a los vídeos terminados el nombre de la película o la serie que son y, si quieres, los lleva a otra carpeta. No dejan de compartirse en eD2K ni de sembrarse en BitTorrent.
+Herramientas → «Renombrar vídeos…» da a los vídeos terminados el nombre de la película o la serie que son y, si quieres, los lleva a otra carpeta. No dejan de compartirse en eD2K ni de sembrarse en BitTorrent. · [English](en/rename-videos.md)
 
 - Películas: `Nombre (año).ext`
 - Series: `Nombre - 1x05.ext` (temporada x capítulo)
@@ -25,7 +25,7 @@ Qué es cada archivo se lee de su nombre: `S01E05`, `1x05`, `Cap.105`, «Tempora
 | OMDb | Películas | Gratuita (1.000 consultas al día) |
 | TheTVDB | Series | Puede pedir suscripción de pago |
 
-Pegaso no trae ninguna clave: cada persona usa las suyas. Se escriben en el botón «Claves…», que también abre la web de cada servicio. Para empezar sin registrarte en nada, usa TVmaze para las series; para las películas hace falta una de las dos claves gratuitas.
+Pegaso no trae ninguna clave: cada persona usa las suyas. Se escriben en el botón «Claves…», que también abre la web de cada servicio, y se guardan cifradas para tu cuenta de Windows. Para empezar sin registrarte en nada, usa TVmaze para las series; para las películas hace falta una de las dos claves gratuitas.
 
 ## Cómo conseguir cada clave
 
@@ -55,7 +55,7 @@ Pegaso no trae ninguna clave: cada persona usa las suyas. Se escriben en el bot�
 
 AniDB no tiene búsqueda para programas: publica la lista de todos sus títulos, y Pegaso la baja una vez al día como mucho y la consulta en tu equipo. En algunas conexiones AniDB pone delante una comprobación para navegadores, que Pegaso no salta. Si la ventana te avisa de ello:
 
-1. Abre <http://anidb.net/api/anime-titles.dat.gz> en tu navegador y guarda el archivo, sin descomprimirlo.
+1. Abre <https://anidb.net/api/anime-titles.dat.gz> en tu navegador y guarda el archivo, sin descomprimirlo.
 2. Déjalo en la carpeta de configuración de Pegaso (la ventana te dice cuál es; normalmente `%LOCALAPPDATA%\Pegaso\config`), con el nombre `anidb-titles.dat.gz`.
 3. Vuelve a pulsar «Buscar nombres».
 

@@ -23,6 +23,7 @@
 #include "Preferences.h"
 #include "PreferencesDlg.h"
 #include "Scheduler.h"
+#include "PegasoStrings.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -281,6 +282,8 @@ CString CPPgScheduler::GetActionLabel(int index)
 	case ACTION_CONS:
 		uid = IDS_PW_MAXC;
 		break;
+	case ACTION_PAUSEALL:	// Pegaso
+		return GetPegasoString(PS_SCHED_PAUSEALL);
 	default:
 		return CString();
 	}
@@ -334,7 +337,7 @@ void CPPgScheduler::OnNmDblClkActionlist(LPNMHDR, LRESULT *pResult)
 {
 	if (m_actions.GetSelectionMark() >= 0) {
 		DWORD_PTR ac = m_actions.GetItemData(m_actions.GetSelectionMark());
-		if (ac != ACTION_CATSTOP && ac != ACTION_CATRESUME)
+		if (ac != ACTION_CATSTOP && ac != ACTION_CATRESUME && ac != ACTION_PAUSEALL)
 			OnCommand(MP_CAT_EDIT, 0);
 	}
 
@@ -370,6 +373,7 @@ void CPPgScheduler::OnNmRClickActionlist(LPNMHDR, LRESULT *pResult)
 	m_ActionSel.AppendMenu(MF_STRING, MP_SCHACTIONS + ACTION_CONS, GetResString(IDS_PW_MAXC));
 	m_ActionSel.AppendMenu(MF_STRING, MP_SCHACTIONS + ACTION_CATSTOP, GetResString(IDS_SCHED_CATSTOP));
 	m_ActionSel.AppendMenu(MF_STRING, MP_SCHACTIONS + ACTION_CATRESUME, GetResString(IDS_SCHED_CATRESUME));
+	m_ActionSel.AppendMenu(MF_STRING, MP_SCHACTIONS + ACTION_PAUSEALL, GetPegasoString(PS_SCHED_PAUSEALL));	// Pegaso
 
 	m_ActionMenu.AddMenuTitle(GetResString(IDS_ACTION));
 	m_ActionMenu.AppendMenu(MF_POPUP, (UINT_PTR)m_ActionSel.m_hMenu, GetResString(IDS_ADD));
@@ -406,6 +410,8 @@ BOOL CPPgScheduler::OnCommand(WPARAM wParam, LPARAM lParam)
 		m_actions.SetSelectionMark(i);
 		if (action < ACTION_CATSTOP)
 			OnCommand(MP_CAT_EDIT, 0);
+		else if (action == ACTION_PAUSEALL)
+			m_actions.SetItemText(i, 1, _T("1"));	// Pegaso: it takes no value, and an action without one is skipped
 	} else if (wParam >= MP_SCHACTIONS + 20 && wParam <= MP_SCHACTIONS + 80 && iSel >= 0) {
 		CString newval;
 		newval.Format(_T("%i"), (int)(wParam - MP_SCHACTIONS - 22));

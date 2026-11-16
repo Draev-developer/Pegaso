@@ -12,6 +12,7 @@
 #include <chrono>
 #include <cstdio>
 #include <map>
+#include <filesystem>
 #include <set>
 #include <thread>
 
@@ -138,6 +139,41 @@ namespace
 		if (changed)
 			h.prioritize_files(prio);
 	}
+	// A torrent of several files keeps them in a folder of its own. On request they are saved
+	// without it - unless one of them would land on a file which is already there: it would be
+	// taken for a part of this torrent and written over.
+	void DropRootFolder(const lt::torrent_handle &h)
+	{
+		const std::shared_ptr<const lt::torrent_info> ti = h.torrent_file();
+		if (!ti)
+			return;
+		const lt::file_storage &fs = ti->layout();
+		std::wstring savePath;
+		try {
+			savePath = FromUtf8(h.status(lt::torrent_handle::query_save_path).save_path);
+		} catch (const std::exception&) {
+		}
+		if (savePath.empty())
+			return;
+		if (savePath.back() != L'\\' && savePath.back() != L'/')
+			savePath += L'\\';
+		std::vector<std::pair<lt::file_index_t, std::string> > moves;
+		for (const lt::file_index_t i : fs.file_range()) {
+			const std::string path(fs.file_path(i));
+			const size_t cut = path.find_first_of("/\\");
+			if (cut == std::string::npos || cut + 1 >= path.size())
+				return;		// a single file: it brings no folder
+			if (fs.pad_file_at(i))
+				continue;
+			std::string rest(path.substr(cut + 1));
+			std::error_code ec;
+			if (std::filesystem::exists(std::filesystem::path(savePath + FromUtf8(rest)), ec))
+				return;
+			moves.emplace_back(i, std::move(rest));
+		}
+		for (const std::pair<lt::file_index_t, std::string> &move : moves)
+			h.rename_file(move.first, move.second);
+	}
 	const lt::resume_data_flags_t RESUME_FLAGS = lt::torrent_handle::save_info_dict | lt::torrent_handle::only_if_modified;
 }
 
@@ -242,14 +278,19 @@ struct CTorrentEngine::Impl
 				push(TE_ERROR, std::string(), p->params.name, p->error.message());
 			else {
 				push(TE_ADDED, IdOf(p->handle), NameOf(p->handle), std::string());
-				if (fresh.count(IdOf(p->handle)) != 0)
+				if (fresh.count(IdOf(p->handle)) != 0) {
 					SkipLinkFiles(p->handle);	// a .torrent file brings its file list along
+					if (settings.noRootFolder)
+						DropRootFolder(p->handle);
+				}
 				p->handle.save_resume_data(lt::torrent_handle::save_info_dict);	// keep it across a restart right away
 				++pendingSaves;
 			}
 		} else if (auto *p = lt::alert_cast<lt::metadata_received_alert>(a)) {
 			push(TE_METADATA, IdOf(p->handle), NameOf(p->handle), std::string());
 			SkipLinkFiles(p->handle);
+			if (settings.noRootFolder)
+				DropRootFolder(p->handle);
 			p->handle.save_resume_data(lt::torrent_handle::save_info_dict);
 			++pendingSaves;
 		} else if (auto *p = lt::alert_cast<lt::piece_finished_alert>(a)) {
@@ -628,6 +669,11 @@ void CTorrentEngine::Remove(const std::string &id, bool deleteFiles)
 	lt::torrent_handle h = m->Find(id);
 	if (h.is_valid())
 		m->ses->remove_torrent(h, deleteFiles ? lt::session::delete_files : lt::remove_flags_t{});
+}
+
+void CTorrentEngine::SetNoRootFolder(bool on)
+{
+	m->settings.noRootFolder = on;
 }
 
 void CTorrentEngine::PauseSession(bool pause)

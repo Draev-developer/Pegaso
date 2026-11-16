@@ -1,6 +1,6 @@
 # Extensión de Pegaso para el navegador
 
-Añade «Descargar con Pegaso» a Chrome, Edge y Firefox. Lo que envías aparece al momento en la lista de descargas de Pegaso.
+Añade «Descargar con Pegaso» a Chrome, Edge y Firefox. Lo que envías aparece al momento en la lista de descargas de Pegaso. · [English](en/browser-extension.md)
 
 ## Qué hace
 

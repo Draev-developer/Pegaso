@@ -22,6 +22,7 @@ All rights reserved.
 #include "OtherFunctions.h"
 #include "Log.h"
 #include "NetGuard.h"
+#include "PegasoBridge.h"
 #include "Preferences.h"
 #include "AsyncProxySocketLayer.h"
 
@@ -434,16 +435,20 @@ void CHttpDownloadDlg::DownloadThread()
 	ENCODING_INIT;
 	//Create the Internet session handle
 	ASSERT(m_hInternetSession == NULL);
-	// Pegaso: nothing is fetched while the VPN protection holds everything, and the proxy of the
-	// preferences is for this window too
+	// Pegaso: nothing is fetched while the VPN protection or the scheduler holds everything,
+	// and the adapter and the proxy of the preferences are for this window too (PegasoBridge.h)
 	if (theNetGuard.IsBlocked()) {
-		HandleThreadError(_T("VPN protection: the adapter is not connected"));
+		HandleThreadError(_T("transfers are held (VPN protection or scheduler)"));
 		return;
 	}
-	const ProxySettings &proxy = thePrefs.GetProxySettings();
-	if (proxy.bUseProxy) {
+	const int iBridge = PegasoBridge::Port();
+	if (iBridge < 0) {
+		HandleThreadError(_T("the proxy of the preferences is SOCKS4, which cannot look names up: web requests are not made (SOCKS4a and SOCKS5 can)"));
+		return;
+	}
+	if (iBridge > 0) {
 		CString sProxy;
-		sProxy.Format(proxy.type == PROXYTYPE_HTTP10 || proxy.type == PROXYTYPE_HTTP11 ? _T("%s:%u") : _T("socks=%s:%u"), (LPCTSTR)proxy.host, (unsigned)proxy.port);
+		sProxy.Format(_T("127.0.0.1:%d"), iBridge);
 		m_hInternetSession = ::InternetOpen(AfxGetAppName(), INTERNET_OPEN_TYPE_PROXY, sProxy, _T("<-loopback>"), 0);
 	} else
 		m_hInternetSession = ::InternetOpen(AfxGetAppName(), INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);

@@ -24,6 +24,7 @@
 #define ACTION_CONS			5
 #define ACTION_CATSTOP		6
 #define ACTION_CATRESUME	7
+#define ACTION_PAUSEALL		8	// Pegaso: nothing is transferred, by any network
 
 #define DAY_DAILY		0
 #define DAY_MO			1
@@ -82,5 +83,6 @@ public:
 
 private:
 	int		m_iLastCheckedMinute;
+	bool	m_bPauseAll;	// Pegaso: a schedule which is on right now asks for the pause
 	CArray<Schedule_Struct*> schedulelist;
 };

@@ -19,6 +19,7 @@
 #include <iphlpapi.h>
 #include "emule.h"
 #include "Preferences.h"
+#include "PegasoPrivacy.h"
 #include "Opcodes.h"
 #include "ClientStateDefs.h"
 #include "OtherFunctions.h"
@@ -1521,6 +1522,10 @@ UINT CPreferences::GetRecommendedMaxConnections()
 void CPreferences::SavePreferences()
 {
 	CIni &ini = *prefsIni;
+	// Pegaso: this object has held the file since the program started, and Pegaso writes its own
+	// options straight to the file (theApp.WriteProfile...). Without reading the file again,
+	// saving the preferences of eMule put those options back to what they were at startup.
+	ini.Reload();
 	ini.SetSection(_T("eMule"));
 	//---
 	ini.WriteString(_T("AppVersion"), theApp.m_strCurVersionLong);
@@ -1580,7 +1585,7 @@ void CPreferences::SavePreferences()
 	ini.WriteBool(_T("Reconnect"), reconnect);
 	ini.WriteBool(_T("Scoresystem"), m_bUseServerPriorities);
 	ini.WriteBool(_T("Serverlist"), m_bAutoUpdateServerList);
-	ini.WriteBool(_T("UpdateNotifyTestClient"), updatenotify);
+	ini.WriteBool(_T("PegasoUpdateCheck"), updatenotify);
 	if (IsRunningAeroGlassTheme())
 		ini.WriteBool(_T("MinToTray_Aero"), mintotray);
 	else
@@ -1798,7 +1803,7 @@ void CPreferences::SavePreferences()
 	ini.WriteBool(_T("ProxyEnablePassword"), proxy.bEnablePassword, _T("Proxy"));
 	ini.WriteBool(_T("ProxyEnableProxy"), proxy.bUseProxy, _T("Proxy"));
 	ini.WriteString(_T("ProxyName"), proxy.host, _T("Proxy"));
-	ini.WriteString(_T("ProxyPassword"), proxy.password, _T("Proxy"));
+	ini.WriteString(_T("ProxyPassword"), PegasoProtect(proxy.password), _T("Proxy"));	// Pegaso: not in clear
 	ini.WriteString(_T("ProxyUser"), proxy.user, _T("Proxy"));
 	ini.WriteInt(_T("ProxyPort"), proxy.port, _T("Proxy"));
 	ini.WriteInt(_T("ProxyType"), proxy.type, _T("Proxy"));
@@ -1905,7 +1910,7 @@ void CPreferences::LoadPreferences()
 #endif
 
 	m_nWebMirrorAlertLevel = ini.GetInt(_T("WebMirrorAlertLevel"), 0);
-	updatenotify = ini.GetBool(_T("UpdateNotifyTestClient"), true);
+	updatenotify = ini.GetBool(_T("PegasoUpdateCheck"), false);	// Pegaso: asks nobody unless the user wants it
 
 	SetUserNick((CString)ini.GetStringUTF8(_T("Nick"), DEFAULT_NICK));
 	if (strNick.IsEmpty() || IsDefaultNick(strNick))
@@ -2367,7 +2372,7 @@ void CPreferences::LoadPreferences()
 	proxy.bUseProxy = ini.GetBool(_T("ProxyEnableProxy"), false);
 	proxy.host = ini.GetString(_T("ProxyName"), _T(""));
 	proxy.user = ini.GetString(_T("ProxyUser"), _T(""));
-	proxy.password = ini.GetString(_T("ProxyPassword"), _T(""));
+	proxy.password = PegasoUnprotect(ini.GetString(_T("ProxyPassword"), _T("")));
 	proxy.port = (uint16)ini.GetInt(_T("ProxyPort"), 1080);
 	proxy.type = (uint16)ini.GetInt(_T("ProxyType"), PROXYTYPE_NOPROXY);
 

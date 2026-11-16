@@ -3,6 +3,9 @@
 #include <iphlpapi.h>
 #include "emule.h"
 #include "NetGuard.h"
+#include "PegasoBridge.h"
+#include "ListenSocket.h"
+#include "MenuCmds.h"
 #include "PegasoStrings.h"
 #include "Preferences.h"
 #include "emuleDlg.h"
@@ -32,6 +35,8 @@ CNetGuard::CNetGuard()
 	, m_bKillSwitch(true)
 	, m_bBlocked()
 	, m_bUp()
+	, m_bHeld()
+	, m_bReconnect()
 {
 }
 
@@ -88,6 +93,7 @@ void CNetGuard::Init()
 	m_sAdapter = AdapterInPrefs().Trim();
 	m_bKillSwitch = KillSwitchInPrefs();
 	Refresh(true);
+	PegasoBridge::Sync();
 }
 
 void CNetGuard::ApplyPrefs(const CString &sAdapter, bool bKillSwitch)
@@ -102,6 +108,7 @@ void CNetGuard::ApplyPrefs(const CString &sAdapter, bool bKillSwitch)
 	if (!IsActive() && bWasActive)
 		thePrefs.SetBindAddrOverride(CString());	// back to "any adapter" for new connections
 	Refresh(true);
+	PegasoBridge::Sync();
 }
 
 bool CNetGuard::UdpHeldByProxy()
@@ -194,35 +201,49 @@ void CNetGuard::Process()
 	if (dwNow - m_dwLastCheck < 2000)
 		return;
 	m_dwLastCheck = dwNow;
-	if (IsActive())
+	if (IsActive() || m_bHeld)
 		Refresh(false);
+	PegasoBridge::Sync();	// the web requests follow the adapter and the proxy of the preferences
+}
+
+void CNetGuard::SetHeld(bool bHeld)
+{
+	if (bHeld == m_bHeld)
+		return;
+	if (bHeld) {
+		m_bReconnect = theApp.IsConnected() || (theApp.serverconnect != NULL && theApp.serverconnect->IsConnecting()) || Kademlia::CKademlia::IsRunning();
+		LogWarning(LOG_STATUSBAR, _T("Scheduler: everything is paused (eD2K, Kad, BitTorrent, web)"));
+	}
+	m_bHeld = bHeld;
+	Refresh(false);
+	PegasoBridge::Sync();
+	if (!bHeld) {
+		AddLogLine(true, _T("Scheduler: the pause is over"));
+		if (m_bReconnect && !m_bBlocked && theApp.emuledlg != NULL && theApp.emuledlg->m_hWnd != NULL && !theApp.IsClosing())
+			theApp.emuledlg->PostMessage(WM_COMMAND, MP_CONNECT);
+	}
 }
 
 void CNetGuard::Refresh(bool bLog)
 {
-	if (!IsActive()) {
-		m_bBlocked = false;
-		m_bUp = false;
-		m_sBindAddress.Empty();
-		return;
-	}
-
 	bool bUp = false;
 	CString sAddress;
-	// "*text" stands for whichever adapter has that text in its description and is connected:
-	// a VPN may bring its own adapter along each time it connects, under one name or another
-	const bool bByDescription = m_sAdapter.Left(1) == _T("*");
-	for (const SNetAdapter &adapter : ListAdapters())
-		if (bByDescription ? adapter.description.Find(m_sAdapter.Mid(1)) >= 0 : adapter.name.CompareNoCase(m_sAdapter) == 0) {
-			bUp = adapter.up && !adapter.ipv4.IsEmpty();
-			sAddress = adapter.ipv4;
-			if (bUp || !bByDescription)
-				break;
-		}
+	if (IsActive()) {
+		// "*text" stands for whichever adapter has that text in its description and is connected:
+		// a VPN may bring its own adapter along each time it connects, under one name or another
+		const bool bByDescription = m_sAdapter.Left(1) == _T("*");
+		for (const SNetAdapter &adapter : ListAdapters())
+			if (bByDescription ? adapter.description.Find(m_sAdapter.Mid(1)) >= 0 : adapter.name.CompareNoCase(m_sAdapter) == 0) {
+				bUp = adapter.up && !adapter.ipv4.IsEmpty();
+				sAddress = adapter.ipv4;
+				if (bUp || !bByDescription)
+					break;
+			}
+	}
 
-	const bool bBlocked = !bUp && m_bKillSwitch;
+	const bool bBlocked = m_bHeld || (IsActive() && !bUp && m_bKillSwitch);
 	// Down without kill switch: no binding, the traffic takes whatever route the system has.
-	const CString sBind(bUp ? sAddress : (m_bKillSwitch ? CString(BLOCKED_ADDRESS) : CString()));
+	const CString sBind(bBlocked ? CString(BLOCKED_ADDRESS) : (bUp ? sAddress : CString()));
 	const bool bChanged = bUp != m_bUp || bBlocked != m_bBlocked || sBind != m_sBindAddress;
 	m_bUp = bUp;
 	m_bBlocked = bBlocked;
@@ -233,7 +254,7 @@ void CNetGuard::Refresh(bool bLog)
 		thePrefs.SetBindAddrOverride(sBind);
 	}
 
-	if (bChanged || bLog) {
+	if ((bChanged || bLog) && IsActive() && !m_bHeld) {
 		if (bUp)
 			AddLogLine(bChanged, _T("VPN protection: adapter \"%s\" is connected (%s); transfers use only this adapter"), (LPCTSTR)m_sAdapter, (LPCTSTR)sAddress);
 		else if (bBlocked)
@@ -246,6 +267,8 @@ void CNetGuard::Refresh(bool bLog)
 		theApp.serverconnect->StopConnectionTry();
 		theApp.serverconnect->Disconnect();
 		Kademlia::CKademlia::Stop();
+		if (m_bHeld && theApp.listensocket != NULL)
+			theApp.listensocket->KillAllSockets();	// the adapter is still there: the transfers under way are cut
 		theApp.emuledlg->ShowConnectionState();
 	}
 }

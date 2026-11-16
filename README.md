@@ -1,6 +1,6 @@
 # Pegaso
 
-**Un solo programa para descargar de eMule, BitTorrent y la web.**
+**Un solo programa para descargar de eMule, BitTorrent y la web.** · [English](README.en.md)
 
 Pegaso es un cliente P2P libre para Windows, derivado de [eMule](https://www.emule-project.net) 0.72a (edición de la comunidad). Conserva todo lo que hace eMule en las redes eD2K y Kad y añade BitTorrent, descargas web y varias medidas de seguridad, todo en la misma lista de descargas.
 
@@ -26,6 +26,7 @@ Pegaso es un cliente P2P libre para Windows, derivado de [eMule](https://www.emu
 | **Renombrar vídeos** | Da a los vídeos terminados el nombre de su película o serie (`Nombre (año)`, `Nombre - 1x05`) con TheMovieDB, OMDb, TheTVDB, TVmaze o AniDB, y los mueve a la carpeta que elijas sin que dejen de compartirse en eD2K ni de sembrarse en BitTorrent. Cómo conseguir las claves: [docs/renombrar-videos.md](docs/renombrar-videos.md). |
 | **IPv6 e ID bajas** | Llama directamente por IPv6 a quien tiene ID baja pero dirección IPv6 pública, y conecta a dos clientes con ID baja a través de sus routers (QUIC) cuando el servidor sabe presentarlos. Compatible con eMule Qt, eMuleAI y aMule. |
 | **API local** | REST y MCP para scripts y asistentes de IA del mismo equipo: descargas, búsquedas y conexión. Desactivada de serie, con clave secreta y solo en 127.0.0.1. Ver [docs/api.md](docs/api.md). |
+| **Programador** | Límites de velocidad por hora y día para todas las redes, y una acción «Pausar todo». |
 | **Idiomas** | Español, inglés, francés, italiano, portugués, alemán y ruso. |
 
 ## Instalación
@@ -62,7 +63,7 @@ También se pueden valorar los torrents. BitTorrent no tiene nada parecido, así
 
 ## Privacidad
 
-Pegaso no tiene cuentas, telemetría ni avisos automáticos, y tu nombre de Windows no viaja a ninguna parte. Como en todo programa de este tipo, quien comparte contigo ve tu dirección IP: para ocultarla, Pegaso se ata a tu VPN y lo detiene todo si se cae, o usa tu proxy para todo lo que puede pasar por él y no envía lo demás. Qué ve cada cual, qué queda en tu equipo y los límites de cada protección: [docs/privacidad.md](docs/privacidad.md).
+Pegaso no tiene cuentas ni telemetría, y tu nombre de Windows no viaja a ninguna parte. Como en todo programa de este tipo, quien comparte contigo ve tu dirección IP: para ocultarla, Pegaso se ata a tu VPN y lo detiene todo si se cae, o usa tu proxy para todo lo que puede pasar por él y no envía lo demás. **Herramientas → Comprobar mi conexión** dice por dónde sale cada protocolo en ese momento. Qué ve cada cual, qué queda en tu equipo y los límites de cada protección: [docs/privacidad.md](docs/privacidad.md).
 
 ## Uso responsable
 
@@ -94,6 +95,4 @@ Los cambios respecto a eMule 0.72a están en [CHANGELOG.md](CHANGELOG.md) y en e
 
 ## English
 
-Pegaso is a free P2P client for Windows derived from eMule 0.72a (community edition). It keeps everything eMule does on the eD2K and Kad networks and adds BitTorrent (magnet links and `.torrent` files, via libtorrent), multi-connection HTTP/HTTPS downloads, hybrid downloads (one file fed by eMule sources, a web server and a torrent at once, verified with the eD2K hashes), file verdicts (correct / poor quality / fake / does not match its description), VPN binding with a kill switch, an antivirus check of finished downloads, and a torrent search through user-configured Torznab providers.
-
-Download the installer from the [latest release](https://github.com/Draev-developer/Pegaso/releases/latest). Windows 10/11, 64-bit. Licensed under the GNU GPL v2; see [BUILDING.md](BUILDING.md) to build it from source. Suggestions are welcome at draev.pegaso@gmail.com. On X: [@draev_developer](https://x.com/draev_developer); on Instagram: [draev.pegaso](https://www.instagram.com/draev.pegaso/).
+The whole of this page in English: [README.en.md](README.en.md). The program itself speaks English too, and so do the guides in [docs/en](docs/en).

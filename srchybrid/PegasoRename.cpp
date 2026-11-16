@@ -18,6 +18,7 @@
 #include "TorrentQueue.h"
 #include "WebDownload.h"
 #include "NetGuard.h"
+#include "PegasoPrivacy.h"
 #include "Preferences.h"
 #include "OtherFunctions.h"
 #include "StringConversion.h"
@@ -154,6 +155,18 @@ namespace
 		theApp.WriteProfileString(_T("eMule"), pszKey, EncodeUrlUtf8(sValue));
 	}
 
+	// The keys of the databases are kept encrypted for the user account (PegasoPrivacy.h)
+	CString ProfileSecret(LPCTSTR pszKey)
+	{
+		const CString sStored(theApp.GetProfileString(_T("eMule"), pszKey, _T("")));
+		return sStored.Left(6) == _T("dpapi:") ? PegasoUnprotect(sStored) : CString(OptUtf8ToStr(URLDecode(sStored)));
+	}
+
+	void WriteProfileSecret(LPCTSTR pszKey, const CString &sValue)
+	{
+		theApp.WriteProfileString(_T("eMule"), pszKey, PegasoProtect(sValue));
+	}
+
 	// ------------------------------------------------------------ HTTP and JSON
 
 	CString QueryValue(const CString &sValue)
@@ -192,7 +205,7 @@ namespace
 		bool bOk = false;
 		HINTERNET hSession = PegasoHttpSession();
 		if (hSession == NULL && ::GetLastError() == ERROR_NOT_SUPPORTED)
-			sError = _T("the proxy of the preferences is a SOCKS proxy: web requests cannot go through it");
+			sError = _T("the proxy of the preferences is SOCKS4, which cannot look names up: web requests are not made (SOCKS4a and SOCKS5 can)");
 		HINTERNET hConnect = NULL;
 		HINTERNET hRequest = NULL;
 		if (hSession != NULL) {
@@ -1268,9 +1281,9 @@ void CPegasoRenameDlg::OnOK()
 	}
 	SavePrefs();
 	SRenameEnv env;
-	env.keyTmdb = ProfileText(_T("RenameKeyTmdb"));
-	env.keyOmdb = ProfileText(_T("RenameKeyOmdb"));
-	env.keyTvdb = ProfileText(_T("RenameKeyTvdb"));
+	env.keyTmdb = ProfileSecret(_T("RenameKeyTmdb"));
+	env.keyOmdb = ProfileSecret(_T("RenameKeyOmdb"));
+	env.keyTvdb = ProfileSecret(_T("RenameKeyTvdb"));
 	env.testBase = theApp.GetProfileString(_T("eMule"), _T("RenameTestBase"), _T(""));
 	env.configDir = thePrefs.GetMuleDirectory(EMULE_CONFIGDIR);
 	Languages(env);
@@ -1631,9 +1644,9 @@ BOOL CPegasoRenameKeysDlg::OnInitDialog()
 	SetDlgItemText(IDC_RK_TMDB_OPEN, GetPegasoString(PS_RK_OPEN));
 	SetDlgItemText(IDC_RK_OMDB_OPEN, GetPegasoString(PS_RK_OPEN));
 	SetDlgItemText(IDC_RK_TVDB_OPEN, GetPegasoString(PS_RK_OPEN));
-	SetDlgItemText(IDC_RK_TMDB, ProfileText(_T("RenameKeyTmdb")));
-	SetDlgItemText(IDC_RK_OMDB, ProfileText(_T("RenameKeyOmdb")));
-	SetDlgItemText(IDC_RK_TVDB, ProfileText(_T("RenameKeyTvdb")));
+	SetDlgItemText(IDC_RK_TMDB, ProfileSecret(_T("RenameKeyTmdb")));
+	SetDlgItemText(IDC_RK_OMDB, ProfileSecret(_T("RenameKeyOmdb")));
+	SetDlgItemText(IDC_RK_TVDB, ProfileSecret(_T("RenameKeyTvdb")));
 	SetDlgItemText(IDCANCEL, GetPegasoString(PS_WS_CLOSE));
 	return TRUE;
 }
@@ -1642,10 +1655,10 @@ void CPegasoRenameKeysDlg::OnOK()
 {
 	CString s;
 	GetDlgItemText(IDC_RK_TMDB, s);
-	WriteProfileText(_T("RenameKeyTmdb"), s.Trim());
+	WriteProfileSecret(_T("RenameKeyTmdb"), s.Trim());
 	GetDlgItemText(IDC_RK_OMDB, s);
-	WriteProfileText(_T("RenameKeyOmdb"), s.Trim());
+	WriteProfileSecret(_T("RenameKeyOmdb"), s.Trim());
 	GetDlgItemText(IDC_RK_TVDB, s);
-	WriteProfileText(_T("RenameKeyTvdb"), s.Trim());
+	WriteProfileSecret(_T("RenameKeyTvdb"), s.Trim());
 	CDialog::OnOK();
 }

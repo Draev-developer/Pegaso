@@ -45,6 +45,7 @@ public:
 	void SetIniName(LPCTSTR fname)						{ m_ininame = fname; }
 	void SetWrite()										{ m_bWrite = true; };
 	bool Load();
+	bool Reload();	// Pegaso: takes the file as it is now, dropping what was read before
 	bool Store();
 	INT_PTR FindSection(LPCTSTR section);
 	CStringA GetEmuleProfileA(LPCTSTR section, LPCTSTR key, LPCTSTR def);

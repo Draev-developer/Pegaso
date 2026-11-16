@@ -22,6 +22,7 @@
 #include "Preferences.h"
 #include "DownloadQueue.h"
 #include "MenuCmds.h"
+#include "NetGuard.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -35,6 +36,7 @@ CScheduler::CScheduler()
 	LoadFromFile();
 	SaveOriginals();
 	m_iLastCheckedMinute = 60;
+	m_bPauseAll = false;
 }
 
 CScheduler::~CScheduler()
@@ -114,6 +116,8 @@ int CScheduler::Check(bool forcecheck)
 		|| theApp.scheduler->GetCount() == 0
 		|| theApp.IsClosing())
 	{
+		if (!theApp.IsClosing())
+			theNetGuard.SetHeld(false);	// Pegaso: no scheduler, no pause
 		return -1;
 	}
 	struct tm tmTemp;
@@ -124,6 +128,7 @@ int CScheduler::Check(bool forcecheck)
 
 	m_iLastCheckedMinute = tNow.GetMinute();
 	theApp.scheduler->RestoreOriginals();
+	m_bPauseAll = false;
 
 	for (INT_PTR i = 0; i < theApp.scheduler->GetCount(); ++i) {
 		const Schedule_Struct *schedule = theApp.scheduler->GetSchedule(i);
@@ -173,6 +178,7 @@ int CScheduler::Check(bool forcecheck)
 		// OK, lets do the actions of this schedule
 		ActivateSchedule(i, schedule->time2 == 0);
 	}
+	theNetGuard.SetHeld(m_bPauseAll);	// Pegaso
 
 	return -1;
 }
@@ -234,6 +240,9 @@ void CScheduler::ActivateSchedule(INT_PTR index, bool makedefault)
 			break;
 		case ACTION_CATRESUME:
 			theApp.downloadqueue->SetCatStatus(_tstoi(schedule->values[ai]), MP_RESUME);
+			break;
+		case ACTION_PAUSEALL:	// Pegaso: applied by Check(), for as long as the schedule is on
+			m_bPauseAll = true;
 		}
 	}
 }

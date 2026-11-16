@@ -2,6 +2,27 @@
 
 Pegaso parte de eMule 0.72a (edición de la comunidad). El historial de eMule está en `changelog_full.txt`.
 
+## 0.6.2
+
+Remata la revisión de privacidad de la 0.6.1. Todo está explicado en [docs/privacidad.md](docs/privacidad.md) ([English](docs/en/privacy.md)).
+
+### Privacidad y seguridad
+- **Claves cifradas.** El token de la API local, las claves de los servicios de renombrado y de tus webs de búsqueda y la contraseña del proxy ya no están en claro en `preferences.ini`: Windows los cifra para tu cuenta de usuario. Lo que estaba en claro se cifra al arrancar.
+- **Comprobar mi conexión** (Herramientas, y Preferencias → Web y BitTorrent): por dónde sale cada protocolo en ese momento —proxy, adaptador de la VPN o ruta del sistema—, si el corte de emergencia está armado y si todo está detenido. También en la API: `GET /api/v1/connection`.
+- **La web, atada a la VPN.** Con la protección VPN, las descargas web, las búsquedas en webs, el renombrado y la actualización de listas salen por el adaptador de la VPN, no por la ruta del sistema: Pegaso hace él mismo la conexión.
+- **La web, por proxy SOCKS.** Con un proxy SOCKS5 o SOCKS4a, las peticiones web pasan por él y es el proxy quien resuelve los nombres (antes no se hacían). También valen el usuario y la contraseña del proxy, incluido un proxy HTTP con contraseña.
+- **Borrar el rastro local** (Herramientas): historial de búsquedas, descargas terminadas y canceladas, recuerdo de archivos que ya no compartes y registro de actividad. Opción para hacerlo cada vez que se cierra Pegaso.
+- La huella SHA-256 del instalador se publica con cada versión.
+
+### Corregido
+- **Opciones que se perdían al cerrar.** Una opción de Pegaso cambiada durante la sesión —el adaptador de la protección VPN, BitTorrent, la API local, tus webs de búsqueda, las claves— podía volver a su valor anterior al cerrar el programa o al aceptar las preferencias, si en la misma sesión cambiaba además alguna preferencia de eMule. eMule guardaba el archivo de configuración tal como lo había leído al arrancar; ahora lo relee antes de guardar. El fallo venía de versiones anteriores.
+
+### Uso diario
+- **Aviso de versión nueva, si lo quieres.** Apagado de serie. Activado en Preferencias → General, Pegaso pregunta a GitHub cada tantos días y lo dice en el registro. No descarga ni instala nada.
+- **Pausa total en el programador.** Preferencias → Programador tiene una acción nueva, «Pausar todo»: en el horario que indiques no hay eD2K, Kad, BitTorrent ni web, y al terminar se vuelve a conectar. Los límites de velocidad del programador ya valían para BitTorrent y las descargas web.
+- **Torrents sin su carpeta.** Opción para guardar los archivos de un torrent directamente en la carpeta de descargas. Si alguno coincidiera con un archivo que ya está ahí, el torrent conserva su carpeta.
+- **Documentación en inglés**: [README.en.md](README.en.md) y `docs/en`.
+
 ## 0.6.1
 
 Revisión de privacidad. Lo que Pegaso deja ver de ti, lo que no, y cómo ocultar tu dirección está en [docs/privacidad.md](docs/privacidad.md).

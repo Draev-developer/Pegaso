@@ -10,7 +10,7 @@
 ; Downloads\Pegaso), so removing or updating the program does not touch them.
 
 #define AppName "Pegaso"
-#define AppVersion "0.6.1"
+#define AppVersion "0.6.2"
 #define Release "..\..\srchybrid\x64\Release"
 
 [Setup]
@@ -106,6 +106,7 @@ Source: "LEEME.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\browser-extension\dist\pegaso-chromium\*"; DestDir: "{app}\browser-extension\chrome-edge"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "..\..\browser-extension\dist\pegaso-firefox.zip"; DestDir: "{app}\browser-extension"; Flags: ignoreversion
 Source: "..\..\docs\extension-navegador.md"; DestDir: "{app}\browser-extension"; DestName: "LEEME.txt"; Flags: ignoreversion
+Source: "..\..\docs\en\browser-extension.md"; DestDir: "{app}\browser-extension"; DestName: "README.txt"; Flags: ignoreversion
 
 [INI]
 ; Pegaso starts in the language the installer ran in (which follows the language of Windows).

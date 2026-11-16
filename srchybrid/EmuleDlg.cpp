@@ -44,6 +44,7 @@
 #include "PegasoApi.h"
 #include "PegasoUi.h"
 #include "NetGuard.h"
+#include "PegasoPrivacy.h"
 #include "PegasoDefaults.h"
 #include "otherfunctions.h"
 #include "ServerWnd.h"
@@ -683,6 +684,8 @@ void CemuleDlg::DoVersioncheck(bool manual)
 	// about Pegaso. Asked by the user, the releases page of the project is opened instead.
 	if (manual)
 		BrowserOpen(thePrefs.GetVersionCheckURL(), thePrefs.GetMuleDirectory(EMULE_EXECUTABLEDIR));
+	else
+		PegasoUpdateCheck();	// only with the option turned on by the user: asks the releases of the project
 #if 0
 #ifndef _DEVBUILD
 	if (!manual && thePrefs.GetLastVC() != 0) {
@@ -1756,6 +1759,8 @@ void CemuleDlg::OnClose()
 	theApp.HandleLogQueue();
 
 	Log(_T("Closing eMule"));
+	if (PegasoClearTracesOnExit())	// Pegaso
+		PegasoClearTraces();
 	CloseTTS();
 	m_pDropTarget->Revoke();
 	theApp.serverconnect->Disconnect();
@@ -2673,6 +2678,15 @@ BOOL CemuleDlg::OnCommand(WPARAM wParam, LPARAM lParam)
 			dlg.DoModal();
 		}
 		break;
+	case MP_PEGASO_CONN:	// Pegaso: by which way each protocol leaves this computer
+		{
+			CPegasoConnDlg dlg(this);
+			dlg.DoModal();
+		}
+		break;
+	case MP_PEGASO_CLEAR:	// Pegaso: search history, finished and cancelled downloads, logs
+		PegasoClearTracesAsk(this);
+		break;
 	case MP_PEGASO_RENAME:	// Pegaso: names for the finished videos
 		CPegasoRenameDlg::Open(this);
 		break;
@@ -2803,6 +2817,8 @@ void CemuleDlg::ShowToolPopup(bool toolsonly)
 	menu.AppendMenu(MF_STRING, MP_PEGASO_WEBSEARCH, GetPegasoString(PS_WS_MENU), _T("SEARCH"));	// Pegaso
 	menu.AppendMenu(MF_STRING, MP_PEGASO_RENAME, GetPegasoString(PS_RN_MENU));	// Pegaso
 	menu.AppendMenu(MF_STRING, MP_PEGASO_CREATE, GetPegasoString(PS_CR_MENU));	// Pegaso
+	menu.AppendMenu(MF_STRING, MP_PEGASO_CONN, GetPegasoString(PS_CC_MENU) + CString(_T("...")));	// Pegaso
+	menu.AppendMenu(MF_STRING, MP_PEGASO_CLEAR, GetPegasoString(PS_CT_MENU) + CString(_T("...")));	// Pegaso
 
 	menu.AppendMenu(MF_SEPARATOR);
 	menu.AppendMenu(MF_STRING | MF_POPUP, (UINT_PTR)Links.m_hMenu, GetResString(IDS_LINKS), _T("WEB"));

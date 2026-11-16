@@ -56,6 +56,23 @@ bool CIni::Load()
 	return true;
 }
 
+// Pegaso: an object of this class holds the whole file as it was when it was read, and writes
+// the whole of it back. Kept for long - as the one of the preferences is, from start to exit -
+// it would write over whatever anyone else has written to the file meanwhile.
+bool CIni::Reload()
+{
+	CArray<CStringA> kept;
+	kept.Copy(m_lines);
+	const bool bWrite = m_bWrite;
+	m_lines.RemoveAll();
+	m_bWrite = false;
+	if (Load())
+		return true;
+	m_lines.Copy(kept);		// it cannot be read right now: better what was known than nothing
+	m_bWrite = bWrite;
+	return false;
+}
+
 bool CIni::Store()
 {
 	if (!m_bWrite)

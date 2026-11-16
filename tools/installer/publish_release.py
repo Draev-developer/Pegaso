@@ -7,6 +7,7 @@ and the file is tools/installer/output/Pegaso-<version>-setup.exe. The GitHub cr
 the one git itself uses for this repository (asked from git's credential helper); it is only
 held in memory and never printed.
 """
+import hashlib
 import json
 import os
 import subprocess
@@ -16,7 +17,7 @@ import urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 REPO = 'Draev-developer/Pegaso'
-VERSION = '0.6.1'
+VERSION = '0.6.2'
 
 
 def token():
@@ -54,6 +55,9 @@ def main():
     folder = os.environ.get('PEGASO_DIST') or os.path.join(ROOT, 'tools', 'installer', 'output')
     installer = os.path.join(folder, 'Pegaso-%s-setup.exe' % VERSION)
     data = open(installer, 'rb').read()
+    # the fingerprint of the installer, for whoever wants to check the download
+    body += ('\n\n## Comprobar la descarga / Checking the download\n\nSHA-256 de / of `%s`:\n\n```\n%s\n```\n\n'
+             '`certutil -hashfile %s SHA256`\n') % (os.path.basename(installer), hashlib.sha256(data).hexdigest().upper(), os.path.basename(installer))
     tok = token()
     release = call('POST', 'https://api.github.com/repos/%s/releases' % REPO, tok,
                    json.dumps({'tag_name': tag, 'name': title, 'body': body, 'draft': False, 'prerelease': False}).encode('utf-8'))

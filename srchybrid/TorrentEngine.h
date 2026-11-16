@@ -25,6 +25,7 @@ struct STorrentSettings
 	int		downloadLimit = 0;		// bytes per second, 0 = unlimited
 	int		uploadLimit = 0;
 	bool	requireEncryption = false;	// only encrypted peer connections
+	bool	noRootFolder = false;		// the files of a torrent are saved without the folder it brings
 	bool	ipv6 = true;				// false: no IPv6 at all, it would go round a VPN or a proxy
 	// The proxy of the preferences: everything goes through it or does not go at all.
 	int		proxyType = 0;				// 0 none, 4 SOCKS4, 5 SOCKS5, 1 HTTP
@@ -153,6 +154,7 @@ public:
 	void	Resume(const std::string &id);
 	void	Remove(const std::string &id, bool deleteFiles);
 	void	SetLimits(int downloadLimit, int uploadLimit);	// bytes per second, 0 = unlimited
+	void	SetNoRootFolder(bool on);	// for the torrents added from now on
 	void	PauseSession(bool pause);	// stops all network activity without touching the torrents
 
 	// The files of a torrent; empty while the description of a magnet link has not arrived.

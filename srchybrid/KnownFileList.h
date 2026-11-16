@@ -35,6 +35,7 @@ public:
 	bool	Init();
 	void	Save();
 	void	Clear();
+	void	ClearHistory();	// Pegaso: forgets the cancelled downloads and the files no longer shared
 	void	Process();
 
 	CKnownFile* FindKnownFile(LPCTSTR filename, time_t date, uint64 size) const;

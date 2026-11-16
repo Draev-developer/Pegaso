@@ -43,6 +43,7 @@
 #include "ClientUDPSocket.h"
 #include "SHAHashSet.h"
 #include "Log.h"
+#include "NetGuard.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -2022,6 +2023,12 @@ static int CALLBACK AcceptConnectionCond(LPWSABUF lpCallerId, LPWSABUF /*lpCalle
 void CListenSocket::OnAccept(int nErrorCode)
 {
 	if (!nErrorCode) {
+		if (theNetGuard.IsHeld()) {	// Pegaso: the scheduler has paused everything
+			SOCKET hTaken;
+			while ((hTaken = ::accept(GetSocketHandle(), NULL, NULL)) != INVALID_SOCKET)
+				::closesocket(hTaken);
+			return;
+		}
 		if (++m_nPendingConnections < 1) {
 			ASSERT(0);
 			m_nPendingConnections = 1;

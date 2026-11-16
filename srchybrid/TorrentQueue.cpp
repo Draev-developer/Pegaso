@@ -83,6 +83,17 @@ bool CTorrentQueue::RequireEncryptionInPrefs()
 	return theApp.GetProfileInt(_T("eMule"), _T("TorrentRequireEncryption"), 0) != 0;
 }
 
+bool CTorrentQueue::NoFolderInPrefs()
+{
+	return theApp.GetProfileInt(_T("eMule"), _T("TorrentNoFolder"), 0) != 0;
+}
+
+void CTorrentQueue::SetNoFolder(bool bNoFolder)
+{
+	theApp.WriteProfileInt(_T("eMule"), _T("TorrentNoFolder"), bNoFolder ? 1 : 0);
+	m_engine.SetNoRootFolder(bNoFolder);
+}
+
 void CTorrentQueue::ApplyPrefs(bool bEnabled, UINT uPort, bool bRequireEncryption)
 {
 	const bool bChanged = bEnabled != IsEnabledInPrefs() || uPort != PortInPrefs() || bRequireEncryption != RequireEncryptionInPrefs();
@@ -129,6 +140,7 @@ void CTorrentQueue::Start()
 	settings.userAgent = CStringA(PEGASO_NAME _T("/") PEGASO_VERSION_NAME);
 	settings.listenPort = (int)PortInPrefs();
 	settings.requireEncryption = RequireEncryptionInPrefs();
+	settings.noRootFolder = NoFolderInPrefs();
 	m_sBoundTo = theNetGuard.GetBindAddress();	// VPN protection
 	settings.bindAddress = CStringA(m_sBoundTo);
 	m_bNetPaused = false;

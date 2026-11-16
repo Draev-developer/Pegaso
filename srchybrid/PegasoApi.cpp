@@ -12,6 +12,7 @@
 #include "emuleDlg.h"
 #include "PegasoApi.h"
 #include "PegasoStrings.h"
+#include "PegasoPrivacy.h"
 #include "PegasoTrust.h"
 #include "PartFile.h"
 #include "KnownFile.h"
@@ -887,6 +888,8 @@ namespace
 		const size_t n = parts.size();
 		if (sWhat == "status" && n == 3 && bGet)
 			req.reply = StatusJson();
+		else if (sWhat == "connection" && n == 3 && bGet)
+			req.reply = CObj().Str("report", PegasoConnectionReport()).Done();
 		else if (sWhat == "downloads" && n == 3 && bGet)
 			req.reply = DownloadsJson();
 		else if (sWhat == "downloads" && n == 3 && bPost) {
@@ -1152,7 +1155,7 @@ UINT CPegasoApi::PortInPrefs()
 
 CString CPegasoApi::TokenInPrefs()
 {
-	CString sToken(theApp.GetProfileString(_T("eMule"), _T("ApiToken"), _T("")));
+	CString sToken(PegasoUnprotect(theApp.GetProfileString(_T("eMule"), _T("ApiToken"), _T(""))));
 	if (sToken.GetLength() < 32) {
 		sToken.Empty();
 		for (int i = 0; i < 8; ++i) {
@@ -1161,7 +1164,7 @@ CString CPegasoApi::TokenInPrefs()
 				AfxThrowUserException();	// no random numbers, no token
 			sToken.AppendFormat(_T("%08x"), u);
 		}
-		theApp.WriteProfileString(_T("eMule"), _T("ApiToken"), sToken);
+		theApp.WriteProfileString(_T("eMule"), _T("ApiToken"), PegasoProtect(sToken));
 	}
 	return sToken;
 }

@@ -254,25 +254,27 @@ def run(kind):
             time.sleep(2)
             with lock:
                 done = (any(h[0] == '/announce' for h in hits) and any(a == PEER for a in asked)
-                        and (kind == 'socks5' or os.path.isfile(os.path.join(incoming, 'por-nombre.bin'))))
+                        and os.path.isfile(os.path.join(incoming, 'por-nombre.bin')))
             if done:
                 break
-        time.sleep(15 if kind == 'socks5' else 6)
+        time.sleep(6)
         with lock:
             got_hits, got_asked, got_through = list(hits), list(asked), set(through)
         print('    the proxy was asked for:', sorted(set(got_asked)))
         print('    the web server was asked:', sorted(set((h[0], h[1] in got_through) for h in got_hits)))
         # an address of this computer itself is reached directly by Windows whatever the proxy: it never leaves it
-        direct = [h[0] for h in got_hits if h[1] not in got_through and not (kind == 'http' and h[0] == '/web/por-direccion.bin')]
+        direct = [h[0] for h in got_hits if h[1] not in got_through and h[0] != '/web/por-direccion.bin']
         check('nothing reached the web server without the proxy', got_hits and not direct, direct)
-        web_hits = [h[0] for h in got_hits if h[0].startswith('/web/')]
-        if kind == 'socks5':
-            # Windows cannot send a web request through a SOCKS proxy: it is not sent at all
-            check('web downloads do not go round a SOCKS proxy: they wait', not web_hits and not os.listdir(incoming), (web_hits, os.listdir(incoming)))
-            log = r.log_of(w.RUN)
-            check('and Pegaso says why', 'SOCKS proxy' in log, log[-600:])
-        else:
-            check('a web download arrives through the proxy, its name looked up by the proxy', os.path.isfile(os.path.join(incoming, 'por-nombre.bin')), os.listdir(incoming))
+        # Windows cannot speak SOCKS: the web requests go through the bridge of Pegaso, which can
+        check('a web download arrives through the proxy, its name looked up by the proxy',
+              os.path.isfile(os.path.join(incoming, 'por-nombre.bin')) and (ONLY_PROXY, WEB_PORT) in got_asked, (os.listdir(incoming), got_asked))
+        status, conn = apitest.call('GET', '/api/v1/connection')
+        report = conn.get('report', '') if status == 200 else ''
+        print('    ' + report.replace('\r\n', '\n    ').rstrip())
+        check('"Check my connection" says that everything goes through the proxy and Kad is not used',
+              report.count('127.0.0.1:%d)' % PROXY_PORT) >= 3 and [line for line in report.splitlines() if 'Kad' in line and '127.0.0.1' not in line], report)
+        stored = [line for line in open(ini, encoding='latin-1').read().splitlines() if line.startswith('ApiToken=')]
+        check('the token of the API is no longer in clear in preferences.ini', stored and stored[0].startswith('ApiToken=dpapi:'), stored)
         announces = [h for h in got_hits if h[0] == '/announce']
         check('the tracker is asked through the proxy, by a name only the proxy knows', announces and (ONLY_PROXY, WEB_PORT) in got_asked, got_asked)
         check('the peer the tracker names is called through the proxy', PEER in got_asked, got_asked)

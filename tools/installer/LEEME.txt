@@ -1,4 +1,4 @@
-﻿Pegaso 0.6.1
+﻿Pegaso 0.6.2
 ==========
 
 Pegaso descarga de las redes eMule (servidores ed2k y Kad), de BitTorrent y de
@@ -21,7 +21,11 @@ Primeros pasos
   - Pega un enlace ed2k, un enlace magnet, un archivo .torrent o una dirección
     web para empezar una descarga.
   - Preferencias > Web y BitTorrent: puerto de BitTorrent, conexiones por
-    descarga web y protección VPN.
+    descarga web, protección VPN y privacidad.
+  - Herramientas > Comprobar mi conexión: por dónde sale cada protocolo
+    (proxy, adaptador de la VPN o ruta normal).
+
+Quien comparte contigo ve tu dirección IP, salvo que uses una VPN o un proxy.
 
 Úsalo solo para contenidos que tengas derecho a descargar y compartir.
 
@@ -36,3 +40,17 @@ program is entitled to its source code as well.
 
 Settings are kept in %LOCALAPPDATA%\Pegaso and downloads in the Pegaso folder
 inside the user's Downloads folder; uninstalling does not remove them.
+
+First steps
+-----------
+  - Press "Connect": Pegaso joins an eMule server and the Kad network.
+  - Paste an ed2k link, a magnet link, a .torrent file or a web address to
+    start a download.
+  - Preferences > Web and BitTorrent: BitTorrent port, connections per web
+    download, VPN protection and privacy.
+  - Tools > Check my connection: which way each protocol leaves (proxy, VPN
+    adapter or the normal route).
+
+Those you share with see your IP address, unless you use a VPN or a proxy.
+
+Use it only for content you have the right to download and share.

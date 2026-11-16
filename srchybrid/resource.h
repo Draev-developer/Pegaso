@@ -2402,6 +2402,15 @@
 #define IDC_PG_VPN_ADAPTER_LBL          5023
 #define IDC_PG_VPN_ADAPTER              5024
 #define IDC_PG_VPN_KILL                 5025
+#define IDC_PG_BT_NOFOLDER              5026
+#define IDC_PG_PRIV_GROUP               5027
+#define IDC_PG_CLEAR_EXIT               5028
+#define IDC_PG_CLEAR_NOW                5029
+#define IDC_PG_CONN                     5143
+#define IDD_PEGASO_CONN                 5014
+#define IDC_CC_TEXT                     5140
+#define IDC_CC_REFRESH                  5141
+#define IDC_CC_COPY                     5142
 #define IDD_WEB_SEARCH                  5003
 #define IDD_WEB_PROVIDERS               5004
 #define IDD_PEGASO_RENAME               5010

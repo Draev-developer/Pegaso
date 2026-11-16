@@ -25,6 +25,8 @@ protected:
 	afx_msg void OnChanged()					{ SetModified(TRUE); }
 	afx_msg void OnBnClickedEnable();
 	afx_msg void OnCbnSelChangeAdapter();
+	afx_msg void OnBnClickedClearNow();
+	afx_msg void OnBnClickedConn();
 
 private:
 	CStringArray m_asAdapters;	// adapter names, in the order of the combo box entries after the first

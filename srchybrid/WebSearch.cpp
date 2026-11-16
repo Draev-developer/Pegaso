@@ -12,6 +12,7 @@
 #include "TorrentQueue.h"
 #include "NetGuard.h"
 #include "PegasoStrings.h"
+#include "PegasoPrivacy.h"
 #include "Preferences.h"
 #include "OtherFunctions.h"
 #include "StringConversion.h"
@@ -160,7 +161,8 @@ std::vector<SSearchProvider> CWebSearch::LoadProviders()
 		// URL-encoded: names and keys may hold characters the ini file cannot
 		p.name = CString(OptUtf8ToStr(URLDecode(theApp.GetProfileString(_T("eMule"), ProfileKey(i, _T("Name")), _T("")))));
 		p.url = theApp.GetProfileString(_T("eMule"), ProfileKey(i, _T("Url")), _T(""));
-		p.apiKey = CString(OptUtf8ToStr(URLDecode(theApp.GetProfileString(_T("eMule"), ProfileKey(i, _T("Key")), _T("")))));
+		const CString sStoredKey(theApp.GetProfileString(_T("eMule"), ProfileKey(i, _T("Key")), _T("")));
+		p.apiKey = sStoredKey.Left(6) == _T("dpapi:") ? PegasoUnprotect(sStoredKey) : CString(OptUtf8ToStr(URLDecode(sStoredKey)));
 		if (!p.url.Trim().IsEmpty())
 			out.push_back(p);
 	}
@@ -174,7 +176,7 @@ void CWebSearch::SaveProviders(const std::vector<SSearchProvider> &providers)
 	for (int i = 0; i < iCount; ++i) {
 		theApp.WriteProfileString(_T("eMule"), ProfileKey(i, _T("Name")), EncodeUrlUtf8(providers[i].name));
 		theApp.WriteProfileString(_T("eMule"), ProfileKey(i, _T("Url")), providers[i].url);
-		theApp.WriteProfileString(_T("eMule"), ProfileKey(i, _T("Key")), EncodeUrlUtf8(providers[i].apiKey));
+		theApp.WriteProfileString(_T("eMule"), ProfileKey(i, _T("Key")), PegasoProtect(providers[i].apiKey));
 	}
 }
 

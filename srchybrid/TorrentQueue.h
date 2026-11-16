@@ -14,6 +14,9 @@ public:
 	//   TorrentEnabled (1), TorrentPort (6881), TorrentRequireEncryption (0)
 	static bool IsEnabledInPrefs();
 	static UINT PortInPrefs();
+	// The files of a torrent are saved without the folder it brings. preferences.ini: TorrentNoFolder (0)
+	static bool NoFolderInPrefs();
+	void	SetNoFolder(bool bNoFolder);
 	static bool RequireEncryptionInPrefs();
 	// Stores the settings and restarts the engine if they differ from the running ones.
 	void	ApplyPrefs(bool bEnabled, UINT uPort, bool bRequireEncryption);

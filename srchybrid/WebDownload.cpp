@@ -18,6 +18,7 @@
 #include "NetGuard.h"
 #include "PegasoScan.h"
 #include "AsyncProxySocketLayer.h"
+#include "PegasoBridge.h"
 #include "Version.h"
 
 #pragma comment(lib, "winhttp.lib")
@@ -32,20 +33,21 @@ CWebDownloadQueue theWebDownloads;
 
 LPVOID PegasoHttpSession()
 {
-	const ProxySettings &proxy = thePrefs.GetProxySettings();
-	if (!proxy.bUseProxy)
+	// Tied to an adapter or with a proxy in the preferences, the request goes through the
+	// bridge of Pegaso (PegasoBridge.h), which makes the connection from that adapter or through
+	// that proxy. Otherwise Windows goes its own way.
+	const int iBridge = PegasoBridge::Port();
+	if (iBridge == 0)
 		return ::WinHttpOpen(PEGASO_NAME _T("/") PEGASO_VERSION_NAME, WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY
 			, WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
-	// WinHTTP speaks to HTTP proxies only. Through a SOCKS proxy no web request can go, and
-	// going round it would show the address the proxy is there to hide: no request, then.
-	if (proxy.type != PROXYTYPE_HTTP10 && proxy.type != PROXYTYPE_HTTP11) {
+	if (iBridge < 0) {	// no way through, and none round it
 		::SetLastError(ERROR_NOT_SUPPORTED);
 		return NULL;
 	}
-	// the proxy of the preferences, for every address but those of this computer itself, which
-	// Windows always reaches directly (and which never leave it)
+	// for every address but those of this computer itself, which Windows always reaches
+	// directly (and which never leave it)
 	CString sProxy;
-	sProxy.Format(_T("%s:%u"), (LPCTSTR)proxy.host, (unsigned)proxy.port);
+	sProxy.Format(_T("127.0.0.1:%d"), iBridge);
 	return ::WinHttpOpen(PEGASO_NAME _T("/") PEGASO_VERSION_NAME, WINHTTP_ACCESS_TYPE_NAMED_PROXY, sProxy, WINHTTP_NO_PROXY_BYPASS, 0);
 }
 
@@ -134,7 +136,7 @@ namespace
 
 		req.hSession = PegasoHttpSession();
 		if (req.hSession == NULL) {
-			sError = ::GetLastError() == ERROR_NOT_SUPPORTED ? CString(_T("the proxy of the preferences is a SOCKS proxy: web requests cannot go through it and do not go round it"))
+			sError = ::GetLastError() == ERROR_NOT_SUPPORTED ? CString(_T("the proxy of the preferences is SOCKS4, which cannot look names up: web requests are not made (SOCKS4a and SOCKS5 can)"))
 				: WinHttpError(_T("session"));
 			return false;
 		}

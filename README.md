@@ -61,6 +61,10 @@ También se pueden valorar los torrents. BitTorrent no tiene nada parecido, así
 
 Pegaso es una herramienta de transferencia de archivos. Úsala solo con contenidos que tengas derecho a descargar y compartir. El programa no incluye ni enlaza índices de contenidos.
 
+## Contacto
+
+Pegaso crece con lo que piden quienes lo usan. Si echas algo en falta, algo te estorba o se te ha ocurrido una idea, escribe a **draev.pegaso@gmail.com**. La dirección está también dentro del programa, en el apartado «Contacto».
+
 ## Compilar
 
 Las instrucciones están en [BUILDING.md](BUILDING.md). Hace falta Visual Studio 2026 con el componente MFC.
@@ -83,4 +87,4 @@ Los cambios respecto a eMule 0.72a están en [CHANGELOG.md](CHANGELOG.md) y en e
 
 Pegaso is a free P2P client for Windows derived from eMule 0.72a (community edition). It keeps everything eMule does on the eD2K and Kad networks and adds BitTorrent (magnet links and `.torrent` files, via libtorrent), multi-connection HTTP/HTTPS downloads, hybrid downloads (one file fed by eMule sources, a web server and a torrent at once, verified with the eD2K hashes), file verdicts (correct / poor quality / fake / does not match its description), VPN binding with a kill switch, an antivirus check of finished downloads, and a torrent search through user-configured Torznab providers.
 
-Download the installer from the [latest release](https://github.com/Draev-developer/Pegaso/releases/latest). Windows 10/11, 64-bit. Licensed under the GNU GPL v2; see [BUILDING.md](BUILDING.md) to build it from source.
+Download the installer from the [latest release](https://github.com/Draev-developer/Pegaso/releases/latest). Windows 10/11, 64-bit. Licensed under the GNU GPL v2; see [BUILDING.md](BUILDING.md) to build it from source. Suggestions are welcome at draev.pegaso@gmail.com.

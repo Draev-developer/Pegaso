@@ -35,7 +35,8 @@ namespace PegasoUi
 class CPegasoSideBar : public CWnd
 {
 public:
-	enum EItem { ITEM_DOWNLOADS, ITEM_SEARCH, ITEM_SHARED, ITEM_UPLOADS, ITEM_SERVERS, ITEM_KAD, ITEM_STATS, ITEM_COUNT };
+	// ITEM_CONTACT is not a section of the window: it opens the contact window
+	enum EItem { ITEM_DOWNLOADS, ITEM_SEARCH, ITEM_SHARED, ITEM_UPLOADS, ITEM_SERVERS, ITEM_KAD, ITEM_STATS, ITEM_CONTACT, ITEM_COUNT };
 
 	bool	Create(CWnd *pParent);
 	static int Width();
@@ -103,4 +104,20 @@ protected:
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	int		HitTest(CPoint pt) const;
 	CString	FilterText(int iFilter) const;
+};
+
+// Contact: where the users send what they would like Pegaso to do.
+class CPegasoContactDlg : public CDialog
+{
+	DECLARE_DYNAMIC(CPegasoContactDlg)
+
+public:
+	explicit CPegasoContactDlg(CWnd *pParent = NULL);
+
+protected:
+	virtual BOOL OnInitDialog();
+
+	DECLARE_MESSAGE_MAP()
+	afx_msg void OnBnClickedWrite();
+	afx_msg void OnBnClickedCopy();
 };

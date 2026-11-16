@@ -244,12 +244,14 @@ void CPegasoSideBar::Layout()
 	GetClientRect(&rc);
 	const int iMargin = Scale(12);
 	int y = Scale(68);
-	for (int i = 0; i < ITEM_COUNT; ++i) {
-		m_arcItems[i].SetRect(iMargin, y, rc.right - iMargin - 1, y + Scale(38));
-		y += Scale(42);
-	}
 	const int iLines = 2 + (theNetGuard.IsActive() || CNetGuard::KasperskyInstalled() ? 1 : 0) + 1;	// eD2K, Kad, BitTorrent and, if in use, the VPN
 	const int iCard = Scale(12) + Scale(22) + Scale(6) + iLines * Scale(19) + Scale(10) + Scale(36) + Scale(12);
+	// in a low window the items stand closer, so that the card below them still fits
+	const int iStep = max(Scale(30), min(Scale(42), (rc.bottom - iMargin - iCard - Scale(8) - y) / ITEM_COUNT));
+	for (int i = 0; i < ITEM_COUNT; ++i) {
+		m_arcItems[i].SetRect(iMargin, y, rc.right - iMargin - 1, y + iStep - Scale(4));
+		y += iStep;
+	}
 	m_rcCard.SetRect(iMargin, max(y + Scale(8), rc.bottom - iMargin - iCard), rc.right - iMargin - 1, 0);
 	m_rcCard.bottom = m_rcCard.top + iCard;
 	m_rcConnect.SetRect(m_rcCard.left + Scale(12), m_rcCard.bottom - Scale(12) - Scale(36), m_rcCard.right - Scale(12), m_rcCard.bottom - Scale(12));
@@ -295,7 +297,7 @@ void CPegasoSideBar::OnMouseLeave()
 
 void CPegasoSideBar::OnLButtonDown(UINT nFlags, CPoint point)
 {
-	static const UINT s_auCommand[ITEM_COUNT] = {MP_PEGASO_NAV_DOWNLOADS, MP_HM_SEARCH, MP_HM_FILES, MP_PEGASO_NAV_UPLOADS, MP_HM_SRVR, MP_HM_KAD, MP_HM_STATS};
+	static const UINT s_auCommand[ITEM_COUNT] = {MP_PEGASO_NAV_DOWNLOADS, MP_HM_SEARCH, MP_HM_FILES, MP_PEGASO_NAV_UPLOADS, MP_HM_SRVR, MP_HM_KAD, MP_HM_STATS, MP_PEGASO_CONTACT};
 	const int iHit = HitTest(point);
 	if (iHit >= 0 && GetParent() != NULL)
 		GetParent()->PostMessage(WM_COMMAND, iHit == ITEM_COUNT ? MP_HM_CON : s_auCommand[iHit], 0);
@@ -317,6 +319,8 @@ CString CPegasoSideBar::Label(int iItem)
 		return GetPegasoString(PS_UI_SERVERS);
 	case ITEM_KAD:
 		return NoAmpersand(IDS_EM_KADEMLIA);
+	case ITEM_CONTACT:
+		return GetPegasoString(PS_UI_CONTACT);
 	}
 	return NoAmpersand(IDS_EM_STATISTIC);
 }
@@ -681,4 +685,44 @@ void CPegasoTopBar::OnPaint()
 			Text(dc, FilterText(i), m_arcFilters[i], FONT_TEXT, bCurrent ? RGB(255, 255, 255) : CR_TEXT, DT_CENTER);
 		}
 	}
+}
+
+// ---------------------------------------------------------------- contact
+
+IMPLEMENT_DYNAMIC(CPegasoContactDlg, CDialog)
+
+BEGIN_MESSAGE_MAP(CPegasoContactDlg, CDialog)
+	ON_BN_CLICKED(IDC_CT_WRITE, OnBnClickedWrite)
+	ON_BN_CLICKED(IDC_CT_COPY, OnBnClickedCopy)
+END_MESSAGE_MAP()
+
+CPegasoContactDlg::CPegasoContactDlg(CWnd *pParent)
+	: CDialog(IDD_PEGASO_CONTACT, pParent)
+{
+}
+
+BOOL CPegasoContactDlg::OnInitDialog()
+{
+	CDialog::OnInitDialog();
+	InitWindowStyles(this);
+	SetWindowText(GetPegasoString(PS_UI_CONTACT));
+	SetDlgItemText(IDC_CT_TEXT, GetPegasoString(PS_CT_TEXT));
+	SetDlgItemText(IDC_CT_ADDRESS, PEGASO_CONTACT);
+	SetDlgItemText(IDC_CT_WRITE, GetPegasoString(PS_CT_WRITE));
+	SetDlgItemText(IDC_CT_COPY, GetPegasoString(PS_CT_COPY));
+	SetDlgItemText(IDCANCEL, GetPegasoString(PS_WS_CLOSE));
+	return TRUE;
+}
+
+// the mail program of the user, with the address and the version already written
+void CPegasoContactDlg::OnBnClickedWrite()
+{
+	::ShellExecute(NULL, _T("open"), _T("mailto:") PEGASO_CONTACT _T("?subject=") PEGASO_NAME _T("%20") PEGASO_VERSION_NAME, NULL, NULL, SW_SHOWNORMAL);
+}
+
+// for those who write from the web: the address, to paste there
+void CPegasoContactDlg::OnBnClickedCopy()
+{
+	::CopyTextToClipboard(CString(PEGASO_CONTACT));
+	SetDlgItemText(IDC_CT_STATUS, GetPegasoString(PS_CT_COPIED));
 }

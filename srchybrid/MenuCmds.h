@@ -72,6 +72,7 @@
 #define MP_PEGASO_NAV_DOWNLOADS	10986	// Pegaso: sections of the bar on the left
 #define MP_PEGASO_NAV_UPLOADS	10987
 #define MP_PEGASO_KVPN		10989	// Pegaso: Kaspersky VPN for Pegaso
+#define MP_PEGASO_CONTACT	10992	// Pegaso: the contact window
 #define MP_PEGASO_RENAME		10991	// Pegaso: names for the finished videos
 #define MP_PEGASO_DROPPED	10990	// Pegaso: files dropped from Explorer, to be opened
 #define MP_PEGASO_SUBMIT		10988	// Pegaso: Enter in the field above

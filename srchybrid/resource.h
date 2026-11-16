@@ -2406,6 +2406,12 @@
 #define IDD_WEB_PROVIDERS               5004
 #define IDD_PEGASO_RENAME               5010
 #define IDD_PEGASO_RENAME_KEYS          5011
+#define IDD_PEGASO_CONTACT              5012
+#define IDC_CT_TEXT                     5110
+#define IDC_CT_ADDRESS                  5111
+#define IDC_CT_WRITE                    5112
+#define IDC_CT_COPY                     5113
+#define IDC_CT_STATUS                   5114
 #define IDC_RN_LIST                     5080
 #define IDC_RN_SERIES_LBL               5081
 #define IDC_RN_SERIES_DB                5082

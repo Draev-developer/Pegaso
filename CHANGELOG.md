@@ -2,6 +2,11 @@
 
 Pegaso parte de eMule 0.72a (edición de la comunidad). El historial de eMule está en `changelog_full.txt`.
 
+## 0.5.3
+
+- Contacto: un apartado nuevo en la barra lateral, con la dirección a la que escribir las sugerencias (draev.pegaso@gmail.com), un botón que abre el programa de correo con la dirección y la versión ya puestas, y otro que copia la dirección.
+- En ventanas bajas, las secciones de la barra lateral se juntan para que la tarjeta de conexión siga cabiendo.
+
 ## 0.5.2
 
 - Renombrar vídeos: al mover un vídeo a otra carpeta, la carpeta donde estaba se quita si no queda en ella ningún otro vídeo (las muestras, «sample», no cuentan). Lo que sobre va a la papelera de reciclaje con la carpeta. Lo que un torrent de la lista sigue ofreciendo (un .nfo, unos subtítulos) no se borra: se guarda aparte, con el estado del motor, y el torrent sigue completo y sembrando. Las carpetas de descargas en sí no se tocan nunca. Se puede desactivar en la propia ventana.

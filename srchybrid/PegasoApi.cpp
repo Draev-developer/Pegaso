@@ -463,8 +463,45 @@ namespace
 		return CObj().Raw("downloads", Array(items)).Done();
 	}
 
-	// ed2k links, magnet links, paths of .torrent files, web addresses
-	std::string AddLinks(const std::vector<CString> &links)
+	// the web address of a .torrent file, as far as the address tells
+	bool IsTorrentAddress(const CString &sUrl)
+	{
+		CString s(sUrl);
+		const int iFragment = s.Find(_T('#'));
+		if (iFragment >= 0)
+			s.Truncate(iFragment);
+		if (s.Right(8).CompareNoCase(_T(".torrent")) == 0)
+			return true;
+		const int iQuery = s.Find(_T('?'));
+		return iQuery >= 0 && s.Left(iQuery).Right(8).CompareNoCase(_T(".torrent")) == 0;
+	}
+
+	// A .torrent file behind a web address: fetched and handed to the BitTorrent engine.
+	void AddTorrentAddress(const CString &sUrl)
+	{
+		std::vector<BYTE> data;
+		CString sError;
+		if (!PegasoHttpGet(sUrl, data, sError, 16 * 1024 * 1024))
+			throw sError;
+		if (data.empty() || data[0] != 'd')
+			throwCStr(_T("not a torrent file"));
+		static UINT s_uCount;
+		const CString sDir(thePrefs.GetMuleDirectory(EMULE_CONFIGDIR) + _T("torrents\\"));
+		::CreateDirectory(sDir, NULL);
+		CString sPath;
+		sPath.Format(_T("%sapi-%u.torrent"), (LPCTSTR)sDir, ++s_uCount % 16);
+		FILE *f = _tfsopen(sPath, _T("wb"), _SH_DENYWR);
+		if (f == NULL)
+			throwCStr(_T("the torrent file cannot be written"));
+		const bool bWritten = fwrite(data.data(), 1, data.size(), f) == data.size();
+		fclose(f);
+		if (!bWritten || !theTorrents.AddLink(sPath))
+			throwCStr(_T("the torrent file cannot be opened"));
+	}
+
+	// ed2k links, magnet links, paths of .torrent files, web addresses.
+	// bTorrents: the web addresses are those of .torrent files, whatever they look like.
+	std::string AddLinks(const std::vector<CString> &links, bool bTorrents = false)
 	{
 		if (links.empty())
 			throw SApiError{400, _T("no link given")};
@@ -476,6 +513,15 @@ namespace
 				continue;
 			if (theTorrents.AddLink(sLink) ) {
 				++uAdded;
+				continue;
+			}
+			if (CWebDownloadQueue::IsWebUrl(sLink) && (bTorrents || IsTorrentAddress(sLink))) {
+				try {
+					AddTorrentAddress(sLink);
+					++uAdded;
+				} catch (const CString &sError) {
+					errors.push_back(CObj().Str("link", sLink).Str("error", sError).Done());
+				}
 				continue;
 			}
 			if (CWebDownloadQueue::IsWebUrl(sLink)) {
@@ -852,7 +898,7 @@ namespace
 					links.push_back(FromUtf8(v.s));
 			if (!body.GetStr("link").empty())
 				links.push_back(FromUtf8(body.GetStr("link")));
-			req.reply = AddLinks(links);
+			req.reply = AddLinks(links, body.GetStr("kind") == "torrent");
 		} else if (sWhat == "downloads" && n == 4 && bGet)
 			req.reply = DownloadJson(DownloadByHash(parts[3]));
 		else if (sWhat == "downloads" && n == 4 && req.method == "DELETE")
@@ -1032,7 +1078,11 @@ namespace
 		const std::string sOrigin(headers["origin"]);
 		if (!sOrigin.empty()) {
 			const size_t uScheme = sOrigin.find("://");
-			if (uScheme == std::string::npos || !IsLocalName(sOrigin.substr(uScheme + 3))) {
+			// A page of a web site is turned away. An extension of the browser of this computer is
+			// not a web site: no page can give itself that origin, and it needs the key like anyone.
+			const std::string sScheme(Lower(sOrigin.substr(0, uScheme == std::string::npos ? 0 : uScheme)));
+			const bool bExtension = sScheme == "chrome-extension" || sScheme == "moz-extension";
+			if (uScheme == std::string::npos || (!bExtension && !IsLocalName(sOrigin.substr(uScheme + 3)))) {
 				Send(s, 403, "{\"error\":\"requests from web pages are not accepted\"}");
 				return;
 			}

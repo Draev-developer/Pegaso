@@ -9,6 +9,7 @@
 // work on its own threads; results are collected with Poll().
 #pragma once
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <string>
 #include <utility>
@@ -95,6 +96,14 @@ struct STorrentEvent
 	std::wstring text;
 };
 
+// What a new torrent is made of.
+struct STorrentCreate
+{
+	std::wstring path;					// a file or a folder
+	std::vector<std::string> trackers;	// optional
+	bool	privateTorrent = false;		// only through its trackers: no DHT, no peer exchange
+};
+
 class CTorrentEngine
 {
 public:
@@ -112,6 +121,14 @@ public:
 	// pId: receives the identifier - also when the torrent is refused for being in the list already.
 	bool	AddMagnet(const std::string &uri, std::wstring &error, const std::wstring &savePath = std::wstring(), std::string *pId = nullptr);
 	bool	AddTorrentFile(const std::wstring &path, std::wstring &error, const std::wstring &savePath = std::wstring(), std::string *pId = nullptr);
+	// Makes the torrent of a file or folder and writes it to torrentPath; magnet receives its
+	// link. Everything is read to work out the hashes, which may take long: progress is told
+	// in pieces. Needs no engine and may be called from any thread.
+	static bool CreateTorrent(const STorrentCreate &what, const std::wstring &torrentPath, std::string &magnet, std::wstring &error
+		, const std::function<void(int done, int total)> &progress);
+	// Adds a torrent whose data is known to be complete (it has just been made): it is
+	// offered at once, without checking the data again. dataFolder: where its data is.
+	bool	AddSeed(const std::wstring &torrentPath, const std::wstring &dataFolder, std::wstring &error, std::string *pId = nullptr);
 	// A web server which has the files of the torrent (BEP 19 web seed).
 	bool	AddWebSeed(const std::string &id, const std::string &url);
 

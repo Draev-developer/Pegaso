@@ -1,0 +1,25 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="pages.css">
+</head>
+<body class="popup">
+  <header>
+    <img src="icons/icon-48.png" alt="" width="28" height="28">
+    <div>
+      <div class="title">Pegaso</div>
+      <div class="muted" id="state" data-i18n="checking"></div>
+    </div>
+    <button id="options" class="plain" data-i18n="options"></button>
+  </header>
+  <form id="add">
+    <input id="link" type="text" data-i18n-placeholder="pasteHint" autocomplete="off">
+    <button type="submit" class="primary" data-i18n="download"></button>
+  </form>
+  <div id="message" class="message" hidden></div>
+  <div class="section muted" id="count"></div>
+  <ul id="list"></ul>
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

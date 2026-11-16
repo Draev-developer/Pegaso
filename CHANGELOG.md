@@ -2,6 +2,25 @@
 
 Pegaso parte de eMule 0.72a (edición de la comunidad). El historial de eMule está en `changelog_full.txt`.
 
+## 0.6
+
+### Extensión de navegador
+- Pegaso tiene extensión para Chrome, Edge y Firefox (carpeta `browser-extension`). Añade «Descargar con Pegaso» al menú del botón derecho sobre un enlace, sobre un vídeo o audio y sobre un texto seleccionado (envía todos los enlaces ed2k, magnet y web que contenga). Su botón muestra las descargas de Pegaso con su avance y admite un enlace pegado.
+- Opcional, apagado de serie: que Pegaso se quede con las descargas que empieza el navegador. Si Pegaso no acepta una, el navegador sigue con ella.
+- La extensión solo habla con Pegaso en el propio equipo, a través de la API local y con su clave. No envía nada a nadie más.
+- API local: se admiten las peticiones de extensiones de navegador (las de páginas web siguen rechazadas), y la dirección web de un archivo .torrent se añade como torrent.
+
+### Crear torrents
+- Herramientas → «Crear torrent…» hace el torrent de un archivo o de una carpeta tuyos. Los lee una vez para calcular sus hashes (en segundo plano, con barra de avance), escribe el archivo .torrent junto a ellos, da su enlace magnet y empieza a sembrarlo sin volver a comprobar los datos.
+- Los rastreadores son opcionales: sin ellos el torrent se encuentra por la red DHT. Se puede marcar como privado (solo por sus rastreadores).
+- Los datos no se mueven ni se copian: se siembran desde donde están.
+
+### Descargas en serie
+- Una dirección web con un rango entre corchetes vale por toda la serie: `https://ejemplo.org/parte[01-20].zip` baja de `parte01.zip` a `parte20.zip`. El primer número marca cómo se escriben los demás: con ceros delante, todos llevan su ancho. Hasta 1000 direcciones por serie. Sirve en el campo de arriba, en «Añadir enlace», en la extensión y en la API.
+
+### Otros
+- Contacto: la ventana lleva también las cuentas de Pegaso en X (@draev_developer) e Instagram (draev.pegaso), con un botón que abre cada una.
+
 ## 0.5.3
 
 - Contacto: un apartado nuevo en la barra lateral, con la dirección a la que escribir las sugerencias (draev.pegaso@gmail.com), un botón que abre el programa de correo con la dirección y la versión ya puestas, y otro que copia la dirección.

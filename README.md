@@ -20,6 +20,9 @@ Pegaso es un cliente P2P libre para Windows, derivado de [eMule](https://www.emu
 | **Protección VPN** | Pegaso puede atarse a un adaptador de red y cortar todo el tráfico si la VPN se cae. |
 | **Seguridad** | Cada descarga terminada se pasa al antivirus instalado (AMSI) y queda marcada como procedente de internet, igual que hacen los navegadores. |
 | **Búsqueda en tus webs** | Guarda en una libreta las webs en las que quieres buscar: una página de búsqueda (con `%s` donde van las palabras) o una API Torznab como la de Jackett o Prowlarr. Pegaso lista los enlaces de descarga que devuelven. No trae ninguna web. |
+| **Crear torrents** | Haz el torrent de un archivo o carpeta tuyos, con su enlace magnet, y siémbralo desde donde está. |
+| **Descargas en serie** | `https://ejemplo.org/parte[01-20].zip` baja las veinte partes de una vez. |
+| **Extensión de navegador** | «Descargar con Pegaso» en el menú de Chrome, Edge y Firefox, para enlaces, selecciones y, si quieres, las descargas del navegador. Ver [docs/extension-navegador.md](docs/extension-navegador.md). |
 | **Renombrar vídeos** | Da a los vídeos terminados el nombre de su película o serie (`Nombre (año)`, `Nombre - 1x05`) con TheMovieDB, OMDb, TheTVDB, TVmaze o AniDB, y los mueve a la carpeta que elijas sin que dejen de compartirse en eD2K ni de sembrarse en BitTorrent. Cómo conseguir las claves: [docs/renombrar-videos.md](docs/renombrar-videos.md). |
 | **IPv6 e ID bajas** | Llama directamente por IPv6 a quien tiene ID baja pero dirección IPv6 pública, y conecta a dos clientes con ID baja a través de sus routers (QUIC) cuando el servidor sabe presentarlos. Compatible con eMule Qt, eMuleAI y aMule. |
 | **API local** | REST y MCP para scripts y asistentes de IA del mismo equipo: descargas, búsquedas y conexión. Desactivada de serie, con clave secreta y solo en 127.0.0.1. Ver [docs/api.md](docs/api.md). |
@@ -65,6 +68,8 @@ Pegaso es una herramienta de transferencia de archivos. Úsala solo con contenid
 
 Pegaso crece con lo que piden quienes lo usan. Si echas algo en falta, algo te estorba o se te ha ocurrido una idea, escribe a **draev.pegaso@gmail.com**. La dirección está también dentro del programa, en el apartado «Contacto».
 
+En las redes: [X @draev_developer](https://x.com/draev_developer) · [Instagram draev.pegaso](https://www.instagram.com/draev.pegaso/)
+
 ## Compilar
 
 Las instrucciones están en [BUILDING.md](BUILDING.md). Hace falta Visual Studio 2026 con el componente MFC.
@@ -87,4 +92,4 @@ Los cambios respecto a eMule 0.72a están en [CHANGELOG.md](CHANGELOG.md) y en e
 
 Pegaso is a free P2P client for Windows derived from eMule 0.72a (community edition). It keeps everything eMule does on the eD2K and Kad networks and adds BitTorrent (magnet links and `.torrent` files, via libtorrent), multi-connection HTTP/HTTPS downloads, hybrid downloads (one file fed by eMule sources, a web server and a torrent at once, verified with the eD2K hashes), file verdicts (correct / poor quality / fake / does not match its description), VPN binding with a kill switch, an antivirus check of finished downloads, and a torrent search through user-configured Torznab providers.
 
-Download the installer from the [latest release](https://github.com/Draev-developer/Pegaso/releases/latest). Windows 10/11, 64-bit. Licensed under the GNU GPL v2; see [BUILDING.md](BUILDING.md) to build it from source. Suggestions are welcome at draev.pegaso@gmail.com.
+Download the installer from the [latest release](https://github.com/Draev-developer/Pegaso/releases/latest). Windows 10/11, 64-bit. Licensed under the GNU GPL v2; see [BUILDING.md](BUILDING.md) to build it from source. Suggestions are welcome at draev.pegaso@gmail.com. On X: [@draev_developer](https://x.com/draev_developer); on Instagram: [draev.pegaso](https://www.instagram.com/draev.pegaso/).

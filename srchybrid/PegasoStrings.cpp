@@ -358,6 +358,40 @@ namespace
 		{L"Copy the address", L"Copiar la direcci\u00f3n", L"Copier l'adresse", L"Copia l'indirizzo", L"\u0421\u043a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u0430\u0434\u0440\u0435\u0441", L"Copiar o endere\u00e7o", L"Adresse kopieren"},
 		// PS_CT_COPIED
 		{L"Address copied: paste it in your mail.", L"Direcci\u00f3n copiada: p\u00e9gala en tu correo.", L"Adresse copi\u00e9e : collez-la dans votre messagerie.", L"Indirizzo copiato: incollalo nella tua posta.", L"\u0410\u0434\u0440\u0435\u0441 \u0441\u043a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u043d: \u0432\u0441\u0442\u0430\u0432\u044c\u0442\u0435 \u0435\u0433\u043e \u0432 \u043f\u043e\u0447\u0442\u0435.", L"Endere\u00e7o copiado: cole-o no seu e-mail.", L"Adresse kopiert: im E-Mail-Programm einf\u00fcgen."},
+		// PS_CT_SOCIAL
+		{L"Pegaso on social media:", L"Pegaso en las redes:", L"Pegaso sur les r\u00e9seaux :", L"Pegaso sui social:", L"Pegaso \u0432 \u0441\u043e\u0446\u0441\u0435\u0442\u044f\u0445:", L"O Pegaso nas redes:", L"Pegaso in den Netzwerken:"},
+		// PS_CR_MENU
+		{L"Create torrent...", L"Crear torrent...", L"Cr\u00e9er un torrent...", L"Crea torrent...", L"\u0421\u043e\u0437\u0434\u0430\u0442\u044c \u0442\u043e\u0440\u0440\u0435\u043d\u0442...", L"Criar torrent...", L"Torrent erstellen..."},
+		// PS_CR_TITLE
+		{L"Create torrent", L"Crear torrent", L"Cr\u00e9er un torrent", L"Crea torrent", L"\u0421\u043e\u0437\u0434\u0430\u043d\u0438\u0435 \u0442\u043e\u0440\u0440\u0435\u043d\u0442\u0430", L"Criar torrent", L"Torrent erstellen"},
+		// PS_CR_PATH
+		{L"File or folder you want to share:", L"Archivo o carpeta que quieres compartir:", L"Fichier ou dossier \u00e0 partager :", L"File o cartella da condividere:", L"\u0424\u0430\u0439\u043b \u0438\u043b\u0438 \u043f\u0430\u043f\u043a\u0430 \u0434\u043b\u044f \u0440\u0430\u0437\u0434\u0430\u0447\u0438:", L"Ficheiro ou pasta a partilhar:", L"Datei oder Ordner zum Teilen:"},
+		// PS_CR_FILE
+		{L"File...", L"Archivo...", L"Fichier...", L"File...", L"\u0424\u0430\u0439\u043b...", L"Ficheiro...", L"Datei..."},
+		// PS_CR_FOLDER
+		{L"Folder...", L"Carpeta...", L"Dossier...", L"Cartella...", L"\u041f\u0430\u043f\u043a\u0430...", L"Pasta...", L"Ordner..."},
+		// PS_CR_TRACKERS
+		{L"Trackers, one per line (optional). Without trackers the torrent is found through the DHT.", L"Rastreadores, uno por l\u00ednea (opcional). Sin rastreadores, el torrent se encuentra por la red DHT.", L"Trackers, un par ligne (facultatif). Sans tracker, le torrent se trouve par le r\u00e9seau DHT.", L"Tracker, uno per riga (facoltativo). Senza tracker, il torrent si trova tramite la rete DHT.", L"\u0422\u0440\u0435\u043a\u0435\u0440\u044b, \u043f\u043e \u043e\u0434\u043d\u043e\u043c\u0443 \u0432 \u0441\u0442\u0440\u043e\u043a\u0435 (\u043d\u0435\u043e\u0431\u044f\u0437\u0430\u0442\u0435\u043b\u044c\u043d\u043e). \u0411\u0435\u0437 \u0442\u0440\u0435\u043a\u0435\u0440\u043e\u0432 \u0442\u043e\u0440\u0440\u0435\u043d\u0442 \u043d\u0430\u0445\u043e\u0434\u044f\u0442 \u0447\u0435\u0440\u0435\u0437 DHT.", L"Rastreadores, um por linha (opcional). Sem rastreadores, o torrent encontra-se pela rede DHT.", L"Tracker, einer pro Zeile (optional). Ohne Tracker wird der Torrent \u00fcber das DHT gefunden."},
+		// PS_CR_PRIVATE
+		{L"Private torrent: only through its trackers, without DHT", L"Torrent privado: solo por sus rastreadores, sin DHT", L"Torrent priv\u00e9 : uniquement par ses trackers, sans DHT", L"Torrent privato: solo tramite i suoi tracker, senza DHT", L"\u041f\u0440\u0438\u0432\u0430\u0442\u043d\u044b\u0439 \u0442\u043e\u0440\u0440\u0435\u043d\u0442: \u0442\u043e\u043b\u044c\u043a\u043e \u0447\u0435\u0440\u0435\u0437 \u0442\u0440\u0435\u043a\u0435\u0440\u044b, \u0431\u0435\u0437 DHT", L"Torrent privado: s\u00f3 pelos seus rastreadores, sem DHT", L"Privater Torrent: nur \u00fcber seine Tracker, ohne DHT"},
+		// PS_CR_SEED
+		{L"Start seeding it as soon as it is made", L"Empezar a sembrarlo en cuanto est\u00e9 creado", L"Commencer \u00e0 le partager d\u00e8s sa cr\u00e9ation", L"Inizia a condividerlo appena creato", L"\u041d\u0430\u0447\u0430\u0442\u044c \u0440\u0430\u0437\u0434\u0430\u0447\u0443 \u0441\u0440\u0430\u0437\u0443 \u043f\u043e\u0441\u043b\u0435 \u0441\u043e\u0437\u0434\u0430\u043d\u0438\u044f", L"Come\u00e7ar a seme\u00e1-lo assim que estiver criado", L"Nach dem Erstellen sofort verteilen"},
+		// PS_CR_CREATE
+		{L"Create", L"Crear", L"Cr\u00e9er", L"Crea", L"\u0421\u043e\u0437\u0434\u0430\u0442\u044c", L"Criar", L"Erstellen"},
+		// PS_CR_MAGNET
+		{L"Magnet link:", L"Enlace magnet:", L"Lien magnet :", L"Link magnet:", L"Magnet-\u0441\u0441\u044b\u043b\u043a\u0430:", L"Liga\u00e7\u00e3o magnet:", L"Magnet-Link:"},
+		// PS_CR_COPY
+		{L"Copy the magnet link", L"Copiar el enlace magnet", L"Copier le lien magnet", L"Copia il link magnet", L"\u0421\u043a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u0441\u0441\u044b\u043b\u043a\u0443", L"Copiar a liga\u00e7\u00e3o magnet", L"Magnet-Link kopieren"},
+		// PS_CR_HASHING
+		{L"Reading the files: %d %%", L"Leyendo los archivos: %d %%", L"Lecture des fichiers : %d %%", L"Lettura dei file: %d %%", L"\u0427\u0442\u0435\u043d\u0438\u0435 \u0444\u0430\u0439\u043b\u043e\u0432: %d %%", L"A ler os ficheiros: %d %%", L"Dateien werden gelesen: %d %%"},
+		// PS_CR_DONE
+		{L"Torrent created: %s", L"Torrent creado: %s", L"Torrent cr\u00e9\u00e9 : %s", L"Torrent creato: %s", L"\u0422\u043e\u0440\u0440\u0435\u043d\u0442 \u0441\u043e\u0437\u0434\u0430\u043d: %s", L"Torrent criado: %s", L"Torrent erstellt: %s"},
+		// PS_CR_SEEDING
+		{L"It is being seeded.", L"Ya se est\u00e1 sembrando.", L"Il est en cours de partage.", L"\u00c8 in condivisione.", L"\u0420\u0430\u0437\u0434\u0430\u0447\u0430 \u043d\u0430\u0447\u0430\u043b\u0430\u0441\u044c.", L"J\u00e1 est\u00e1 a ser semeado.", L"Er wird verteilt."},
+		// PS_CR_NOPATH
+		{L"Choose a file or a folder first.", L"Elige primero un archivo o una carpeta.", L"Choisissez d'abord un fichier ou un dossier.", L"Scegli prima un file o una cartella.", L"\u0421\u043d\u0430\u0447\u0430\u043b\u0430 \u0432\u044b\u0431\u0435\u0440\u0438\u0442\u0435 \u0444\u0430\u0439\u043b \u0438\u043b\u0438 \u043f\u0430\u043f\u043a\u0443.", L"Escolha primeiro um ficheiro ou uma pasta.", L"Zuerst eine Datei oder einen Ordner w\u00e4hlen."},
+		// PS_CR_COPIED
+		{L"Magnet link copied.", L"Enlace magnet copiado.", L"Lien magnet copi\u00e9.", L"Link magnet copiato.", L"\u0421\u0441\u044b\u043b\u043a\u0430 \u0441\u043a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u043d\u0430.", L"Liga\u00e7\u00e3o magnet copiada.", L"Magnet-Link kopiert."},
 	};
 }
 

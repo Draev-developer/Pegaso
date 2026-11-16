@@ -15,6 +15,7 @@ Pegaso puede atender a otros programas del mismo equipo: scripts, y asistentes d
 - Solo escucha en `127.0.0.1`: no es accesible desde la red.
 - Cada petición lleva la clave: `Authorization: Bearer <clave>`. Sin ella, respuesta 401.
 - Se rechazan (403) las peticiones cuyo `Host` no sea este equipo y las que envía una página web (cabecera `Origin` que no es local), para que un sitio web no pueda llegar a la API a través del navegador.
+- Una extensión del navegador (`chrome-extension://…`, `moz-extension://…`) no es una página web y sí se admite, con la clave como cualquiera: así funciona la [extensión de Pegaso](extension-navegador.md).
 - Quien tiene la clave puede añadir y quitar descargas. Trátala como una contraseña.
 
 ## REST
@@ -25,7 +26,7 @@ Todas las respuestas son JSON. Los errores llevan `{"error": "..."}` y el códig
 |---|---|
 | `GET /api/v1/status` | Versión, estado de eD2K y Kad, velocidades, número de descargas y de archivos compartidos |
 | `GET /api/v1/downloads` | Lista de descargas |
-| `POST /api/v1/downloads` | Añade descargas. Cuerpo: `{"links": ["ed2k://…", "magnet:…", "https://…"]}` |
+| `POST /api/v1/downloads` | Añade descargas. Cuerpo: `{"links": ["ed2k://…", "magnet:…", "https://…"]}`. La dirección web de un archivo `.torrent` se añade como torrent; con `"kind": "torrent"` todas las direcciones web se toman por archivos `.torrent`, aunque no lo parezcan. Una dirección web con un rango, `…/parte[01-20].zip`, vale por toda la serie |
 | `GET /api/v1/downloads/{hash}` | Una descarga |
 | `POST /api/v1/downloads/{hash}/pause` | Pausa |
 | `POST /api/v1/downloads/{hash}/resume` | Reanuda |

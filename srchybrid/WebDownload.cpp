@@ -35,6 +35,7 @@ namespace
 	const uint64	WEB_MIN_SPLIT = 1024 * 1024;			// do not split a segment into pieces smaller than this
 	const uint32	WEB_READ_SIZE = 64 * 1024;
 	const uint64	WEB_MAX_QUEUED = 16 * 1024 * 1024;		// workers wait when this much data is pending
+	const int		WEB_MAX_SERIES = 1000;					// addresses one series may stand for
 	const UINT		WEB_MAX_PROBES = 4;						// simultaneous size/name lookups
 	const uint64	WEB_SIZE_UNKNOWN = _UI64_MAX;
 
@@ -726,8 +727,49 @@ bool CWebDownloadQueue::IsWebUrl(const CString &sUrl)
 	return _tcsnicmp(sUrl, _T("http://"), 7) == 0 || _tcsnicmp(sUrl, _T("https://"), 8) == 0;
 }
 
+// A series of addresses written as one: "https://host/file[001-120].zip" stands for file001.zip
+// to file120.zip. The first number tells how the others are written: with leading zeros it
+// gives the width of all. Returns false if the address holds no such range.
+bool CWebDownloadQueue::ExpandPattern(const CString &sUrl, std::vector<CString> &urls)
+{
+	const int iHost = sUrl.Find(_T("://"));
+	const int iPath = iHost < 0 ? -1 : sUrl.Find(_T('/'), iHost + 3);	// after the host, which may be "[::1]"
+	for (int iOpen = iPath < 0 ? -1 : sUrl.Find(_T('['), iPath); iOpen >= 0; iOpen = sUrl.Find(_T('['), iOpen + 1)) {
+		const int iClose = sUrl.Find(_T(']'), iOpen);
+		if (iClose < 0)
+			break;
+		const CString sRange(sUrl.Mid(iOpen + 1, iClose - iOpen - 1));
+		const int iDash = sRange.Find(_T('-'));
+		if (iDash <= 0 || iDash >= sRange.GetLength() - 1 || iDash > 9 || sRange.GetLength() - iDash - 1 > 9)
+			continue;
+		const CString sFirst(sRange.Left(iDash));
+		const CString sLast(sRange.Mid(iDash + 1));
+		if (sFirst.SpanIncluding(_T("0123456789")) != sFirst || sLast.SpanIncluding(_T("0123456789")) != sLast)
+			continue;
+		const int iFirst = _ttoi(sFirst);
+		const int iLast = _ttoi(sLast);
+		if (iLast < iFirst || iLast - iFirst >= WEB_MAX_SERIES)
+			continue;
+		const int iWidth = (sFirst.GetLength() > 1 && sFirst[0] == _T('0')) ? sFirst.GetLength() : 0;
+		for (int i = iFirst; i <= iLast; ++i) {
+			CString sNumber;
+			sNumber.Format(_T("%0*d"), iWidth, i);
+			urls.push_back(sUrl.Left(iOpen) + sNumber + sUrl.Mid(iClose + 1));
+		}
+		return true;
+	}
+	return false;
+}
+
 void CWebDownloadQueue::AddUrl(const CString &sUrl, int cat)
 {
+	std::vector<CString> series;
+	if (ExpandPattern(sUrl, series)) {
+		AddLogLine(true, _T("Web download: %u addresses from %s"), (unsigned)series.size(), (LPCTSTR)sUrl);
+		for (const CString &sOne : series)
+			AddUrl(sOne, cat);
+		return;
+	}
 	std::shared_ptr<SWebProbe> pProbe = std::make_shared<SWebProbe>();
 	pProbe->url = sUrl;
 	pProbe->cat = cat;

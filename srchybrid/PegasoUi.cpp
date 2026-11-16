@@ -694,6 +694,8 @@ IMPLEMENT_DYNAMIC(CPegasoContactDlg, CDialog)
 BEGIN_MESSAGE_MAP(CPegasoContactDlg, CDialog)
 	ON_BN_CLICKED(IDC_CT_WRITE, OnBnClickedWrite)
 	ON_BN_CLICKED(IDC_CT_COPY, OnBnClickedCopy)
+	ON_BN_CLICKED(IDC_CT_X, OnBnClickedX)
+	ON_BN_CLICKED(IDC_CT_INSTAGRAM, OnBnClickedInstagram)
 END_MESSAGE_MAP()
 
 CPegasoContactDlg::CPegasoContactDlg(CWnd *pParent)
@@ -710,6 +712,9 @@ BOOL CPegasoContactDlg::OnInitDialog()
 	SetDlgItemText(IDC_CT_ADDRESS, PEGASO_CONTACT);
 	SetDlgItemText(IDC_CT_WRITE, GetPegasoString(PS_CT_WRITE));
 	SetDlgItemText(IDC_CT_COPY, GetPegasoString(PS_CT_COPY));
+	SetDlgItemText(IDC_CT_SOCIAL, GetPegasoString(PS_CT_SOCIAL));
+	SetDlgItemText(IDC_CT_X, _T("X:  @") PEGASO_X);
+	SetDlgItemText(IDC_CT_INSTAGRAM, _T("Instagram:  ") PEGASO_INSTAGRAM);
 	SetDlgItemText(IDCANCEL, GetPegasoString(PS_WS_CLOSE));
 	return TRUE;
 }
@@ -718,6 +723,17 @@ BOOL CPegasoContactDlg::OnInitDialog()
 void CPegasoContactDlg::OnBnClickedWrite()
 {
 	::ShellExecute(NULL, _T("open"), _T("mailto:") PEGASO_CONTACT _T("?subject=") PEGASO_NAME _T("%20") PEGASO_VERSION_NAME, NULL, NULL, SW_SHOWNORMAL);
+}
+
+// the accounts of Pegaso, in the browser of the user
+void CPegasoContactDlg::OnBnClickedX()
+{
+	::ShellExecute(NULL, _T("open"), _T("https://x.com/") PEGASO_X, NULL, NULL, SW_SHOWNORMAL);
+}
+
+void CPegasoContactDlg::OnBnClickedInstagram()
+{
+	::ShellExecute(NULL, _T("open"), _T("https://www.instagram.com/") PEGASO_INSTAGRAM _T("/"), NULL, NULL, SW_SHOWNORMAL);
 }
 
 // for those who write from the web: the address, to paste there

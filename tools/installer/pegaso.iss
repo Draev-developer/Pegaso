@@ -10,7 +10,7 @@
 ; Downloads\Pegaso), so removing or updating the program does not touch them.
 
 #define AppName "Pegaso"
-#define AppVersion "0.5.3"
+#define AppVersion "0.6"
 #define Release "..\..\srchybrid\x64\Release"
 
 [Setup]
@@ -102,6 +102,10 @@ Source: "..\..\geo\flags.bmp"; DestDir: "{app}\geo"; Flags: ignoreversion
 Source: "..\..\geo\README.txt"; DestDir: "{app}\geo"; Flags: ignoreversion
 Source: "..\..\license*.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "LEEME.txt"; DestDir: "{app}"; Flags: ignoreversion
+; the browser extension, to be loaded from here (python browser-extension\build.py first)
+Source: "..\..\browser-extension\dist\pegaso-chromium\*"; DestDir: "{app}\browser-extension\chrome-edge"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\..\browser-extension\dist\pegaso-firefox.zip"; DestDir: "{app}\browser-extension"; Flags: ignoreversion
+Source: "..\..\docs\extension-navegador.md"; DestDir: "{app}\browser-extension"; DestName: "LEEME.txt"; Flags: ignoreversion
 
 [INI]
 ; Pegaso starts in the language the installer ran in (which follows the language of Windows).

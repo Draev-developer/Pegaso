@@ -477,6 +477,23 @@ STRINGS = [
     ('PS_CT_WRITE', ['Write an e-mail', 'Escribir un correo', 'Écrire un courriel', "Scrivi un'e-mail", 'Написать письмо', 'Escrever um e-mail', 'E-Mail schreiben']),
     ('PS_CT_COPY', ['Copy the address', 'Copiar la dirección', "Copier l'adresse", "Copia l'indirizzo", 'Скопировать адрес', 'Copiar o endereço', 'Adresse kopieren']),
     ('PS_CT_COPIED', ['Address copied: paste it in your mail.', 'Dirección copiada: pégala en tu correo.', 'Adresse copiée : collez-la dans votre messagerie.', 'Indirizzo copiato: incollalo nella tua posta.', 'Адрес скопирован: вставьте его в почте.', 'Endereço copiado: cole-o no seu e-mail.', 'Adresse kopiert: im E-Mail-Programm einfügen.']),
+    ('PS_CT_SOCIAL', ['Pegaso on social media:', 'Pegaso en las redes:', 'Pegaso sur les réseaux :', 'Pegaso sui social:', 'Pegaso в соцсетях:', 'O Pegaso nas redes:', 'Pegaso in den Netzwerken:']),
+    ('PS_CR_MENU', ['Create torrent...', 'Crear torrent...', 'Créer un torrent...', 'Crea torrent...', 'Создать торрент...', 'Criar torrent...', 'Torrent erstellen...']),
+    ('PS_CR_TITLE', ['Create torrent', 'Crear torrent', 'Créer un torrent', 'Crea torrent', 'Создание торрента', 'Criar torrent', 'Torrent erstellen']),
+    ('PS_CR_PATH', ['File or folder you want to share:', 'Archivo o carpeta que quieres compartir:', 'Fichier ou dossier à partager :', 'File o cartella da condividere:', 'Файл или папка для раздачи:', 'Ficheiro ou pasta a partilhar:', 'Datei oder Ordner zum Teilen:']),
+    ('PS_CR_FILE', ['File...', 'Archivo...', 'Fichier...', 'File...', 'Файл...', 'Ficheiro...', 'Datei...']),
+    ('PS_CR_FOLDER', ['Folder...', 'Carpeta...', 'Dossier...', 'Cartella...', 'Папка...', 'Pasta...', 'Ordner...']),
+    ('PS_CR_TRACKERS', ['Trackers, one per line (optional). Without trackers the torrent is found through the DHT.', 'Rastreadores, uno por línea (opcional). Sin rastreadores, el torrent se encuentra por la red DHT.', 'Trackers, un par ligne (facultatif). Sans tracker, le torrent se trouve par le réseau DHT.', 'Tracker, uno per riga (facoltativo). Senza tracker, il torrent si trova tramite la rete DHT.', 'Трекеры, по одному в строке (необязательно). Без трекеров торрент находят через DHT.', 'Rastreadores, um por linha (opcional). Sem rastreadores, o torrent encontra-se pela rede DHT.', 'Tracker, einer pro Zeile (optional). Ohne Tracker wird der Torrent über das DHT gefunden.']),
+    ('PS_CR_PRIVATE', ['Private torrent: only through its trackers, without DHT', 'Torrent privado: solo por sus rastreadores, sin DHT', 'Torrent privé : uniquement par ses trackers, sans DHT', 'Torrent privato: solo tramite i suoi tracker, senza DHT', 'Приватный торрент: только через трекеры, без DHT', 'Torrent privado: só pelos seus rastreadores, sem DHT', 'Privater Torrent: nur über seine Tracker, ohne DHT']),
+    ('PS_CR_SEED', ['Start seeding it as soon as it is made', 'Empezar a sembrarlo en cuanto esté creado', 'Commencer à le partager dès sa création', 'Inizia a condividerlo appena creato', 'Начать раздачу сразу после создания', 'Começar a semeá-lo assim que estiver criado', 'Nach dem Erstellen sofort verteilen']),
+    ('PS_CR_CREATE', ['Create', 'Crear', 'Créer', 'Crea', 'Создать', 'Criar', 'Erstellen']),
+    ('PS_CR_MAGNET', ['Magnet link:', 'Enlace magnet:', 'Lien magnet :', 'Link magnet:', 'Magnet-ссылка:', 'Ligação magnet:', 'Magnet-Link:']),
+    ('PS_CR_COPY', ['Copy the magnet link', 'Copiar el enlace magnet', 'Copier le lien magnet', 'Copia il link magnet', 'Скопировать ссылку', 'Copiar a ligação magnet', 'Magnet-Link kopieren']),
+    ('PS_CR_HASHING', ['Reading the files: %d %%', 'Leyendo los archivos: %d %%', 'Lecture des fichiers : %d %%', 'Lettura dei file: %d %%', 'Чтение файлов: %d %%', 'A ler os ficheiros: %d %%', 'Dateien werden gelesen: %d %%']),
+    ('PS_CR_DONE', ['Torrent created: %s', 'Torrent creado: %s', 'Torrent créé : %s', 'Torrent creato: %s', 'Торрент создан: %s', 'Torrent criado: %s', 'Torrent erstellt: %s']),
+    ('PS_CR_SEEDING', ['It is being seeded.', 'Ya se está sembrando.', 'Il est en cours de partage.', 'È in condivisione.', 'Раздача началась.', 'Já está a ser semeado.', 'Er wird verteilt.']),
+    ('PS_CR_NOPATH', ['Choose a file or a folder first.', 'Elige primero un archivo o una carpeta.', "Choisissez d'abord un fichier ou un dossier.", 'Scegli prima un file o una cartella.', 'Сначала выберите файл или папку.', 'Escolha primeiro um ficheiro ou uma pasta.', 'Zuerst eine Datei oder einen Ordner wählen.']),
+    ('PS_CR_COPIED', ['Magnet link copied.', 'Enlace magnet copiado.', 'Lien magnet copié.', 'Link magnet copiato.', 'Ссылка скопирована.', 'Ligação magnet copiada.', 'Magnet-Link kopiert.']),
 ]
 
 

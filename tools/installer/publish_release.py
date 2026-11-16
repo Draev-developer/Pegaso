@@ -16,7 +16,7 @@ import urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 REPO = 'Draev-developer/Pegaso'
-VERSION = '0.5.3'
+VERSION = '0.6'
 
 
 def token():
@@ -61,6 +61,13 @@ def main():
     upload = release['upload_url'].split('{')[0] + '?name=' + os.path.basename(installer)
     asset = call('POST', upload, tok, data, 'application/octet-stream')
     print('installer attached: %s (%d bytes)' % (asset['browser_download_url'], asset['size']))
+    # the browser extension, as built by browser-extension/build.py
+    for name in ('pegaso-chromium.zip', 'pegaso-firefox.zip'):
+        path = os.path.join(ROOT, 'browser-extension', 'dist', name)
+        if os.path.isfile(path):
+            attached = 'Pegaso-%s-extension-%s' % (VERSION, name.split('-', 1)[1])
+            asset = call('POST', release['upload_url'].split('{')[0] + '?name=' + attached, tok, open(path, 'rb').read(), 'application/zip')
+            print('extension attached: %s (%d bytes)' % (asset['browser_download_url'], asset['size']))
 
 
 if __name__ == '__main__':

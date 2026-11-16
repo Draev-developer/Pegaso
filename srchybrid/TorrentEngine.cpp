@@ -17,6 +17,7 @@
 
 #include <libtorrent/add_torrent_params.hpp>
 #include <libtorrent/alert_types.hpp>
+#include <libtorrent/create_torrent.hpp>
 #include <libtorrent/error_code.hpp>
 #include <libtorrent/file_storage.hpp>
 #include <libtorrent/load_torrent.hpp>
@@ -491,6 +492,71 @@ bool CTorrentEngine::AddTorrentFile(const std::wstring &path, std::wstring &erro
 	}
 	try {
 		return m->Add(lt::load_torrent_buffer(data), error, savePath, pId);
+	} catch (const std::exception &e) {
+		error = FromUtf8(e.what());
+		return false;
+	}
+}
+
+bool CTorrentEngine::CreateTorrent(const STorrentCreate &what, const std::wstring &torrentPath, std::string &magnet, std::wstring &error
+	, const std::function<void(int done, int total)> &progress)
+{
+	try {
+		std::wstring path(what.path);
+		while (path.size() > 3 && (path.back() == L'\\' || path.back() == L'/'))
+			path.pop_back();
+		const size_t cut = path.find_last_of(L"\\/");
+		if (cut == std::wstring::npos) {
+			error = L"a complete path is needed";
+			return false;
+		}
+		std::vector<lt::create_file_entry> files = lt::list_files(ToUtf8(path));
+		if (files.empty()) {
+			error = L"there is nothing in it to make a torrent of";
+			return false;
+		}
+		// the classic format, which every program understands
+		lt::create_torrent t(std::move(files), 0, lt::create_torrent::v1_only);
+		int tier = 0;
+		for (const std::string &tracker : what.trackers)
+			t.add_tracker(tracker, tier++);
+		t.set_creator("Pegaso");
+		t.set_priv(what.privateTorrent);
+		const int total = t.num_pieces();
+		if (progress)
+			progress(0, total);
+		lt::set_piece_hashes(t, ToUtf8(path.substr(0, cut)), [&progress, total](lt::piece_index_t piece) {
+			if (progress)
+				progress(static_cast<int>(piece) + 1, total);
+		});
+		const std::vector<char> data = t.generate_buf();
+		if (!WriteFile(torrentPath, data)) {
+			error = L"the torrent file cannot be written";
+			return false;
+		}
+		magnet = lt::make_magnet_uri(lt::load_torrent_buffer(data));
+		return true;
+	} catch (const std::exception &e) {
+		error = FromUtf8(e.what());
+		return false;
+	}
+}
+
+bool CTorrentEngine::AddSeed(const std::wstring &torrentPath, const std::wstring &dataFolder, std::wstring &error, std::string *pId)
+{
+	if (!m->ses) {
+		error = L"the BitTorrent engine is not running";
+		return false;
+	}
+	std::vector<char> data;
+	if (!ReadFile(torrentPath, data, MAX_TORRENT_FILE) || data.empty()) {
+		error = L"cannot read the torrent file";
+		return false;
+	}
+	try {
+		lt::add_torrent_params atp = lt::load_torrent_buffer(data);
+		atp.flags |= lt::torrent_flags::seed_mode;	// taken as complete; a piece is checked when it is first asked for
+		return m->Add(std::move(atp), error, dataFolder, pId);
 	} catch (const std::exception &e) {
 		error = FromUtf8(e.what());
 		return false;

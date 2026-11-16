@@ -74,6 +74,7 @@
 #include "PerfLog.h"
 #include "DropTarget.h"
 #include "PegasoRename.h"
+#include "PegasoTorrentCreate.h"
 #include "LastCommonRouteFinder.h"
 #include "WebServer.h"
 #include "DownloadQueue.h"
@@ -2675,6 +2676,9 @@ BOOL CemuleDlg::OnCommand(WPARAM wParam, LPARAM lParam)
 	case MP_PEGASO_RENAME:	// Pegaso: names for the finished videos
 		CPegasoRenameDlg::Open(this);
 		break;
+	case MP_PEGASO_CREATE:	// Pegaso: make a torrent of a file or folder
+		CPegasoTorrentCreateDlg::Open(this);
+		break;
 	case MP_PEGASO_CONTACT:	// Pegaso: where to send suggestions
 		{
 			CPegasoContactDlg dlg(this);
@@ -2798,6 +2802,7 @@ void CemuleDlg::ShowToolPopup(bool toolsonly)
 	}
 	menu.AppendMenu(MF_STRING, MP_PEGASO_WEBSEARCH, GetPegasoString(PS_WS_MENU), _T("SEARCH"));	// Pegaso
 	menu.AppendMenu(MF_STRING, MP_PEGASO_RENAME, GetPegasoString(PS_RN_MENU));	// Pegaso
+	menu.AppendMenu(MF_STRING, MP_PEGASO_CREATE, GetPegasoString(PS_CR_MENU));	// Pegaso
 
 	menu.AppendMenu(MF_SEPARATOR);
 	menu.AppendMenu(MF_STRING | MF_POPUP, (UINT_PTR)Links.m_hMenu, GetResString(IDS_LINKS), _T("WEB"));

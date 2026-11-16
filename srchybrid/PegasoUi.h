@@ -120,4 +120,6 @@ protected:
 	DECLARE_MESSAGE_MAP()
 	afx_msg void OnBnClickedWrite();
 	afx_msg void OnBnClickedCopy();
+	afx_msg void OnBnClickedX();
+	afx_msg void OnBnClickedInstagram();
 };

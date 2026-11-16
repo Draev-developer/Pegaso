@@ -17,6 +17,7 @@
 /srchybrid/lang/Win32/
 /srchybrid/lang/ARM64/
 tools/webtest/__pycache__/
+/browser-extension/dist/
 tools/webtest/shot_*.png
 tools/installer/output/
 tools/webtest/*.torrent

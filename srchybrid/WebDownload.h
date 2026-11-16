@@ -65,7 +65,8 @@ public:
 	UINT	GetMaxConnections();
 	void	SetMaxConnections(UINT uConnections);
 
-	void	AddUrl(const CString &sUrl, int cat);
+	void	AddUrl(const CString &sUrl, int cat);	// also a series: see ExpandPattern
+	static bool ExpandPattern(const CString &sUrl, std::vector<CString> &urls);
 	void	Process();		// main thread, called from CDownloadQueue::Process()
 	void	Clear();		// forget pending requests (shutdown)
 

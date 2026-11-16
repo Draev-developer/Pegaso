@@ -51,8 +51,8 @@
 // must keep tracking the eMule release this code is based on; Pegaso is announced as a mod.
 #define PEGASO_NAME			_T("Pegaso")
 #define PEGASO_VERSION_MJR	0
-#define PEGASO_VERSION_MIN	5
-#define PEGASO_VERSION_UPD	3
+#define PEGASO_VERSION_MIN	6
+#define PEGASO_VERSION_UPD	0
 #if PEGASO_VERSION_UPD > 0
 #define PEGASO_VERSION_NAME	chSTR(PEGASO_VERSION_MJR) _T(".") chSTR(PEGASO_VERSION_MIN) _T(".") chSTR(PEGASO_VERSION_UPD)
 #else
@@ -62,6 +62,8 @@
 #define PEGASO_AUTHOR		_T("Draev")
 #define PEGASO_CREATED_BY	_T("Created by ") PEGASO_AUTHOR
 #define PEGASO_CONTACT		_T("draev.pegaso@gmail.com")	// where the users write to
+#define PEGASO_X			_T("draev_developer")	// the account on X, without the @
+#define PEGASO_INSTAGRAM	_T("draev.pegaso")
 #define PEGASO_URL			_T("https://github.com/Draev-developer/Pegaso")	// project page: source, releases, issues
 
 #endif /* !__VERSION_H__ */

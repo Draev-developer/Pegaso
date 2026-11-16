@@ -39,6 +39,13 @@ public:
 	// itself to its adapter, tells the user what to set there and opens it.
 	static bool FindKaspersky(CString &sAdapter, CString &sProgram);
 	static bool KasperskyInstalled();	// looked up every few seconds at most
+
+	// The proxy of the preferences carries TCP only. eD2K and Kad also speak UDP, which would go
+	// round it and show the address the proxy hides: with a proxy in use the UDP sockets are
+	// tied to this computer, so nothing of it leaves, and Kad - all UDP - is not started.
+	// preferences.ini, [eMule]: ProxyStrict (1; 0 = UDP goes round the proxy, as in eMule).
+	static bool	UdpHeldByProxy();
+	static LPCTSTR UdpBindAddr();		// the address the UDP sockets are bound to
 	bool	IsKaspersky() const;	// tied to the adapter of Kaspersky VPN
 	void	KasperskyDialog(CWnd *pParent);
 

@@ -104,6 +104,16 @@ void CNetGuard::ApplyPrefs(const CString &sAdapter, bool bKillSwitch)
 	Refresh(true);
 }
 
+bool CNetGuard::UdpHeldByProxy()
+{
+	return thePrefs.GetProxySettings().bUseProxy && theApp.GetProfileInt(_T("eMule"), _T("ProxyStrict"), 1) != 0;
+}
+
+LPCTSTR CNetGuard::UdpBindAddr()
+{
+	return UdpHeldByProxy() ? BLOCKED_ADDRESS : thePrefs.GetBindAddr();
+}
+
 bool CNetGuard::KasperskyInstalled()
 {
 	static DWORD s_dwChecked;

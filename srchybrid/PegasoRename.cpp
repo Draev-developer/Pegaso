@@ -16,6 +16,7 @@
 #include "KnownFileList.h"
 #include "SharedFileList.h"
 #include "TorrentQueue.h"
+#include "WebDownload.h"
 #include "NetGuard.h"
 #include "Preferences.h"
 #include "OtherFunctions.h"
@@ -189,7 +190,9 @@ namespace
 			return false;
 		}
 		bool bOk = false;
-		HINTERNET hSession = ::WinHttpOpen(PEGASO_NAME _T("/") PEGASO_VERSION_NAME, WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY, WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
+		HINTERNET hSession = PegasoHttpSession();
+		if (hSession == NULL && ::GetLastError() == ERROR_NOT_SUPPORTED)
+			sError = _T("the proxy of the preferences is a SOCKS proxy: web requests cannot go through it");
 		HINTERNET hConnect = NULL;
 		HINTERNET hRequest = NULL;
 		if (hSession != NULL) {
@@ -372,7 +375,7 @@ namespace
 			bFresh = uAge < 24ULL * 3600 * 10000000;
 		}
 		if (!bFresh) {
-			const CString sUrl(state.env.testBase.IsEmpty() ? CString(_T("http://anidb.net/api/anime-titles.dat.gz")) : state.env.testBase + _T("/anidb/anime-titles.dat.gz"));
+			const CString sUrl(state.env.testBase.IsEmpty() ? CString(_T("https://anidb.net/api/anime-titles.dat.gz")) : state.env.testBase + _T("/anidb/anime-titles.dat.gz"));
 			DWORD dwStatus;
 			CString sError;
 			if (Http(L"GET", sUrl, CString(), CStringA(), packed, dwStatus, sError, MAX_TITLES) && dwStatus == HTTP_STATUS_OK && packed.size() > 2 && packed[0] == 0x1F && packed[1] == 0x8B) {

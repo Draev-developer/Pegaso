@@ -22,6 +22,7 @@
 #include "Statistics.h"
 #include "Server.h"
 #include "Preferences.h"
+#include "NetGuard.h"
 #include "OtherFunctions.h"
 #include "ServerList.h"
 #include "Opcodes.h"
@@ -133,7 +134,7 @@ bool CUDPSocket::Create()
 		VERIFY(m_udpwnd.CreateEx(0, AfxRegisterWndClass(0), _T("eMule Async DNS Resolver Socket #1"), 0, 0, 0, 0, 0, HWND_MESSAGE, NULL, 0));
 		m_hWndResolveMessage = m_udpwnd.m_hWnd;
 		m_udpwnd.m_pOwner = this;
-		if (CAsyncSocket::Create(thePrefs.GetServerUDPPort() == _UI16_MAX ? 0 : thePrefs.GetServerUDPPort(), SOCK_DGRAM, FD_READ | FD_WRITE, thePrefs.GetBindAddr()))
+		if (CAsyncSocket::Create(thePrefs.GetServerUDPPort() == _UI16_MAX ? 0 : thePrefs.GetServerUDPPort(), SOCK_DGRAM, FD_READ | FD_WRITE, CNetGuard::UdpBindAddr()))
 			return true;
 		LogError(LOG_STATUSBAR, _T("Error: Server UDP socket: Failed to create server UDP socket - %s"), (LPCTSTR)GetErrorMessage(CAsyncSocket::GetLastError()));
 	}

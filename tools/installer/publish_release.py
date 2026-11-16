@@ -16,7 +16,7 @@ import urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 REPO = 'Draev-developer/Pegaso'
-VERSION = '0.6'
+VERSION = '0.6.1'
 
 
 def token():

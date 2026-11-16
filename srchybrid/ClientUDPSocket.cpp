@@ -28,6 +28,7 @@
 #include "SharedFileList.h"
 #include "UploadQueue.h"
 #include "Preferences.h"
+#include "NetGuard.h"
 #include "ClientList.h"
 #include "EncryptedDatagramSocket.h"
 #include "IPFilter.h"
@@ -547,7 +548,7 @@ bool CClientUDPSocket::SendPacket(Packet *packet, uint32 dwIP, uint16 nPort, boo
 bool CClientUDPSocket::Create()
 {
 	if (thePrefs.GetUDPPort()) {
-		if (!CAsyncSocket::Create(thePrefs.GetUDPPort(), SOCK_DGRAM, FD_READ | FD_WRITE, thePrefs.GetBindAddr()))
+		if (!CAsyncSocket::Create(thePrefs.GetUDPPort(), SOCK_DGRAM, FD_READ | FD_WRITE, CNetGuard::UdpBindAddr()))
 			return false;
 		m_port = thePrefs.GetUDPPort();
 		// the default socket size seems to be insufficient for this UDP socket

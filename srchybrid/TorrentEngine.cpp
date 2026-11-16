@@ -20,6 +20,7 @@
 #include <libtorrent/create_torrent.hpp>
 #include <libtorrent/error_code.hpp>
 #include <libtorrent/file_storage.hpp>
+#include <libtorrent/ip_filter.hpp>
 #include <libtorrent/load_torrent.hpp>
 #include <libtorrent/magnet_uri.hpp>
 #include <libtorrent/read_resume_data.hpp>
@@ -338,7 +339,7 @@ bool CTorrentEngine::Start(const STorrentSettings &settings, std::wstring &error
 		pack.set_str(lt::settings_pack::peer_fingerprint, "-PG0100-");
 		const std::string port(std::to_string(m->settings.listenPort));
 		if (m->settings.bindAddress.empty())
-			pack.set_str(lt::settings_pack::listen_interfaces, "0.0.0.0:" + port + ",[::]:" + port);
+			pack.set_str(lt::settings_pack::listen_interfaces, m->settings.ipv6 ? "0.0.0.0:" + port + ",[::]:" + port : "0.0.0.0:" + port);
 		else {
 			// tied to one adapter: listen there and send from there, nowhere else
 			pack.set_str(lt::settings_pack::listen_interfaces, m->settings.bindAddress + ":" + port);
@@ -352,9 +353,40 @@ bool CTorrentEngine::Start(const STorrentSettings &settings, std::wstring &error
 		const int policy = m->settings.requireEncryption ? lt::settings_pack::pe_forced : lt::settings_pack::pe_enabled;
 		pack.set_int(lt::settings_pack::out_enc_policy, policy);
 		pack.set_int(lt::settings_pack::in_enc_policy, policy);
+		const STorrentSettings &st = m->settings;
+		if (st.proxyType != 0) {
+			const bool bAuth = !st.proxyUser.empty();
+			pack.set_int(lt::settings_pack::proxy_type, st.proxyType == 5 ? (bAuth ? lt::settings_pack::socks5_pw : lt::settings_pack::socks5)
+				: st.proxyType == 4 ? lt::settings_pack::socks4 : (bAuth ? lt::settings_pack::http_pw : lt::settings_pack::http));
+			pack.set_str(lt::settings_pack::proxy_hostname, st.proxyHost);
+			pack.set_int(lt::settings_pack::proxy_port, st.proxyPort);
+			pack.set_str(lt::settings_pack::proxy_username, st.proxyUser);
+			pack.set_str(lt::settings_pack::proxy_password, st.proxyPassword);
+			pack.set_bool(lt::settings_pack::proxy_peer_connections, true);
+			pack.set_bool(lt::settings_pack::proxy_tracker_connections, true);
+			pack.set_bool(lt::settings_pack::proxy_hostnames, true);	// names are looked up by the proxy, not here
+			// What cannot go through the proxy does not go: nothing is said about this computer,
+			// nobody is asked on the local network, and UDP only travels through SOCKS5.
+			pack.set_bool(lt::settings_pack::anonymous_mode, true);
+			pack.set_bool(lt::settings_pack::enable_lsd, false);
+			pack.set_bool(lt::settings_pack::enable_upnp, false);
+			pack.set_bool(lt::settings_pack::enable_natpmp, false);
+			pack.set_bool(lt::settings_pack::enable_incoming_utp, false);
+			pack.set_bool(lt::settings_pack::enable_outgoing_utp, false);
+			if (st.proxyType != 5)
+				pack.set_bool(lt::settings_pack::enable_dht, false);
+			// nobody can call in through a proxy: listening on this computer alone keeps the door shut
+			pack.set_str(lt::settings_pack::listen_interfaces, "127.0.0.1:" + port);
+		}
 		m->ApplyLimits(pack);
 
 		m->ses.reset(new lt::session(std::move(params)));
+		if (!m->settings.ipv6 || !m->settings.bindAddress.empty() || m->settings.proxyType != 0) {
+			// no IPv6 peer is called and none gets in, whoever names it (tracker, DHT, other peers)
+			lt::ip_filter filter;
+			filter.add_rule(lt::make_address("::"), lt::make_address("ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff"), lt::ip_filter::blocked);
+			m->ses->set_ip_filter(filter);
+		}
 	} catch (const std::exception &e) {
 		error = FromUtf8(e.what());
 		m->ses.reset();

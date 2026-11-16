@@ -55,6 +55,7 @@ namespace Pegaso6
 
 	// ---- our side
 	bool	Enabled();
+	bool	Allowed();								// IPv6 would not go round a VPN or a proxy (BitTorrent asks too)
 	bool	Own(in6_addr &rAddr);					// our public IPv6, if there is one
 	bool	PeerGateOpen();							// peers may be told: it is known to be reachable
 	void	NoteInboundHello(uint32 uPeerPseudo);	// a peer got in over IPv6

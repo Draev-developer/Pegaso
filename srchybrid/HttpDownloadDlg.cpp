@@ -21,6 +21,9 @@ All rights reserved.
 #include "opcodes.h"
 #include "OtherFunctions.h"
 #include "Log.h"
+#include "NetGuard.h"
+#include "Preferences.h"
+#include "AsyncProxySocketLayer.h"
 
 ///////////////////////////////// Defines /////////////////////////////////////
 #define HAS_ZLIB
@@ -431,7 +434,19 @@ void CHttpDownloadDlg::DownloadThread()
 	ENCODING_INIT;
 	//Create the Internet session handle
 	ASSERT(m_hInternetSession == NULL);
-	m_hInternetSession = ::InternetOpen(AfxGetAppName(), INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
+	// Pegaso: nothing is fetched while the VPN protection holds everything, and the proxy of the
+	// preferences is for this window too
+	if (theNetGuard.IsBlocked()) {
+		HandleThreadError(_T("VPN protection: the adapter is not connected"));
+		return;
+	}
+	const ProxySettings &proxy = thePrefs.GetProxySettings();
+	if (proxy.bUseProxy) {
+		CString sProxy;
+		sProxy.Format(proxy.type == PROXYTYPE_HTTP10 || proxy.type == PROXYTYPE_HTTP11 ? _T("%s:%u") : _T("socks=%s:%u"), (LPCTSTR)proxy.host, (unsigned)proxy.port);
+		m_hInternetSession = ::InternetOpen(AfxGetAppName(), INTERNET_OPEN_TYPE_PROXY, sProxy, _T("<-loopback>"), 0);
+	} else
+		m_hInternetSession = ::InternetOpen(AfxGetAppName(), INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
 	if (m_hInternetSession == NULL) {
 		TRACE(_T("Failed in call to InternetOpen, Error: %d\n"), ::GetLastError());
 		HandleThreadErrorWithLastError(GetResString(IDS_HTTPDOWNLOAD_GENERIC_ERROR));

@@ -59,6 +59,8 @@ private:
 	bool	m_bStartTried;
 	bool	m_bNetPaused;		// VPN protection has stopped the engine's traffic
 	CString	m_sBoundTo;			// bind address the engine was started with
+	bool	m_bIPv6;			// whether it was started with IPv6
+	CString	m_sProxy;			// the proxy it was started with, as one text
 };
 
 extern CTorrentQueue theTorrents;

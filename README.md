@@ -60,6 +60,10 @@ También se pueden valorar los torrents. BitTorrent no tiene nada parecido, así
 
 ![Diálogo para valorar un archivo](docs/img/pegaso-valorar.png)
 
+## Privacidad
+
+Pegaso no tiene cuentas, telemetría ni avisos automáticos, y tu nombre de Windows no viaja a ninguna parte. Como en todo programa de este tipo, quien comparte contigo ve tu dirección IP: para ocultarla, Pegaso se ata a tu VPN y lo detiene todo si se cae, o usa tu proxy para todo lo que puede pasar por él y no envía lo demás. Qué ve cada cual, qué queda en tu equipo y los límites de cada protección: [docs/privacidad.md](docs/privacidad.md).
+
 ## Uso responsable
 
 Pegaso es una herramienta de transferencia de archivos. Úsala solo con contenidos que tengas derecho a descargar y compartir. El programa no incluye ni enlaza índices de contenidos.

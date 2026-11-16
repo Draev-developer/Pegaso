@@ -25,6 +25,13 @@ struct STorrentSettings
 	int		downloadLimit = 0;		// bytes per second, 0 = unlimited
 	int		uploadLimit = 0;
 	bool	requireEncryption = false;	// only encrypted peer connections
+	bool	ipv6 = true;				// false: no IPv6 at all, it would go round a VPN or a proxy
+	// The proxy of the preferences: everything goes through it or does not go at all.
+	int		proxyType = 0;				// 0 none, 4 SOCKS4, 5 SOCKS5, 1 HTTP
+	std::string	proxyHost;
+	int		proxyPort = 0;
+	std::string	proxyUser;				// empty: no authentication
+	std::string	proxyPassword;
 };
 
 enum ETorrentState

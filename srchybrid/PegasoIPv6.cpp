@@ -77,6 +77,11 @@ namespace
 				const in6_addr &addr = ((const sockaddr_in6*)pUni->Address.lpSockaddr)->sin6_addr;
 				if (IN6_IS_ADDR_LINKLOCAL(&addr) || IN6_IS_ADDR_LOOPBACK(&addr) || !Pegaso6::IsAcceptable(addr))
 					continue;
+				// made from the hardware address of the network card: it would tell everybody which
+				// card this is, wherever the computer goes. Windows only makes such addresses if
+				// its own privacy setting was turned off.
+				if (pUni->SuffixOrigin == IpSuffixOriginLinkLayerAddress)
+					continue;
 				const bool bStable = pUni->SuffixOrigin != IpSuffixOriginRandom;
 				if (!bFound || bStable) {
 					rAddr = addr;
@@ -265,12 +270,52 @@ CString Pegaso6::ToHex(const in6_addr &addr)
 	return s;
 }
 
+// Whether IPv6 leaves this computer through the adapter IPv4 leaves through. With a VPN which
+// carries IPv4 only it does not, and IPv6 would show the very address the VPN is there to hide.
+// Only the routing table is asked; nothing is sent.
+static bool FollowsIPv4()
+{
+	static DWORD s_dwChecked;
+	static bool s_bSame = true;
+	const DWORD dwNow = ::GetTickCount();
+	if (s_dwChecked != 0 && dwNow - s_dwChecked < 5000)
+		return s_bSame;
+	s_dwChecked = dwNow | 1;
+	sockaddr_in v4 = {};
+	v4.sin_family = AF_INET;
+	v4.sin_addr.s_addr = htonl(0x01010101);
+	sockaddr_in6 v6 = {};
+	v6.sin6_family = AF_INET6;
+	inet_pton(AF_INET6, "2001:4860:4860::8888", &v6.sin6_addr);
+	DWORD dwIf4 = 0, dwIf6 = 0;
+	bool bSame = true;	// no IPv4 or no IPv6 at all: nothing to compare
+	if (::GetBestInterfaceEx((sockaddr*)&v4, &dwIf4) == NO_ERROR && ::GetBestInterfaceEx((sockaddr*)&v6, &dwIf6) == NO_ERROR)
+		bSame = dwIf4 == dwIf6;
+	if (bSame != s_bSame) {
+		if (bSame)
+			AddLogLine(false, _T("IPv6: it takes the way of IPv4 again and is used"));
+		else
+			LogWarning(LOG_STATUSBAR, _T("IPv6 is not used: it would leave through another adapter than IPv4 (a VPN which carries IPv4 only?)"));
+	}
+	s_bSame = bSame;
+	return bSame;
+}
+
+bool Pegaso6::Allowed()
+{
+	// bound to an adapter (VPN protection) or behind a proxy: IPv6 would go around them
+	if ((thePrefs.GetBindAddrA() != NULL && *thePrefs.GetBindAddrA() != '\0') || thePrefs.GetProxySettings().bUseProxy)
+		return false;
+	return FollowsIPv4();
+}
+
 bool Pegaso6::Enabled()
 {
 	if (theApp.GetProfileInt(_T("eMule"), _T("IPv6Enabled"), 1) == 0)
 		return false;
-	// bound to an adapter (VPN protection) or behind a proxy: IPv6 would go around them
-	return (thePrefs.GetBindAddrA() == NULL || *thePrefs.GetBindAddrA() == '\0') && !thePrefs.GetProxySettings().bUseProxy;
+	if ((thePrefs.GetBindAddrA() != NULL && *thePrefs.GetBindAddrA() != '\0') || thePrefs.GetProxySettings().bUseProxy)
+		return false;
+	return LabMode() || FollowsIPv4();	// a private network set up on purpose has no VPN to go round
 }
 
 bool Pegaso6::Own(in6_addr &rAddr)

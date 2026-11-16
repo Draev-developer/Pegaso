@@ -17,6 +17,8 @@
 #include "Log.h"
 #include "NetGuard.h"
 #include "PegasoScan.h"
+#include "AsyncProxySocketLayer.h"
+#include "Version.h"
 
 #pragma comment(lib, "winhttp.lib")
 
@@ -27,6 +29,25 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 CWebDownloadQueue theWebDownloads;
+
+LPVOID PegasoHttpSession()
+{
+	const ProxySettings &proxy = thePrefs.GetProxySettings();
+	if (!proxy.bUseProxy)
+		return ::WinHttpOpen(PEGASO_NAME _T("/") PEGASO_VERSION_NAME, WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY
+			, WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
+	// WinHTTP speaks to HTTP proxies only. Through a SOCKS proxy no web request can go, and
+	// going round it would show the address the proxy is there to hide: no request, then.
+	if (proxy.type != PROXYTYPE_HTTP10 && proxy.type != PROXYTYPE_HTTP11) {
+		::SetLastError(ERROR_NOT_SUPPORTED);
+		return NULL;
+	}
+	// the proxy of the preferences, for every address but those of this computer itself, which
+	// Windows always reaches directly (and which never leave it)
+	CString sProxy;
+	sProxy.Format(_T("%s:%u"), (LPCTSTR)proxy.host, (unsigned)proxy.port);
+	return ::WinHttpOpen(PEGASO_NAME _T("/") PEGASO_VERSION_NAME, WINHTTP_ACCESS_TYPE_NAMED_PROXY, sProxy, WINHTTP_NO_PROXY_BYPASS, 0);
+}
 
 namespace
 {
@@ -111,10 +132,10 @@ namespace
 		if (sObject.IsEmpty())
 			sObject = _T('/');
 
-		req.hSession = ::WinHttpOpen(PEGASO_NAME _T("/") PEGASO_VERSION_NAME, WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY
-			, WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
+		req.hSession = PegasoHttpSession();
 		if (req.hSession == NULL) {
-			sError = WinHttpError(_T("session"));
+			sError = ::GetLastError() == ERROR_NOT_SUPPORTED ? CString(_T("the proxy of the preferences is a SOCKS proxy: web requests cannot go through it and do not go round it"))
+				: WinHttpError(_T("session"));
 			return false;
 		}
 		::WinHttpSetTimeouts(req.hSession, 15000, 15000, 30000, 30000);

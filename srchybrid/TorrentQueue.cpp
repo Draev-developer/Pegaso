@@ -7,6 +7,8 @@
 #include "OtherFunctions.h"
 #include "Log.h"
 #include "NetGuard.h"
+#include "PegasoIPv6.h"
+#include "AsyncProxySocketLayer.h"
 #include "WebDownload.h"
 #include "PartFile.h"
 #include "DownloadQueue.h"
@@ -105,6 +107,16 @@ void CTorrentQueue::SetFilesWanted(const std::string &id, const std::vector<bool
 		m_engine.SetFilesWanted(id, changes);
 }
 
+// The proxy of the preferences as one text: a change of it starts the engine again.
+static CString ProxyText()
+{
+	const ProxySettings &proxy = thePrefs.GetProxySettings();
+	CString s;
+	if (proxy.bUseProxy)
+		s.Format(_T("%u|%s|%u|%d|%s|%s"), proxy.type, (LPCTSTR)proxy.host, proxy.port, (int)proxy.bEnablePassword, (LPCTSTR)proxy.user, (LPCTSTR)proxy.password);
+	return s;
+}
+
 void CTorrentQueue::Start()
 {
 	m_bStartTried = true;
@@ -120,6 +132,19 @@ void CTorrentQueue::Start()
 	m_sBoundTo = theNetGuard.GetBindAddress();	// VPN protection
 	settings.bindAddress = CStringA(m_sBoundTo);
 	m_bNetPaused = false;
+	settings.ipv6 = m_bIPv6 = Pegaso6::Allowed();
+	m_sProxy = ProxyText();
+	const ProxySettings &proxy = thePrefs.GetProxySettings();
+	if (proxy.bUseProxy) {
+		// the proxy of the preferences is for everything, not for eD2K alone
+		settings.proxyType = proxy.type == PROXYTYPE_SOCKS5 ? 5 : (proxy.type == PROXYTYPE_SOCKS4 || proxy.type == PROXYTYPE_SOCKS4A) ? 4 : 1;
+		settings.proxyHost = CStringA(proxy.host);
+		settings.proxyPort = proxy.port;
+		if (proxy.bEnablePassword) {
+			settings.proxyUser = CStringA(StrToUtf8(proxy.user));
+			settings.proxyPassword = CStringA(StrToUtf8(proxy.password));
+		}
+	}
 	settings.downloadLimit = LimitFromPrefs(thePrefs.GetMaxDownloadInBytesPerSec(false));
 	settings.uploadLimit = LimitFromPrefs(thePrefs.GetMaxUpload() == UNLIMITED ? UNLIMITED * 1024ull : thePrefs.GetMaxUpload() * 1024ull);
 
@@ -231,7 +256,7 @@ void CTorrentQueue::Process()
 	if (!m_engine.IsRunning())
 		return;
 	// VPN protection: the adapter address changed (connected, reconnected, dropped) -> bind again
-	if (theNetGuard.GetBindAddress() != m_sBoundTo) {
+	if (theNetGuard.GetBindAddress() != m_sBoundTo || Pegaso6::Allowed() != m_bIPv6 || ProxyText() != m_sProxy) {
 		Stop();
 		Start();
 		if (!m_engine.IsRunning())

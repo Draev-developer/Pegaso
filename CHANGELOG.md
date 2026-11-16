@@ -2,6 +2,24 @@
 
 Pegaso parte de eMule 0.72a (edición de la comunidad). El historial de eMule está en `changelog_full.txt`.
 
+## 0.6.1
+
+Revisión de privacidad. Lo que Pegaso deja ver de ti, lo que no, y cómo ocultar tu dirección está en [docs/privacidad.md](docs/privacidad.md).
+
+### El proxy de las preferencias vale para todo
+- Hasta ahora el proxy de Preferencias → Proxy solo lo usaba eD2K: BitTorrent y las descargas web salían directas, con tu dirección a la vista. Ahora BitTorrent (pares, rastreadores y, con SOCKS5, la DHT) va por el proxy, y los nombres los resuelve el proxy.
+- Lo que no puede pasar por el proxy ya no se envía. Kad y el UDP de eD2K, que en eMule salían por fuera del proxy, no se usan mientras haya proxy (`ProxyStrict=0` en `preferences.ini` devuelve el comportamiento de eMule). Las descargas web, las búsquedas en webs y el renombrado van por el proxy si es HTTP; con un proxy SOCKS, que Windows no sabe usar para la web, no se hacen y Pegaso lo dice.
+- Con proxy, BitTorrent no dice qué programa es, no acepta conexiones entrantes y no pregunta en la red local.
+
+### IPv6 y VPN
+- Con una VPN que solo lleva IPv4 y sin la protección VPN de Pegaso activada, IPv6 salía por la conexión normal. Pegaso mira ahora por qué adaptador sale cada protocolo y, si no coinciden, deja de usar IPv6 en eD2K, Kad y BitTorrent y lo avisa.
+- Atado a un adaptador o con proxy, BitTorrent ya no conecta con ningún par por IPv6, lo nombre quien lo nombre.
+- No se anuncian direcciones IPv6 hechas con el número de la tarjeta de red.
+
+### Otros
+- La actualización de la lista de servidores y del filtro de IP respeta el corte de emergencia de la protección VPN y usa el proxy.
+- La lista de títulos de AniDB se pide por HTTPS.
+
 ## 0.6
 
 ### Extensión de navegador

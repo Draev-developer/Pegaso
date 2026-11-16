@@ -34,6 +34,7 @@ their client on the eMule forum.
 #include "emuledlg.h"
 #include "opcodes.h"
 #include "Log.h"
+#include "NetGuard.h"
 #include "MD4.h"
 #include "StringConversion.h"
 #include "kademliawnd.h"
@@ -93,6 +94,16 @@ void CKademlia::Start()
 
 void CKademlia::Start(CPrefs *pPrefs)
 {
+	// Pegaso: Kad is all UDP, which the proxy of the preferences does not carry
+	if (CNetGuard::UdpHeldByProxy()) {
+		delete pPrefs;
+		static bool s_bTold;
+		if (!s_bTold) {
+			s_bTold = true;
+			LogWarning(LOG_STATUSBAR, _T("Kad is not started: it cannot go through the proxy of the preferences, and going round it would show your address"));
+		}
+		return;
+	}
 	try {
 		// If we already have an instance, something is wrong.
 		if (m_pInstance) {

@@ -9,6 +9,10 @@
 // which the main thread drains in CWebDownload::Process().
 #pragma once
 #include <memory>
+
+// Every web request of Pegaso starts here (a WinHTTP session handle). With a proxy in the
+// preferences the request goes through it or fails: it never falls back to a direct connection.
+LPVOID PegasoHttpSession();
 #include <vector>
 
 class CPartFile;

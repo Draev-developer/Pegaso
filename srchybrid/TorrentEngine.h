@@ -62,7 +62,8 @@ struct STorrentStatus
 struct STorrentFile
 {
 	int		index = 0;			// position inside the torrent
-	std::wstring path;
+	std::wstring path;			// as it is now, inside the folder of the torrent; absolute if it was moved out of it
+	std::wstring fullPath;		// where the file is on disk
 	int64_t	size = 0;
 	int64_t	offset = 0;			// where the file starts inside the torrent
 	bool	wanted = true;
@@ -132,6 +133,9 @@ public:
 	// Link files (*.url) are deselected by default when a torrent is added.
 	std::vector<STorrentFile> GetFiles(const std::string &id);
 	void	SetFilesWanted(const std::string &id, const std::vector<std::pair<int, bool> > &wanted);
+	// Gives one file of a torrent another name or place (newPath: complete path). The engine
+	// moves the file itself and goes on offering it; the call returns when that is done.
+	bool	RenameFile(const std::string &id, int index, const std::wstring &newPath, std::wstring &error);
 
 	void	Poll(std::vector<STorrentEvent> &events);	// collect what happened since the last call
 	std::vector<STorrentStatus> GetStatus();

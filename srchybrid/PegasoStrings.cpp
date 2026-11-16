@@ -282,6 +282,58 @@ namespace
 		{L"Open the page", L"Abrir la web", L"Ouvrir la page", L"Apri la pagina", L"\u041e\u0442\u043a\u0440\u044b\u0442\u044c \u0441\u0442\u0440\u0430\u043d\u0438\u0446\u0443", L"Abrir a p\u00e1gina", L"Seite \u00f6ffnen"},
 		// PS_WS_PAGE_OPENED
 		{L"Opened in your browser, which does not go through the VPN of Pegaso. Paste here the link you get there.", L"Abierta en tu navegador, que no pasa por la VPN de Pegaso. Pega en Pegaso el enlace que consigas all\u00ed.", L"Ouverte dans votre navigateur, qui ne passe pas par le VPN de Pegaso. Collez dans Pegaso le lien obtenu.", L"Aperta nel tuo browser, che non passa per la VPN di Pegaso. Incolla in Pegaso il link che ottieni.", L"\u041e\u0442\u043a\u0440\u044b\u0442\u043e \u0432 \u0431\u0440\u0430\u0443\u0437\u0435\u0440\u0435, \u043a\u043e\u0442\u043e\u0440\u044b\u0439 \u043d\u0435 \u0438\u0434\u0451\u0442 \u0447\u0435\u0440\u0435\u0437 VPN Pegaso. \u0412\u0441\u0442\u0430\u0432\u044c\u0442\u0435 \u0432 Pegaso \u043f\u043e\u043b\u0443\u0447\u0435\u043d\u043d\u0443\u044e \u0441\u0441\u044b\u043b\u043a\u0443.", L"Aberta no seu navegador, que n\u00e3o passa pela VPN do Pegaso. Cole no Pegaso a liga\u00e7\u00e3o que obtiver.", L"Im Browser ge\u00f6ffnet, der nicht \u00fcber das VPN von Pegaso l\u00e4uft. Den dort erhaltenen Link in Pegaso einf\u00fcgen."},
+		// PS_RN_MENU
+		{L"Rename videos...", L"Renombrar v\u00eddeos...", L"Renommer les vid\u00e9os...", L"Rinomina i video...", L"\u041f\u0435\u0440\u0435\u0438\u043c\u0435\u043d\u043e\u0432\u0430\u0442\u044c \u0432\u0438\u0434\u0435\u043e...", L"Mudar o nome dos v\u00eddeos...", L"Videos umbenennen..."},
+		// PS_RN_TITLE
+		{L"Rename videos", L"Renombrar v\u00eddeos", L"Renommer les vid\u00e9os", L"Rinomina i video", L"\u041f\u0435\u0440\u0435\u0438\u043c\u0435\u043d\u043e\u0432\u0430\u043d\u0438\u0435 \u0432\u0438\u0434\u0435\u043e", L"Mudar o nome dos v\u00eddeos", L"Videos umbenennen"},
+		// PS_RN_SERIES
+		{L"Series:", L"Series:", L"S\u00e9ries :", L"Serie:", L"\u0421\u0435\u0440\u0438\u0430\u043b\u044b:", L"S\u00e9ries:", L"Serien:"},
+		// PS_RN_MOVIES
+		{L"Films:", L"Pel\u00edculas:", L"Films :", L"Film:", L"\u0424\u0438\u043b\u044c\u043c\u044b:", L"Filmes:", L"Filme:"},
+		// PS_RN_LOOKUP
+		{L"Look the names up", L"Buscar nombres", L"Chercher les noms", L"Cerca i nomi", L"\u041d\u0430\u0439\u0442\u0438 \u043d\u0430\u0437\u0432\u0430\u043d\u0438\u044f", L"Procurar nomes", L"Namen suchen"},
+		// PS_RN_MOVIEDIR
+		{L"Move films to (empty: leave them where they are)", L"Mover las pel\u00edculas a (vac\u00edo: no moverlas)", L"D\u00e9placer les films vers (vide : ne pas les d\u00e9placer)", L"Sposta i film in (vuoto: non spostarli)", L"\u041f\u0435\u0440\u0435\u043d\u043e\u0441\u0438\u0442\u044c \u0444\u0438\u043b\u044c\u043c\u044b \u0432 (\u043f\u0443\u0441\u0442\u043e: \u043d\u0435 \u043f\u0435\u0440\u0435\u043d\u043e\u0441\u0438\u0442\u044c)", L"Mover os filmes para (vazio: n\u00e3o mover)", L"Filme verschieben nach (leer: nicht verschieben)"},
+		// PS_RN_SERIESDIR
+		{L"Move series to (empty: leave them where they are)", L"Mover las series a (vac\u00edo: no moverlas)", L"D\u00e9placer les s\u00e9ries vers (vide : ne pas les d\u00e9placer)", L"Sposta le serie in (vuoto: non spostarle)", L"\u041f\u0435\u0440\u0435\u043d\u043e\u0441\u0438\u0442\u044c \u0441\u0435\u0440\u0438\u0430\u043b\u044b \u0432 (\u043f\u0443\u0441\u0442\u043e: \u043d\u0435 \u043f\u0435\u0440\u0435\u043d\u043e\u0441\u0438\u0442\u044c)", L"Mover as s\u00e9ries para (vazio: n\u00e3o mover)", L"Serien verschieben nach (leer: nicht verschieben)"},
+		// PS_RN_KEYS
+		{L"Keys...", L"Claves...", L"Cl\u00e9s...", L"Chiavi...", L"\u041a\u043b\u044e\u0447\u0438...", L"Chaves...", L"Schl\u00fcssel..."},
+		// PS_RN_APPLY
+		{L"Rename", L"Renombrar", L"Renommer", L"Rinomina", L"\u041f\u0435\u0440\u0435\u0438\u043c\u0435\u043d\u043e\u0432\u0430\u0442\u044c", L"Mudar o nome", L"Umbenennen"},
+		// PS_RN_COL_NEW
+		{L"New name", L"Nombre nuevo", L"Nouveau nom", L"Nuovo nome", L"\u041d\u043e\u0432\u043e\u0435 \u0438\u043c\u044f", L"Nome novo", L"Neuer Name"},
+		// PS_RN_COL_OLD
+		{L"File", L"Archivo", L"Fichier", L"File", L"\u0424\u0430\u0439\u043b", L"Ficheiro", L"Datei"},
+		// PS_RN_COL_STATE
+		{L"State", L"Estado", L"\u00c9tat", L"Stato", L"\u0421\u043e\u0441\u0442\u043e\u044f\u043d\u0438\u0435", L"Estado", L"Status"},
+		// PS_RN_NOFILES
+		{L"There are no finished videos in the download folders.", L"No hay v\u00eddeos terminados en las carpetas de descargas.", L"Il n'y a pas de vid\u00e9os termin\u00e9es dans les dossiers de t\u00e9l\u00e9chargement.", L"Non ci sono video completati nelle cartelle dei download.", L"\u0412 \u043f\u0430\u043f\u043a\u0430\u0445 \u0437\u0430\u0433\u0440\u0443\u0437\u043e\u043a \u043d\u0435\u0442 \u0433\u043e\u0442\u043e\u0432\u044b\u0445 \u0432\u0438\u0434\u0435\u043e.", L"N\u00e3o h\u00e1 v\u00eddeos conclu\u00eddos nas pastas de transfer\u00eancias.", L"In den Download-Ordnern sind keine fertigen Videos."},
+		// PS_RN_SERIE
+		{L"Series", L"Serie", L"S\u00e9rie", L"Serie", L"\u0421\u0435\u0440\u0438\u0430\u043b", L"S\u00e9rie", L"Serie"},
+		// PS_RN_MOVIE
+		{L"Film", L"Pel\u00edcula", L"Film", L"Film", L"\u0424\u0438\u043b\u044c\u043c", L"Filme", L"Film"},
+		// PS_RN_SEARCHING
+		{L"Looking up...", L"Buscando...", L"Recherche...", L"Ricerca...", L"\u041f\u043e\u0438\u0441\u043a...", L"A procurar...", L"Suche..."},
+		// PS_RN_NOTFOUND
+		{L"not found", L"no encontrado", L"introuvable", L"non trovato", L"\u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u043e", L"n\u00e3o encontrado", L"nicht gefunden"},
+		// PS_RN_NEEDKEY
+		{L"%s: a valid key is missing (Keys)", L"%s: falta una clave v\u00e1lida (Claves)", L"%s : il manque une cl\u00e9 valide (Cl\u00e9s)", L"%s: manca una chiave valida (Chiavi)", L"%s: \u043d\u0443\u0436\u0435\u043d \u0434\u0435\u0439\u0441\u0442\u0432\u0443\u044e\u0449\u0438\u0439 \u043a\u043b\u044e\u0447 (\u041a\u043b\u044e\u0447\u0438)", L"%s: falta uma chave v\u00e1lida (Chaves)", L"%s: g\u00fcltiger Schl\u00fcssel fehlt (Schl\u00fcssel)"},
+		// PS_RN_FOUND
+		{L"%d of %d found. Tick what is to be renamed; a name can be corrected with F2.", L"%d de %d encontrados. Marca los que quieras renombrar; un nombre se corrige con F2.", L"%d sur %d trouv\u00e9s. Cochez ceux \u00e0 renommer ; un nom se corrige avec F2.", L"%d di %d trovati. Spunta quelli da rinominare; un nome si corregge con F2.", L"\u041d\u0430\u0439\u0434\u0435\u043d\u043e %d \u0438\u0437 %d. \u041e\u0442\u043c\u0435\u0442\u044c\u0442\u0435 \u043d\u0443\u0436\u043d\u044b\u0435; \u0438\u043c\u044f \u0438\u0441\u043f\u0440\u0430\u0432\u043b\u044f\u0435\u0442\u0441\u044f \u043a\u043b\u0430\u0432\u0438\u0448\u0435\u0439 F2.", L"%d de %d encontrados. Marque os que quer mudar; um nome corrige-se com F2.", L"%d von %d gefunden. Ankreuzen, was umbenannt werden soll; ein Name l\u00e4sst sich mit F2 korrigieren."},
+		// PS_RN_DONE
+		{L"Done", L"Hecho", L"Fait", L"Fatto", L"\u0413\u043e\u0442\u043e\u0432\u043e", L"Feito", L"Erledigt"},
+		// PS_RN_SUMMARY
+		{L"%d renamed, %d could not be.", L"%d renombrados, %d no se han podido.", L"%d renomm\u00e9s, %d n'ont pas pu l'\u00eatre.", L"%d rinominati, %d non \u00e8 stato possibile.", L"\u041f\u0435\u0440\u0435\u0438\u043c\u0435\u043d\u043e\u0432\u0430\u043d\u043e: %d, \u043d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c: %d.", L"%d com nome novo, %d n\u00e3o foi poss\u00edvel.", L"%d umbenannt, %d nicht m\u00f6glich."},
+		// PS_RN_EXISTS
+		{L"there is a file with that name already", L"ya hay un archivo con ese nombre", L"un fichier porte d\u00e9j\u00e0 ce nom", L"c'\u00e8 gi\u00e0 un file con quel nome", L"\u0444\u0430\u0439\u043b \u0441 \u0442\u0430\u043a\u0438\u043c \u0438\u043c\u0435\u043d\u0435\u043c \u0443\u0436\u0435 \u0435\u0441\u0442\u044c", L"j\u00e1 h\u00e1 um ficheiro com esse nome", L"eine Datei mit diesem Namen gibt es schon"},
+		// PS_RN_BUSY
+		{L"it is still downloading", L"a\u00fan se est\u00e1 descargando", L"encore en cours de t\u00e9l\u00e9chargement", L"\u00e8 ancora in download", L"\u0435\u0449\u0451 \u0437\u0430\u0433\u0440\u0443\u0436\u0430\u0435\u0442\u0441\u044f", L"ainda est\u00e1 a ser transferido", L"wird noch heruntergeladen"},
+		// PS_RK_TITLE
+		{L"Database keys", L"Claves de las bases de datos", L"Cl\u00e9s des bases de donn\u00e9es", L"Chiavi delle banche dati", L"\u041a\u043b\u044e\u0447\u0438 \u0431\u0430\u0437 \u0434\u0430\u043d\u043d\u044b\u0445", L"Chaves das bases de dados", L"Schl\u00fcssel der Datenbanken"},
+		// PS_RK_HINT
+		{L"TVmaze and AniDB ask for no key. The others give one for free to whoever signs up on their site; Pegaso brings none, type yours here.", L"TVmaze y AniDB no piden clave. Las dem\u00e1s dan una gratis a quien se registra en su web; Pegaso no trae ninguna: escribe aqu\u00ed las tuyas.", L"TVmaze et AniDB ne demandent pas de cl\u00e9. Les autres en donnent une gratuite \u00e0 qui s'inscrit sur leur site ; Pegaso n'en apporte aucune : \u00e9crivez ici les v\u00f4tres.", L"TVmaze e AniDB non chiedono chiave. Le altre ne danno una gratis a chi si registra sul loro sito; Pegaso non ne porta nessuna: scrivi qui le tue.", L"TVmaze \u0438 AniDB \u0440\u0430\u0431\u043e\u0442\u0430\u044e\u0442 \u0431\u0435\u0437 \u043a\u043b\u044e\u0447\u0430. \u041e\u0441\u0442\u0430\u043b\u044c\u043d\u044b\u0435 \u0432\u044b\u0434\u0430\u044e\u0442 \u0435\u0433\u043e \u0431\u0435\u0441\u043f\u043b\u0430\u0442\u043d\u043e \u043f\u043e\u0441\u043b\u0435 \u0440\u0435\u0433\u0438\u0441\u0442\u0440\u0430\u0446\u0438\u0438 \u043d\u0430 \u0441\u0430\u0439\u0442\u0435; \u0432 Pegaso \u043a\u043b\u044e\u0447\u0435\u0439 \u043d\u0435\u0442 \u2014 \u0432\u043f\u0438\u0448\u0438\u0442\u0435 \u0441\u0432\u043e\u0438.", L"TVmaze e AniDB n\u00e3o pedem chave. As outras d\u00e3o uma gr\u00e1tis a quem se regista no site; o Pegaso n\u00e3o traz nenhuma: escreva aqui as suas.", L"TVmaze und AniDB brauchen keinen Schl\u00fcssel. Die anderen geben nach der Anmeldung auf ihrer Seite einen kostenlos; Pegaso bringt keinen mit: hier die eigenen eintragen."},
+		// PS_RN_ANIDB
+		{L"AniDB does not let programs fetch its list of titles from this connection. Download anime-titles.dat.gz from anidb.net with your browser and save it in:", L"AniDB no deja a los programas bajar su lista de t\u00edtulos desde esta conexi\u00f3n. Descarga anime-titles.dat.gz de anidb.net con el navegador y gu\u00e1rdalo en:", L"AniDB ne laisse pas les programmes t\u00e9l\u00e9charger sa liste de titres depuis cette connexion. T\u00e9l\u00e9chargez anime-titles.dat.gz sur anidb.net avec le navigateur et enregistrez-le dans :", L"AniDB non lascia scaricare ai programmi la lista dei titoli da questa connessione. Scarica anime-titles.dat.gz da anidb.net con il browser e salvalo in:", L"AniDB \u043d\u0435 \u043e\u0442\u0434\u0430\u0451\u0442 \u043f\u0440\u043e\u0433\u0440\u0430\u043c\u043c\u0430\u043c \u0441\u043f\u0438\u0441\u043e\u043a \u043d\u0430\u0437\u0432\u0430\u043d\u0438\u0439 \u0441 \u044d\u0442\u043e\u0433\u043e \u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0435\u043d\u0438\u044f. \u0421\u043a\u0430\u0447\u0430\u0439\u0442\u0435 anime-titles.dat.gz \u0441 anidb.net \u0431\u0440\u0430\u0443\u0437\u0435\u0440\u043e\u043c \u0438 \u0441\u043e\u0445\u0440\u0430\u043d\u0438\u0442\u0435 \u0432:", L"O AniDB n\u00e3o deixa os programas descarregar a lista de t\u00edtulos a partir desta liga\u00e7\u00e3o. Descarregue anime-titles.dat.gz de anidb.net com o navegador e guarde-o em:", L"AniDB l\u00e4sst Programme seine Titelliste \u00fcber diese Verbindung nicht laden. anime-titles.dat.gz mit dem Browser von anidb.net laden und speichern in:"},
 	};
 }
 

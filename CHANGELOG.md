@@ -2,6 +2,21 @@
 
 Pegaso parte de eMule 0.72a (edición de la comunidad). El historial de eMule está en `changelog_full.txt`.
 
+## 0.5
+
+### Renombrar vídeos
+- Herramientas → «Renombrar vídeos…» da a los vídeos terminados el nombre de la película o la serie que son, como hacen los organizadores de colecciones: `Nombre (año).ext` para las películas y `Nombre - 1x05.ext` para las series. Qué es cada archivo (película o capítulo, de qué, temporada y capítulo) se lee de su nombre; el nombre correcto, y el año de las películas, lo da la base de datos que se elija: TVmaze, TheMovieDB, TheTVDB o AniDB para las series, TheMovieDB u OMDb para las películas. Los nombres se piden en el idioma de Pegaso donde la base de datos lo permite.
+- Antes de renombrar se ve la lista con el nombre de ahora y el nuevo; se marca lo que se quiere cambiar y cualquier nombre se corrige a mano (F2).
+- Mover: las películas y las series pueden llevarse cada una a una carpeta, que se crea si falta.
+- Un archivo renombrado o movido sigue siendo el mismo para las redes. En eD2K y Kad conserva su hash y sigue compartido sin calcularlo de nuevo, también si la carpeta nueva no es una carpeta compartida. En BitTorrent lo mueve el propio motor, que sigue sembrándolo desde el sitio nuevo, también tras cerrar y abrir Pegaso.
+- Claves: TVmaze y AniDB no piden. TheMovieDB, OMDb y TheTVDB dan una gratis a quien se registra; Pegaso no trae ninguna y cada usuario escribe las suyas (botón «Claves…»).
+- AniDB no tiene búsqueda para programas: publica la lista de todos sus títulos, que Pegaso baja una vez al día como mucho y consulta en casa. Donde AniDB pone delante una comprobación para navegadores, Pegaso no la salta: lo dice, y sirve la lista que el usuario baje con su navegador y deje en la carpeta de configuración.
+
+### Otros
+- Nombre de usuario: quien empieza con Pegaso se llama «Pegaso» en las redes, en vez de la dirección de la web de eMule. Quien ya tenía un nombre lo conserva.
+- API local: la lista de archivos compartidos salía siempre vacía; ahora los trae, con su ruta.
+- Arrastrar archivos desde el Explorador: los archivos que Pegaso abre con doble clic (.torrent y colecciones de eMule) se aceptan también al soltarlos sobre la ventana, uno o varios a la vez. Antes la ventana solo aceptaba enlaces y accesos directos de Internet.
+
 ## 0.4
 
 ### Interfaz

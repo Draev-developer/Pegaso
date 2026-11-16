@@ -529,15 +529,15 @@ namespace
 	{
 		const size_t MAX_LISTED = 1000;
 		std::vector<std::string> items;
-		for (POSITION pos = NULL;;) {
-			const CKnownFile *pFile = theApp.sharedfiles->GetFileNext(pos);
-			if (pFile == NULL)
-				break;
-			if (items.size() < MAX_LISTED)
+		CKnownFilesMap shared;
+		theApp.sharedfiles->CopySharedFileMap(shared);
+		for (POSITION pos = shared.GetStartPosition(); pos != NULL && items.size() < MAX_LISTED;) {
+			CCKey key;
+			CKnownFile *pFile;
+			shared.GetNextAssoc(pos, key, pFile);
+			if (pFile != NULL)
 				items.push_back(CObj().Str("hash", md4str(pFile->GetFileHash())).Str("name", pFile->GetFileName())
-					.Num("size", (uint64)pFile->GetFileSize()).Str("link", pFile->GetED2kLink()).Done());
-			if (pos == NULL)
-				break;
+					.Num("size", (uint64)pFile->GetFileSize()).Str("path", pFile->GetFilePath()).Str("link", pFile->GetED2kLink()).Done());
 		}
 		return CObj().Num("total", (uint64)theApp.sharedfiles->GetCount()).Raw("files", Array(items)).Done();
 	}

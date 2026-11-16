@@ -73,6 +73,7 @@
 #include "kademlia/kademlia/kademlia.h"
 #include "PerfLog.h"
 #include "DropTarget.h"
+#include "PegasoRename.h"
 #include "LastCommonRouteFinder.h"
 #include "WebServer.h"
 #include "DownloadQueue.h"
@@ -2671,6 +2672,15 @@ BOOL CemuleDlg::OnCommand(WPARAM wParam, LPARAM lParam)
 			dlg.DoModal();
 		}
 		break;
+	case MP_PEGASO_RENAME:	// Pegaso: names for the finished videos
+		{
+			CPegasoRenameDlg dlg(this);
+			dlg.DoModal();
+		}
+		break;
+	case MP_PEGASO_DROPPED:	// Pegaso: files dropped from Explorer
+		CMainFrameDropTarget::ProcessDropped();
+		break;
 	case MP_PEGASO_KVPN:	// Pegaso: tie Pegaso to Kaspersky VPN, open it
 		theNetGuard.KasperskyDialog(this);
 		if (m_pSideBar != NULL)
@@ -2784,6 +2794,7 @@ void CemuleDlg::ShowToolPopup(bool toolsonly)
 			menu.AppendMenu(MF_STRING | (theNetGuard.IsKaspersky() ? MF_CHECKED : 0), MP_PEGASO_KVPN, GetPegasoString(PS_KVPN_MENU) + CString(_T("...")));
 	}
 	menu.AppendMenu(MF_STRING, MP_PEGASO_WEBSEARCH, GetPegasoString(PS_WS_MENU), _T("SEARCH"));	// Pegaso
+	menu.AppendMenu(MF_STRING, MP_PEGASO_RENAME, GetPegasoString(PS_RN_MENU));	// Pegaso
 
 	menu.AppendMenu(MF_SEPARATOR);
 	menu.AppendMenu(MF_STRING | MF_POPUP, (UINT_PTR)Links.m_hMenu, GetResString(IDS_LINKS), _T("WEB"));

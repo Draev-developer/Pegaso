@@ -21,7 +21,7 @@
 #include "resource.h"
 #include "Version.h"
 
-#define	DEFAULT_NICK			thePrefs.GetHomepageBaseURL()
+#define	DEFAULT_NICK			_T("Pegaso")	// Pegaso: the name a new user starts with
 #define	DEFAULT_TCP_PORT_OLD	4662
 #define	DEFAULT_UDP_PORT_OLD	(DEFAULT_TCP_PORT_OLD + 10)
 

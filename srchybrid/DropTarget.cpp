@@ -20,6 +20,10 @@
 #include "DropTarget.h"
 #include "OtherFunctions.h"
 #include <intshcut.h>
+#include <vector>
+#include "Collection.h"
+#include "CollectionViewDialog.h"
+#include "MenuCmds.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -357,9 +361,48 @@ HRESULT CMainFrameDropTarget::PasteText(CLIPFORMAT cfData, COleDataObject &data)
 	return hrPasteResult;
 }
 
+// Pegaso: the files Pegaso opens when they are double-clicked - .torrent files and eMule
+// collections - are taken as well when they are dragged from Explorer into the window.
+// They are not opened inside the drop itself: Explorer waits for the drop to return, and
+// opening one may ask the user something. They are noted and opened right afterwards.
+namespace
+{
+	std::vector<CString> s_droppedFiles;
+
+	bool IsPegasoFile(const CString &sPath)
+	{
+		return sPath.Right(8).CompareNoCase(_T(".torrent")) == 0 || CCollection::HasCollectionExtention(sPath);
+	}
+}
+
+void CMainFrameDropTarget::ProcessDropped()
+{
+	std::vector<CString> files;
+	files.swap(s_droppedFiles);
+	if (files.empty() || theApp.emuledlg == NULL || theApp.IsClosing())
+		return;
+	theApp.emuledlg->SetForegroundWindow();
+	for (const CString &sPath : files)
+		if (CCollection::HasCollectionExtention(sPath)) {
+			CCollection collection;
+			if (collection.InitCollectionFromFile(sPath, sPath.Mid(sPath.ReverseFind(_T('\\')) + 1))) {
+				CCollectionViewDialog dialog;
+				dialog.SetCollection(&collection);
+				dialog.DoModal();
+			}
+		} else
+			theApp.emuledlg->ProcessED2KLink(CStringW(sPath));
+}
+
 HRESULT CMainFrameDropTarget::AddUrlFileContents(LPCWSTR pszFileName)
 {
 	HRESULT hrResult = S_FALSE;
+
+	if (IsPegasoFile(CString(pszFileName))) {
+		s_droppedFiles.push_back(CString(pszFileName));
+		theApp.emuledlg->PostMessage(WM_COMMAND, MP_PEGASO_DROPPED);
+		return S_OK;
+	}
 
 	if (ExtensionIs((CString)pszFileName, FILEEXTDOT_INETSHRTCUT)) {
 		CComPtr<IUniformResourceLocatorW> pIUrl;
@@ -449,7 +492,8 @@ BOOL CMainFrameDropTarget::IsSupportedDropData(COleDataObject *pDataObject) cons
 			}
 			::GlobalFree(hMem);
 		}
-	} else if (pDataObject->IsDataAvailable(CF_HDROP)) {
+	}
+	if (!bResult && pDataObject->IsDataAvailable(CF_HDROP)) {
 		//
 		// Check HDROP data
 		//
@@ -463,7 +507,7 @@ BOOL CMainFrameDropTarget::IsSupportedDropData(COleDataObject *pDataObject) cons
 					while (*pszFileW != L'\0') {
 						size_t iLen = wcslen(pszFileW);
 						LPCWSTR pszExtW = GetFileExtW(pszFileW, (int)iLen);
-						if (pszExtW != NULL && _wcsicmp(pszExtW, FILEEXTDOT_INETSHRTCUTW) == 0) {
+						if ((pszExtW != NULL && _wcsicmp(pszExtW, FILEEXTDOT_INETSHRTCUTW) == 0) || IsPegasoFile(CString(pszFileW))) {
 							bResult = TRUE;
 							break;
 						}
@@ -474,7 +518,7 @@ BOOL CMainFrameDropTarget::IsSupportedDropData(COleDataObject *pDataObject) cons
 					while (*pszFileA != '\0') {
 						size_t iLen = strlen(pszFileA);
 						LPCSTR pszExtA = GetFileExtA(pszFileA, (int)iLen);
-						if (pszExtA != NULL && _stricmp(pszExtA, FILEEXTDOT_INETSHRTCUTA) == 0) {
+						if ((pszExtA != NULL && _stricmp(pszExtA, FILEEXTDOT_INETSHRTCUTA) == 0) || IsPegasoFile(CString(pszFileA))) {
 							bResult = TRUE;
 							break;
 						}
@@ -503,6 +547,8 @@ DROPEFFECT CMainFrameDropTarget::OnDragOver(CWnd*, COleDataObject*, DWORD, CPoin
 BOOL CMainFrameDropTarget::OnDrop(CWnd*, COleDataObject *pDataObject, DROPEFFECT /*dropEffect*/, CPoint /*point*/)
 {
 	if (m_bDropDataValid) {
+		if (pDataObject->IsDataAvailable(CF_HDROP))	// Pegaso: files first, whatever else comes along with them
+			return PasteHDROP(*pDataObject) == S_OK;
 		if (m_cfHTML && pDataObject->IsDataAvailable(m_cfHTML))
 			PasteHTML(*pDataObject);
 		else if (m_cfShellURL && pDataObject->IsDataAvailable(m_cfShellURL))

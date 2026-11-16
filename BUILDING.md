@@ -80,6 +80,8 @@ python -I tools\webtest\btseedtest.py        # torrents entre dos instancias
 python -I tools\webtest\webseedtest.py       # semillas web de torrents
 python -I tools\webtest\sidebartest.py       # barra lateral, campo de búsqueda y filtros (pantalla al 100 %)
 python -I tools\webtest\sitesearchtest.py    # búsqueda en las webs del usuario (web simulada)
+python -I tools\webtest\renametest.py        # renombrar vídeos con las bases de datos (simuladas) y moverlos sin dejar de compartir
+python -I tools\webtest\droptest.py          # archivos arrastrados desde el Explorador (mueve el ratón unos segundos)
 python -I tools\webtest\kvpntest.py          # oferta de Kaspersky VPN (solo si está instalado; no lo toca)
 python -I tools\webtest\nattest.py           # dos ID bajas presentadas por un servidor simulado
 python -I tools\webtest\kadnattest.py direct # dos ID bajas a través de Kad, vía directa por UDP

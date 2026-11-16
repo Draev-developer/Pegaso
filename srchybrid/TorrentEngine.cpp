@@ -18,6 +18,7 @@
 #include <libtorrent/add_torrent_params.hpp>
 #include <libtorrent/alert_types.hpp>
 #include <libtorrent/error_code.hpp>
+#include <libtorrent/file_storage.hpp>
 #include <libtorrent/load_torrent.hpp>
 #include <libtorrent/magnet_uri.hpp>
 #include <libtorrent/read_resume_data.hpp>
@@ -148,6 +149,7 @@ struct CTorrentEngine::Impl
 	std::set<std::string> fresh;	// torrents added by the user in this session, as opposed to restored ones
 	std::set<std::string> deliver;	// hybrid downloads: torrents whose finished pieces are read back
 	std::vector<STorrentPiece> pieces;	// read back, waiting for PollPieces()
+	std::vector<STorrentEvent> held;	// what happened while RenameFile() was waiting, for the next Poll()
 
 	// Name of a torrent; libtorrent 2.1 alerts do not carry it any more.
 	std::string NameOf(const lt::torrent_handle &h)
@@ -553,13 +555,27 @@ std::vector<STorrentFile> CTorrentEngine::GetFiles(const std::string &id)
 	if (!ti)
 		return out;
 	const lt::file_storage &fs = ti->layout();
+	const lt::renamed_files renamed = h.get_renamed_files();
+	const lt::filenames names(fs, renamed);	// the names as they are now
+	std::wstring savePath;
+	try {
+		savePath = FromUtf8(h.status(lt::torrent_handle::query_save_path).save_path);
+	} catch (const std::exception&) {
+	}
+	if (!savePath.empty() && savePath.back() != L'\\' && savePath.back() != L'/')
+		savePath += L'\\';
 	const std::vector<lt::download_priority_t> prio = h.get_file_priorities();
 	for (const lt::file_index_t i : fs.file_range()) {
 		if (fs.pad_file_at(i))
 			continue;	// filler between files, of no interest to the user
 		STorrentFile f;
 		f.index = static_cast<int>(i);
-		f.path = FromUtf8(fs.file_path(i));
+		f.path = FromUtf8(names.file_path(i));
+		for (wchar_t &c : f.path)
+			if (c == L'/')
+				c = L'\\';
+		const bool absolute = f.path.size() > 2 && (f.path[1] == L':' || (f.path[0] == L'\\' && f.path[1] == L'\\'));
+		f.fullPath = absolute ? f.path : savePath + f.path;
 		f.size = fs.file_size(i);
 		f.offset = fs.file_offset(i);
 		f.wanted = (size_t)f.index >= prio.size() || prio[(size_t)f.index] != lt::dont_download;
@@ -590,10 +606,58 @@ void CTorrentEngine::SetFilesWanted(const std::string &id, const std::vector<std
 	++m->pendingSaves;
 }
 
+bool CTorrentEngine::RenameFile(const std::string &id, int index, const std::wstring &newPath, std::wstring &error)
+{
+	const lt::torrent_handle h = m->Find(id);
+	if (!h.is_valid()) {
+		error = L"the torrent is not in the list";
+		return false;
+	}
+	const lt::file_index_t file(index);
+	h.rename_file(file, ToUtf8(newPath));
+	// the answer comes as an alert; everything else which arrives meanwhile is kept for Poll()
+	const auto start = std::chrono::steady_clock::now();
+	while (std::chrono::steady_clock::now() - start < std::chrono::minutes(10)) {
+		m->ses->wait_for_alert(std::chrono::milliseconds(200));
+		std::vector<lt::alert*> alerts;
+		m->ses->pop_alerts(&alerts);
+		bool done = false;
+		bool ok = false;
+		for (lt::alert *a : alerts) {
+			if (auto *p = lt::alert_cast<lt::file_renamed_alert>(a)) {
+				if (p->handle == h && p->index == file) {
+					done = ok = true;
+					continue;
+				}
+			} else if (auto *p = lt::alert_cast<lt::file_rename_failed_alert>(a)) {
+				if (p->handle == h && p->index == file) {
+					done = true;
+					error = FromUtf8(p->error.message());
+					continue;
+				}
+			}
+			m->Handle(a, &m->held);
+		}
+		if (done) {
+			if (ok) {
+				h.save_resume_data(lt::torrent_handle::save_info_dict);	// the new name has to outlive a restart
+				++m->pendingSaves;
+			}
+			return ok;
+		}
+	}
+	error = L"no answer from the engine";
+	return false;
+}
+
 void CTorrentEngine::Poll(std::vector<STorrentEvent> &events)
 {
 	if (!m->ses)
 		return;
+	if (!m->held.empty()) {
+		events.insert(events.end(), m->held.begin(), m->held.end());
+		m->held.clear();
+	}
 	m->Drain(&events);
 	// progress is written down regularly, so a crash costs little
 	if (std::chrono::steady_clock::now() - m->lastSave > std::chrono::minutes(2)) {

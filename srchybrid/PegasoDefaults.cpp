@@ -35,18 +35,29 @@ namespace
 		LPCTSTR	name;
 	};
 
-	// Present in both reference lists (upd.emule-security.org and emuling.gitlab.io), November 2026.
+	// The servers of the list of upd.emule-security.org (server.met) as of 17 November 2026,
+	// in the order of that list: the ones with most users first.
 	const SDefaultServer s_aServers[] =
 	{
 		{_T("176.123.5.89"), 4725, _T("eMule Sunrise")},
+		{_T("176.125.242.230"), 5555, _T("emule-qt.org - eNode")},
+		{_T("176.116.0.51"), 6555, _T("emule-qt.org - BiG BanG eNode")},
 		{_T("85.17.116.222"), 6082, _T("ed2k-rust")},
+		{_T("91.208.162.87"), 4232, _T("!! Sharing-Devils No.4 !!")},
 		{_T("91.208.162.182"), 4232, _T("MO-Server")},
 		{_T("77.42.68.79"), 4232, _T("Nordic-Server")},
-		{_T("91.208.162.87"), 4232, _T("!! Sharing-Devils No.4 !!")},
 		{_T("85.121.5.137"), 4232, _T("!! Sharing-Devils No.2 !!")},
+		{_T("176.116.0.62"), 7555, _T("Razorback 4")},
+		{_T("57.131.35.107"), 4232, _T("MO-ad-free")},
+		{_T("213.141.198.207"), 4232, _T("Mazinga Server")},
 		{_T("212.95.35.240"), 4232, _T("eMule Cosmic")},
 		{_T("91.208.162.55"), 4235, _T("!! Sharing-Devils No.3 !!")},
-		{_T("146.19.248.158"), 4325, _T("!! Sharing-Devils No.1 !!")}
+		{_T("57.128.161.24"), 6666, _T("Cyberchrist")},
+		{_T("146.19.248.158"), 4325, _T("!! Sharing-Devils No.1 !!")},
+		{_T("82.192.72.186"), 4661, _T("Drunken Donkey Unlimited Server")},
+		{_T("91.126.170.253"), 5687, _T("Emule Sentinel")},
+		{_T("143.246.192.192"), 4232, _T("eMule-Nordic")},
+		{_T("85.137.248.210"), 56612, _T("MO-Tardis")}
 	};
 
 	LPCTSTR const s_apszServerMetUrls[] =

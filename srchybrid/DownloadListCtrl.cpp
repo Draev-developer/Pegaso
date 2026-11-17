@@ -1616,10 +1616,10 @@ BOOL CDownloadListCtrl::OnCommand(WPARAM wParam, LPARAM)
 				break;
 			case MP_PEGASO_ADDTORRENT:	// hybrid download: a torrent with the same file as one more source
 				if (file->IsPartFile()) {
-					InputBox inputbox;
-					inputbox.SetLabels(GetPegasoString(PS_HYB_ADD), GetPegasoString(PS_HYB_HINT), _T(""));
-					if (inputbox.DoModal() == IDOK && !inputbox.WasCancelled())
-						theHybrid.Link(file, inputbox.GetInput());
+					// the link or the file can be written, looked for, or picked among the
+					// torrents Pegaso knows to have this same file
+					CPegasoAddTorrentDlg dlg(file, this);
+					dlg.DoModal();
 				}
 				break;
 			case MP_PEGASO_ADDWEBSRC:

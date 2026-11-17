@@ -2,6 +2,12 @@
 
 Pegaso parte de eMule 0.72a (edición de la comunidad). El historial de eMule está en `changelog_full.txt`.
 
+## 0.7.1
+
+- **Añadir un torrent a una descarga de eMule, sin escribir rutas.** «Añadir un torrent de este mismo archivo…» abre ahora una ventana con un botón **Examinar** (empieza en tu carpeta de descargas) y una lista de lo que Pegaso ha encontrado por su cuenta: los torrents de la lista de descargas y los archivos `.torrent` de tus carpetas de descargas que tienen un archivo de exactamente el mismo tamaño. Si solo hay uno, ya viene elegido: basta Aceptar. El enlace magnet o la ruta se pueden seguir escribiendo.
+- **Un torrent de la lista como fuente.** Un torrent que ya está en la lista —terminado o a medias— puede dar sus datos a una descarga de eMule del mismo archivo sin dejar de ser lo que era: conserva su fila, su carpeta y lo que descarga. Los datos pasan igualmente la comprobación de hashes de eMule.
+- **Lista de servidores de serie actualizada.** Pegaso trae ahora los 19 servidores de la lista de `upd.emule-security.org` del 17 de noviembre de 2026 (antes 9). Se añaden cuando la lista de servidores está vacía; quien ya tiene servidores conserva los suyos y puede actualizarlos en Servidores → «Actualizar server.met desde URL».
+
 ## 0.7
 
 · [English](CHANGELOG.en.md)

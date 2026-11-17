@@ -149,6 +149,12 @@ public:
 	// downloaded; with redeliver, the ones which are there already are handed out again.
 	void	SetWantedRanges(const std::string &id, const std::vector<std::pair<int64_t, int64_t> > &ranges, bool redeliver);
 	void	PollPieces(std::vector<STorrentPiece> &pieces);
+	// The pieces the torrent has which touch these ranges are handed out again, up to maxBytes
+	// of them at a time; what the torrent downloads is left as it is (a torrent of the list,
+	// which is a download of its own as well as a source of another).
+	void	RedeliverRanges(const std::string &id, const std::vector<std::pair<int64_t, int64_t> > &ranges, int64_t maxBytes);
+	// What a .torrent file describes: its identifier, its name and the sizes of its files.
+	static bool DescribeTorrentFile(const std::wstring &path, std::string &id, std::wstring &name, std::vector<int64_t> &sizes);
 
 	void	Pause(const std::string &id);
 	// true once a torrent which was paused has let go of its files: they can be moved then

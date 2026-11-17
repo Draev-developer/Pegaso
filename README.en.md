@@ -53,7 +53,7 @@ To receive incoming connections (a high ID in eMule), Pegaso asks the router to 
 Right-click an eMule download:
 
 - **Add web source…**: an `http://` address where that same file is.
-- **Add a torrent of this same file…**: a magnet link or `.torrent` file containing a file of exactly the same size.
+- **Add a torrent of this same file…**: a magnet link or `.torrent` file containing a file of exactly the same size. The window offers the ones Pegaso already knows — the torrents of the list and the `.torrent` files of your download folders — to pick it without typing anything.
 
 The torrent only fetches what the download lacks. If its data does not pass the eMule check, it is not the same file and Pegaso drops it.
 

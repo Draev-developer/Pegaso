@@ -2431,6 +2431,12 @@
 #define IDC_IM_QB_GO                    5188
 #define IDC_IM_QB_HINT                  5189
 #define IDC_IM_RESULT                   5190
+#define IDD_PEGASO_ADDTORRENT           5017
+#define IDC_AT_LINK_LBL                 5191
+#define IDC_AT_LINK                     5192
+#define IDC_AT_BROWSE                   5193
+#define IDC_AT_LIST_LBL                 5194
+#define IDC_AT_LIST                     5195
 #define IDD_WEB_SEARCH                  5003
 #define IDD_WEB_PROVIDERS               5004
 #define IDD_PEGASO_RENAME               5010

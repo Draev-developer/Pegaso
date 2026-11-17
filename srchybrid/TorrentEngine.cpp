@@ -1001,3 +1001,56 @@ bool CTorrentEngine::AddFromResume(const std::wstring &resumePath, const std::ws
 		return false;
 	}
 }
+
+void CTorrentEngine::RedeliverRanges(const std::string &id, const std::vector<std::pair<int64_t, int64_t> > &ranges, int64_t maxBytes)
+{
+	const lt::torrent_handle h = m->Find(id);
+	if (!h.is_valid() || m->deliver.count(id) == 0)
+		return;
+	const std::shared_ptr<const lt::torrent_info> ti = h.torrent_file();
+	if (!ti || ti->piece_length() <= 0)
+		return;
+	const int64_t pieceLen = ti->piece_length();
+	const int count = ti->num_pieces();
+	const lt::torrent_status st = h.status(lt::torrent_handle::query_pieces);
+	const bool all = st.is_seeding || st.pieces.empty() && st.is_finished;
+	int64_t given = 0;
+	int lastGiven = -1;
+	for (const std::pair<int64_t, int64_t> &range : ranges) {
+		if (range.second <= range.first)
+			continue;
+		const int64_t first = std::max<int64_t>(0, range.first / pieceLen);
+		const int64_t last = std::min<int64_t>(count - 1, (range.second - 1) / pieceLen);
+		for (int64_t i = first; i <= last; ++i) {
+			if ((int)i <= lastGiven || !(all || ((int)i < st.pieces.size() && st.pieces.get_bit(lt::piece_index_t((int)i)))))
+				continue;
+			if (given >= maxBytes)
+				return;
+			h.read_piece(lt::piece_index_t((int)i));
+			lastGiven = (int)i;
+			given += pieceLen;
+		}
+	}
+}
+
+bool CTorrentEngine::DescribeTorrentFile(const std::wstring &path, std::string &id, std::wstring &name, std::vector<int64_t> &sizes)
+{
+	std::vector<char> data;
+	if (!ReadFile(path, data, MAX_TORRENT_FILE) || data.empty())
+		return false;
+	try {
+		const lt::add_torrent_params atp = lt::load_torrent_buffer(data);
+		if (!atp.ti)
+			return false;
+		id = Hex(atp.info_hashes.get_best());
+		name = FromUtf8(atp.ti->name());
+		const lt::file_storage &fs = atp.ti->layout();
+		sizes.clear();
+		for (const lt::file_index_t i : fs.file_range())
+			if (!fs.pad_file_at(i))
+				sizes.push_back(fs.file_size(i));
+		return true;
+	} catch (const std::exception&) {
+		return false;
+	}
+}

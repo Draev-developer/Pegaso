@@ -8,6 +8,9 @@
 #include "NetGuard.h"
 #include "PegasoPrivacy.h"
 #include "OtherFunctions.h"
+#include "Preferences.h"
+#include "PartFile.h"
+#include "HybridSwarm.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -221,5 +224,99 @@ void CTorrentFilesDlg::OnOK()
 	for (int i = m_list.GetItemCount(); --i >= 0;)
 		wanted[(size_t)i] = m_list.GetCheck(i) != FALSE;
 	theTorrents.SetFilesWanted(m_sTorrentId, wanted);
+	CDialog::OnOK();
+}
+
+// ---------------------------------------------------------------- CPegasoAddTorrentDlg
+
+IMPLEMENT_DYNAMIC(CPegasoAddTorrentDlg, CDialog)
+
+BEGIN_MESSAGE_MAP(CPegasoAddTorrentDlg, CDialog)
+	ON_BN_CLICKED(IDC_AT_BROWSE, OnBnClickedBrowse)
+	ON_LBN_SELCHANGE(IDC_AT_LIST, OnLbnSelChange)
+	ON_LBN_DBLCLK(IDC_AT_LIST, OnLbnDblClk)
+	ON_EN_CHANGE(IDC_AT_LINK, OnEnChangeLink)
+END_MESSAGE_MAP()
+
+CPegasoAddTorrentDlg::CPegasoAddTorrentDlg(CPartFile *pFile, CWnd *pParent)
+	: CDialog(CPegasoAddTorrentDlg::IDD, pParent)
+	, m_pFile(pFile)
+	, m_bSetting(false)
+{
+}
+
+BOOL CPegasoAddTorrentDlg::OnInitDialog()
+{
+	CDialog::OnInitDialog();
+	InitWindowStyles(this);
+	CString sTitle(GetPegasoString(PS_HYB_ADD));
+	sTitle.TrimRight(_T('.'));
+	SetWindowText(sTitle + _T(" - ") + m_pFile->GetFileName());
+	SetDlgItemText(IDC_AT_LINK_LBL, GetPegasoString(PS_HYB_HINT));
+	SetDlgItemText(IDC_AT_BROWSE, GetResString(IDS_PW_BROWSE));
+	SetDlgItemText(IDOK, GetResString(IDS_TREEOPTIONS_OK));
+	SetDlgItemText(IDCANCEL, GetResString(IDS_CANCEL));
+
+	CWaitCursor wait;
+	m_candidates = theHybrid.Candidates(m_pFile);
+	const CString sSize(CastItoXBytes((uint64)m_pFile->GetFileSize()));
+	CString sLabel;
+	sLabel.Format(GetPegasoString(m_candidates.empty() ? PS_AT_NONE : PS_AT_LIST), (LPCTSTR)sSize);
+	SetDlgItemText(IDC_AT_LIST_LBL, sLabel);
+	CListBox *pList = static_cast<CListBox*>(GetDlgItem(IDC_AT_LIST));
+	for (const CHybridSwarm::SCandidate &candidate : m_candidates)
+		pList->AddString(candidate.text);
+	pList->EnableWindow(!m_candidates.empty());
+	if (m_candidates.size() == 1)
+		pList->SetCurSel(0);	// the one there is: OK takes it
+	GetDlgItem(m_candidates.size() == 1 ? IDC_AT_LIST : IDC_AT_LINK)->SetFocus();
+	return FALSE;
+}
+
+void CPegasoAddTorrentDlg::OnBnClickedBrowse()
+{
+	CFileDialog dlg(TRUE, _T("torrent"), NULL, OFN_FILEMUSTEXIST | OFN_HIDEREADONLY, _T("Torrent (*.torrent)|*.torrent|*.*|*.*||"), this);
+	const CString sStart(thePrefs.GetMuleDirectory(EMULE_INCOMINGDIR));	// where a downloaded .torrent file is
+	dlg.m_ofn.lpstrInitialDir = sStart;
+	if (dlg.DoModal() == IDOK)
+		SetDlgItemText(IDC_AT_LINK, dlg.GetPathName());
+}
+
+void CPegasoAddTorrentDlg::OnLbnSelChange()
+{
+	// one or the other: what is chosen in the list is not what is written above
+	if (static_cast<CListBox*>(GetDlgItem(IDC_AT_LIST))->GetCurSel() >= 0) {
+		m_bSetting = true;
+		SetDlgItemText(IDC_AT_LINK, _T(""));
+		m_bSetting = false;
+	}
+}
+
+void CPegasoAddTorrentDlg::OnEnChangeLink()
+{
+	if (!m_bSetting && GetDlgItem(IDC_AT_LINK)->GetWindowTextLength() > 0)
+		static_cast<CListBox*>(GetDlgItem(IDC_AT_LIST))->SetCurSel(-1);
+}
+
+void CPegasoAddTorrentDlg::OnLbnDblClk()
+{
+	OnOK();
+}
+
+void CPegasoAddTorrentDlg::OnOK()
+{
+	CString sLink;
+	GetDlgItemText(IDC_AT_LINK, sLink);
+	const int iSel = static_cast<CListBox*>(GetDlgItem(IDC_AT_LIST))->GetCurSel();
+	if (!sLink.Trim().IsEmpty())
+		theHybrid.Link(m_pFile, sLink);
+	else if (iSel >= 0 && (size_t)iSel < m_candidates.size()) {
+		const CHybridSwarm::SCandidate &candidate = m_candidates[(size_t)iSel];
+		if (candidate.listed)
+			theHybrid.LinkListed(m_pFile, candidate.id);
+		else
+			theHybrid.Link(m_pFile, candidate.path);
+	} else
+		return;		// nothing written and nothing chosen
 	CDialog::OnOK();
 }

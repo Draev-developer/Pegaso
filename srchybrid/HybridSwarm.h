@@ -14,6 +14,10 @@
 // temporary directory and is removed when the download completes or is cancelled. The links
 // survive a restart (config\hybrid.ini).
 //
+// The torrent may also be one of the download list: a download of its own which has that same
+// file. It then stays what it was - its row, its folder, whatever it downloads - and only
+// hands its pieces of that file over as well; dropped as a source, it is left alone.
+//
 // Main thread only.
 #pragma once
 #include <map>
@@ -31,6 +35,18 @@ public:
 
 	// sTorrent: magnet link or path of a .torrent file. Errors are logged.
 	bool	Link(CPartFile *pFile, const CString &sTorrent);
+	// A torrent which is in the download list already.
+	bool	LinkListed(CPartFile *pFile, const std::string &id);
+	// What could be given to this download without typing anything: the torrents of the list,
+	// and the .torrent files of the download folders, which have a file of exactly its size.
+	struct SCandidate
+	{
+		bool		listed;		// a torrent of the list (id), or a .torrent file (path)
+		std::string	id;
+		CString		path;
+		CString		text;		// for the user
+	};
+	std::vector<SCandidate> Candidates(const CPartFile *pFile);
 	// Is this torrent the helper of a download (and therefore not a download of its own)?
 	bool	IsHelper(const std::string &id);
 	// About once per second, with the fresh status of all torrents.
@@ -47,6 +63,7 @@ private:
 		DWORD	dwLastRanges;
 		DWORD	dwLastRedeliver;
 		bool	paused;
+		bool	own;				// a torrent of the download list, not a helper of this download alone
 	};
 
 	void	Load();

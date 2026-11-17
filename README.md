@@ -52,7 +52,7 @@ Para recibir conexiones entrantes (ID alta en eMule), Pegaso pide al router que 
 Con el botón derecho sobre una descarga de eMule:
 
 - **Añadir fuente web…**: dirección `http://` donde está ese mismo archivo.
-- **Añadir un torrent de este mismo archivo…**: enlace magnet o archivo `.torrent` que contenga un archivo de exactamente el mismo tamaño.
+- **Añadir un torrent de este mismo archivo…**: enlace magnet o archivo `.torrent` que contenga un archivo de exactamente el mismo tamaño. La ventana ofrece los que Pegaso ya conoce —los torrents de la lista y los `.torrent` de tus carpetas de descargas— para elegirlo sin escribir nada.
 
 El torrent solo baja lo que a la descarga le falta. Si sus datos no pasan la comprobación de eMule, no es el mismo archivo y Pegaso lo descarta.
 

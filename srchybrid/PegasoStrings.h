@@ -4,6 +4,10 @@
 
 enum EPegasoString
 {
+	PS_AT_LIST,
+	PS_AT_NONE,
+	PS_AT_INLIST,
+	PS_AT_FILE,
 	PS_TRUST_ASK_MANY,
 	PS_CC_DNS,
 	PS_CC_DNS_SYSTEM,

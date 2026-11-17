@@ -9,6 +9,8 @@
 #include "OtherFunctions.h"
 #include "Opcodes.h"
 #include "Log.h"
+#include "PegasoStrings.h"
+#include <set>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -65,6 +67,8 @@ void CHybridSwarm::Load()
 		link.fileIndex = -1;
 		link.corruptionAtLink = _UI64_MAX;	// taken from the download when it is first seen
 		link.dwAdded = ::GetTickCount();
+		sKey.Format(_T("Own%u"), i);
+		link.own = ::GetPrivateProfileInt(_T("Hybrid"), sKey, 0, sPath) != 0;
 		if (szTorrent[0] != 0 && _tcslen(szHash) == 32 && strmd4(CStringA(szHash), link.hash))
 			m_links[std::string(CStringA(szTorrent))] = link;
 	}
@@ -84,6 +88,8 @@ void CHybridSwarm::Save() const
 		::WritePrivateProfileString(_T("Hybrid"), sKey, CString(entry.first.c_str()), sPath);
 		sKey.Format(_T("File%u"), i);
 		::WritePrivateProfileString(_T("Hybrid"), sKey, md4str(entry.second.hash), sPath);
+		sKey.Format(_T("Own%u"), i);
+		::WritePrivateProfileString(_T("Hybrid"), sKey, entry.second.own ? _T("1") : _T("0"), sPath);
 		++i;
 	}
 }
@@ -91,7 +97,8 @@ void CHybridSwarm::Save() const
 bool CHybridSwarm::IsHelper(const std::string &id)
 {
 	Load();
-	return m_links.find(id) != m_links.end() || m_leaving.count(id) != 0;
+	const std::map<std::string, SLink>::const_iterator it = m_links.find(id);
+	return (it != m_links.end() && !it->second.own) || m_leaving.count(id) != 0;
 }
 
 bool CHybridSwarm::Link(CPartFile *pFile, const CString &sTorrent)
@@ -143,6 +150,101 @@ bool CHybridSwarm::Link(CPartFile *pFile, const CString &sTorrent)
 	return true;
 }
 
+bool CHybridSwarm::LinkListed(CPartFile *pFile, const std::string &id)
+{
+	Load();
+	if (pFile == NULL || pFile->IsTorrent() || !pFile->IsPartFile() || !theTorrents.IsRunning())
+		return false;
+	for (const auto &entry : m_links)
+		if (md4equ(entry.second.hash, pFile->GetFileHash())) {
+			LogWarning(LOG_STATUSBAR, _T("\"%s\" already has a torrent as a source"), (LPCTSTR)pFile->GetFileName());
+			return false;
+		}
+	if (m_links.find(id) != m_links.end()) {
+		LogWarning(LOG_STATUSBAR, _T("That torrent is the source of another download already"));
+		return false;
+	}
+	SLink link = {};
+	md4cpy(link.hash, pFile->GetFileHash());
+	link.fileIndex = -1;
+	link.corruptionAtLink = pFile->GetCorruptionLoss();
+	link.dwAdded = ::GetTickCount();
+	link.own = true;
+	m_links[id] = link;
+	theTorrents.Engine().DeliverPieces(id, true);
+	Save();
+	AddLogLine(true, _T("Hybrid download: a torrent of the list was added as a source of \"%s\""), (LPCTSTR)pFile->GetFileName());
+	return true;
+}
+
+std::vector<CHybridSwarm::SCandidate> CHybridSwarm::Candidates(const CPartFile *pFile)
+{
+	Load();
+	std::vector<SCandidate> out;
+	if (pFile == NULL || !theTorrents.IsRunning())
+		return out;
+	const int64_t iSize = (int64_t)(uint64)pFile->GetFileSize();
+	std::set<std::string> known;
+
+	// the torrents of the list
+	for (const STorrentStatus &st : theTorrents.GetStatus()) {
+		known.insert(st.id);
+		if (m_links.find(st.id) != m_links.end() || m_leaving.count(st.id) != 0)
+			continue;
+		bool bHasIt = false;
+		for (const STorrentFile &file : theTorrents.Engine().GetFiles(st.id))
+			bHasIt |= (file.size == iSize);
+		if (!bHasIt)
+			continue;
+		SCandidate c;
+		c.listed = true;
+		c.id = st.id;
+		c.text.Format(_T("%s  -  %s"), st.name.c_str(), GetPegasoString(PS_AT_INLIST));
+		if (!st.finished && st.size > 0)
+			c.text.AppendFormat(_T(" (%d %%)"), (int)(st.done * 100 / st.size));
+		out.push_back(c);
+	}
+
+	// the .torrent files of the download folders
+	CStringArray asFolders;
+	asFolders.Add(thePrefs.GetMuleDirectory(EMULE_INCOMINGDIR));
+	for (INT_PTR i = 1; i < thePrefs.GetCatCount(); ++i)
+		if (!thePrefs.GetCatPath(i).IsEmpty())
+			asFolders.Add(thePrefs.GetCatPath(i));
+	std::set<CString> seen;
+	for (INT_PTR i = 0; i < asFolders.GetCount(); ++i) {
+		CString sFolder(asFolders[i]);
+		if (sFolder.Right(1) != _T("\\"))
+			sFolder += _T('\\');
+		CString sKey(sFolder);
+		if (!seen.insert(sKey.MakeLower()).second)
+			continue;
+		CFileFind finder;
+		int iLooked = 0;
+		for (BOOL bFound = finder.FindFile(sFolder + _T("*.torrent")); bFound && iLooked < 500; ++iLooked) {
+			bFound = finder.FindNextFile();
+			if (finder.IsDirectory())
+				continue;
+			std::string id;
+			std::wstring name;
+			std::vector<int64_t> sizes;
+			if (!CTorrentEngine::DescribeTorrentFile(std::wstring((LPCTSTR)finder.GetFilePath()), id, name, sizes) || !known.insert(id).second)
+				continue;	// not a torrent, or one which is in the list (or listed here) already
+			bool bHasIt = false;
+			for (const int64_t size : sizes)
+				bHasIt |= (size == iSize);
+			if (!bHasIt)
+				continue;
+			SCandidate c;
+			c.listed = false;
+			c.path = finder.GetFilePath();
+			c.text.Format(_T("%s  -  %s"), (LPCTSTR)finder.GetFileName(), GetPegasoString(PS_AT_FILE));
+			out.push_back(c);
+		}
+	}
+	return out;
+}
+
 void CHybridSwarm::Process(CTorrentEngine &engine, const std::vector<STorrentStatus> &status)
 {
 	Load();
@@ -182,7 +284,7 @@ void CHybridSwarm::Process(CTorrentEngine &engine, const std::vector<STorrentSta
 			pszDrop = _T("");
 		} else if (pStatus == NULL) {
 			if (dwNow - link.dwAdded > SEC2MS(60))
-				pszDrop = _T("the torrent could not be added");
+				pszDrop = link.own ? _T("the torrent is no longer in the list") : _T("the torrent could not be added");
 		} else if (pStatus->state == TS_ERROR) {
 			pszDrop = _T("the torrent reported an error");
 		} else if (pFile->GetCorruptionLoss() > link.corruptionAtLink && link.fileIndex >= 0) {
@@ -209,8 +311,10 @@ void CHybridSwarm::Process(CTorrentEngine &engine, const std::vector<STorrentSta
 			if (pFile)
 				pFile->SetHybridPeers(-1);
 			engine.DeliverPieces(id, false);
-			engine.Remove(id, true);
-			m_leaving.insert(id);	// stays hidden until the engine has let go of it
+			if (!link.own) {	// a torrent of the list goes on being what it was
+				engine.Remove(id, true);
+				m_leaving.insert(id);	// stays hidden until the engine has let go of it
+			}
 			it = m_links.erase(it);
 			bChanged = true;
 			continue;
@@ -220,6 +324,22 @@ void CHybridSwarm::Process(CTorrentEngine &engine, const std::vector<STorrentSta
 		if (pFile != NULL && pStatus != NULL) {
 			pFile->SetHybridPeers(pStatus->state == TS_PAUSED ? 0 : pStatus->peers);
 			const bool bActive = IsActive(pFile);
+			if (link.own) {
+				// it downloads what it downloads; what it has of the file is handed over, a
+				// stretch at a time (a whole file read at once would not fit in memory)
+				if (link.fileIndex >= 0 && bActive && (link.dwLastRanges == 0 || dwNow - link.dwLastRanges >= SEC2MS(3))) {
+					std::vector<std::pair<int64_t, int64_t> > ranges;
+					const CList<Gap_Struct> &gaps = pFile->GetGapList();
+					for (POSITION pos = gaps.GetHeadPosition(); pos != NULL;) {
+						const Gap_Struct &gap = gaps.GetNext(pos);
+						ranges.emplace_back(link.offset + (int64_t)gap.start, link.offset + (int64_t)gap.end + 1);
+					}
+					engine.RedeliverRanges(id, ranges, 64 * 1024 * 1024);
+					link.dwLastRanges = dwNow ? dwNow : 1;
+				}
+				++it;
+				continue;
+			}
 			if (bActive == link.paused) {
 				link.paused = !bActive;
 				if (bActive)

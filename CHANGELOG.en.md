@@ -2,6 +2,12 @@
 
 Pegaso starts from eMule 0.72a (community edition). The history of eMule is in `changelog_full.txt`. · [Español](CHANGELOG.md)
 
+## 0.7.1
+
+- **Adding a torrent to an eMule download without typing paths.** "Add a torrent of this same file…" now opens a window with a **Browse** button (it starts in your download folder) and a list of what Pegaso has found by itself: the torrents of the download list and the `.torrent` files of your download folders which have a file of exactly the same size. If there is only one, it comes chosen already: OK is enough. The magnet link or the path can still be typed.
+- **A torrent of the list as a source.** A torrent which is in the list already — finished or halfway — can give its data to an eMule download of the same file without ceasing to be what it was: it keeps its row, its folder and whatever it downloads. The data goes through the hash check of eMule all the same.
+- **The built-in server list is up to date.** Pegaso now ships with the 19 servers of the list of `upd.emule-security.org` of 17 November 2026 (9 before). They are added when the server list is empty; whoever has servers already keeps them and can update them in Servers → "Update server.met from URL".
+
 ## 0.7
 
 ### Daily use

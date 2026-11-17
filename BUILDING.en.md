@@ -91,6 +91,7 @@ python    tools\webtest\privuitest.py        # the windows of the privacy option
 python -I tools\webtest\autotest.py          # watched folder, folders by type, playing, import, names through the adapter
 python -I tools\webtest\manytest.py 1500     # downloading many search results at once
 python -I tools\webtest\hybridpicktest.py    # picking, not typing, the torrent given to an eMule download
+python -I tools\webtest\videotest.py         # videos published as a list (HLS, DASH): quality, language and name
 python -I tools\webtest\droptest.py          # files dragged from Explorer (moves the mouse for a few seconds)
 python -I tools\webtest\kvpntest.py          # the offer of Kaspersky VPN (only if it is installed; does not touch it)
 python -I tools\webtest\nattest.py           # two low IDs introduced by a simulated server

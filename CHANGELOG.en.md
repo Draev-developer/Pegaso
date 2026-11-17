@@ -2,6 +2,13 @@
 
 Pegaso starts from eMule 0.72a (community edition). The history of eMule is in `changelog_full.txt`. · [Español](CHANGELOG.md)
 
+## 0.8
+
+- **Downloading a video from a web page, choosing quality, language and name.** Many sites publish their videos as a list (HLS, `.m3u8`; DASH, `.mpd`) with several qualities and sound tracks, each in hundreds of pieces. Given the address of that list, or of a page which carries it in plain sight, Pegaso opens a window to choose the quality, the language and the name of the file; it fetches the pieces and joins them. It works from the usual link field and from Tools → "Download a video from a web page…". Guide: [docs/en/download-videos.md](docs/en/download-videos.md).
+- What it does not take, and says so: encrypted videos, live broadcasts, and those of sites which do not publish the list but hand it to their own player through a private service, a login or copy protection. Nothing is written for one site in particular.
+- **Video and sound in one file, if there is ffmpeg.** When a language is chosen, video and sound travel apart. If ffmpeg is on the computer (next to `Pegaso.exe`, in the PATH or in `FfmpegPath` of `preferences.ini`), Pegaso joins them without re-encoding; if not, it leaves the sound in a file of its own next to the video and says so before starting. Pegaso does not bring ffmpeg along.
+- A link which turns out to be a web page is no longer downloaded as a file nor gives an error: it is looked at for a video.
+
 ## 0.7.1
 
 - **Adding a torrent to an eMule download without typing paths.** "Add a torrent of this same file…" now opens a window with a **Browse** button (it starts in your download folder) and a list of what Pegaso has found by itself: the torrents of the download list and the `.torrent` files of your download folders which have a file of exactly the same size. If there is only one, it comes chosen already: OK is enough. The magnet link or the path can still be typed.

@@ -46,6 +46,7 @@
 #include "NetGuard.h"
 #include "PegasoPrivacy.h"
 #include "PegasoAuto.h"
+#include "PegasoVideo.h"
 #include "PegasoDefaults.h"
 #include "otherfunctions.h"
 #include "ServerWnd.h"
@@ -2685,6 +2686,9 @@ BOOL CemuleDlg::OnCommand(WPARAM wParam, LPARAM lParam)
 			dlg.DoModal();
 		}
 		break;
+	case MP_PEGASO_VIDEO:	// Pegaso: a video of a web page, with its quality, language and name chosen
+		CPegasoVideoDlg::Open(this);
+		break;
 	case MP_PEGASO_FOLDERS:	// Pegaso: the watched folder and the folders by type
 		{
 			CPegasoFoldersDlg dlg(this);
@@ -2830,6 +2834,7 @@ void CemuleDlg::ShowToolPopup(bool toolsonly)
 	menu.AppendMenu(MF_STRING, MP_PEGASO_WEBSEARCH, GetPegasoString(PS_WS_MENU), _T("SEARCH"));	// Pegaso
 	menu.AppendMenu(MF_STRING, MP_PEGASO_RENAME, GetPegasoString(PS_RN_MENU));	// Pegaso
 	menu.AppendMenu(MF_STRING, MP_PEGASO_CREATE, GetPegasoString(PS_CR_MENU));	// Pegaso
+	menu.AppendMenu(MF_STRING, MP_PEGASO_VIDEO, GetPegasoString(PS_VD_MENU) + CString(_T("...")));	// Pegaso
 	menu.AppendMenu(MF_STRING, MP_PEGASO_FOLDERS, GetPegasoString(PS_AF_MENU) + CString(_T("...")));	// Pegaso
 	menu.AppendMenu(MF_STRING, MP_PEGASO_IMPORT, GetPegasoString(PS_IM_MENU) + CString(_T("...")));	// Pegaso
 	menu.AppendMenu(MF_STRING, MP_PEGASO_CONN, GetPegasoString(PS_CC_MENU) + CString(_T("...")));	// Pegaso

@@ -51,8 +51,8 @@
 // must keep tracking the eMule release this code is based on; Pegaso is announced as a mod.
 #define PEGASO_NAME			_T("Pegaso")
 #define PEGASO_VERSION_MJR	0
-#define PEGASO_VERSION_MIN	7
-#define PEGASO_VERSION_UPD	1
+#define PEGASO_VERSION_MIN	8
+#define PEGASO_VERSION_UPD	0
 #if PEGASO_VERSION_UPD > 0
 #define PEGASO_VERSION_NAME	chSTR(PEGASO_VERSION_MJR) _T(".") chSTR(PEGASO_VERSION_MIN) _T(".") chSTR(PEGASO_VERSION_UPD)
 #else

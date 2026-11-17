@@ -90,6 +90,7 @@ python    tools\webtest\privuitest.py        # las ventanas de las opciones de p
 python -I tools\webtest\autotest.py          # carpeta vigilada, carpetas por tipo, reproducir, importar, nombres por el adaptador
 python -I tools\webtest\manytest.py 1500     # descargar de una vez muchos resultados de una búsqueda
 python -I tools\webtest\hybridpicktest.py    # elegir, sin escribirlo, el torrent que se añade a una descarga de eMule
+python -I tools\webtest\videotest.py         # vídeos publicados como lista (HLS, DASH): calidad, idioma y nombre
 python -I tools\webtest\droptest.py          # archivos arrastrados desde el Explorador (mueve el ratón unos segundos)
 python -I tools\webtest\kvpntest.py          # oferta de Kaspersky VPN (solo si está instalado; no lo toca)
 python -I tools\webtest\nattest.py           # dos ID bajas presentadas por un servidor simulado

@@ -2,6 +2,13 @@
 
 Pegaso parte de eMule 0.72a (edición de la comunidad). El historial de eMule está en `changelog_full.txt`.
 
+## 0.8
+
+- **Descargar un vídeo de una web, eligiendo calidad, idioma y nombre.** Muchas webs publican sus vídeos como una lista (HLS, `.m3u8`; DASH, `.mpd`) con varias calidades y pistas de sonido, cada una en cientos de trozos. Al dar a Pegaso la dirección de esa lista, o de una página que la lleve a la vista, se abre una ventana para elegir la calidad, el idioma y el nombre del archivo; Pegaso baja los trozos y los une. Vale el campo de enlaces de siempre y también Herramientas → «Descargar un vídeo de una web…». Guía: [docs/descargar-videos.md](docs/descargar-videos.md).
+- Lo que no baja, y lo dice: vídeos cifrados, emisiones en directo, y los de las webs que no publican la lista sino que la entregan a su propio reproductor mediante un servicio privado, un inicio de sesión o una protección contra copia. No hay nada hecho a medida para ninguna web.
+- **Vídeo y sonido en un solo archivo, si hay ffmpeg.** Cuando se elige idioma, vídeo y sonido viajan aparte. Si ffmpeg está en el equipo (junto a `Pegaso.exe`, en el PATH o en `FfmpegPath` de `preferences.ini`), Pegaso los une sin recodificar; si no, deja el sonido en un archivo aparte junto al vídeo y lo avisa antes de empezar. Pegaso no trae ffmpeg.
+- Un enlace que resulta ser una página web ya no se descarga como archivo ni da error: se mira si lleva un vídeo.
+
 ## 0.7.1
 
 - **Añadir un torrent a una descarga de eMule, sin escribir rutas.** «Añadir un torrent de este mismo archivo…» abre ahora una ventana con un botón **Examinar** (empieza en tu carpeta de descargas) y una lista de lo que Pegaso ha encontrado por su cuenta: los torrents de la lista de descargas y los archivos `.torrent` de tus carpetas de descargas que tienen un archivo de exactamente el mismo tamaño. Si solo hay uno, ya viene elegido: basta Aceptar. El enlace magnet o la ruta se pueden seguir escribiendo.

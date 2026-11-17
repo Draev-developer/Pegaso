@@ -21,6 +21,7 @@ Pegaso is a free P2P client for Windows, derived from [eMule](https://www.emule-
 | **Safety** | Every finished download is handed to the installed antivirus (AMSI) and marked as coming from the internet, as browsers do. |
 | **Search on your own sites** | Keep a notebook of the sites you want to search: a search page (with `%s` where the words go) or a Torznab API such as the one of Jackett or Prowlarr. Pegaso lists the download links they return. It ships with no site at all. |
 | **Making torrents** | Make the torrent of a file or folder of yours, with its magnet link, and seed it from where it is. |
+| **Videos from the web** | A video published in an open format (HLS or DASH) is fetched choosing quality, language and file name. It takes neither encrypted videos nor those of platforms which hide them behind their player. See [docs/en/download-videos.md](docs/en/download-videos.md). |
 | **Series of downloads** | `https://example.org/part[01-20].zip` fetches the twenty parts at once. |
 | **Browser extension** | "Download with Pegaso" in the menu of Chrome, Edge and Firefox, for links, selections and, if you wish, the downloads of the browser. See [docs/en/browser-extension.md](docs/en/browser-extension.md). |
 | **Renaming videos** | Gives finished videos the name of their film or series (`Name (year)`, `Name - 1x05`) with TheMovieDB, OMDb, TheTVDB, TVmaze or AniDB, and moves them to the folder you choose without ceasing to share them on eD2K or to seed them on BitTorrent. How to get the keys: [docs/en/rename-videos.md](docs/en/rename-videos.md). |

@@ -1,4 +1,4 @@
-﻿Pegaso 0.7.1
+﻿Pegaso 0.8
 ==========
 
 Pegaso descarga de las redes eMule (servidores ed2k y Kad), de BitTorrent y de

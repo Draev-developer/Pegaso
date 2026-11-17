@@ -19,6 +19,8 @@
 #include "PegasoScan.h"
 #include "AsyncProxySocketLayer.h"
 #include "PegasoBridge.h"
+#include "PegasoVideo.h"
+#include "emuleDlg.h"
 #include "Version.h"
 
 #pragma comment(lib, "winhttp.lib")
@@ -695,6 +697,7 @@ struct SWebProbe
 	uint64	size = WEB_SIZE_UNKNOWN;
 	CString	name;
 	CString	error;
+	bool	page = false;				// not a file: a web page, or the list of the pieces of a video
 };
 
 namespace
@@ -708,6 +711,13 @@ namespace
 		// A one byte range request reveals the total size and whether ranges are supported,
 		// also on servers which refuse HEAD requests.
 		if (SendGet(probe.url, _T("bytes=0-0"), req, dwStatus, probe.error)) {
+			// Pegaso: a page or a list of pieces is not downloaded as a file - it is looked at for a video
+			if (GetHeader(req.hRequest, WINHTTP_QUERY_CONTENT_TYPE, sValue)) {
+				sValue.MakeLower();
+				// (a server may call a file a page: an address with the name of a file is a file)
+				probe.page = (sValue.Left(9) == _T("text/html") && !CWebDownloadQueue::LooksLikeFileUrl(probe.url))
+					|| sValue.Find(_T("mpegurl")) >= 0 || sValue.Find(_T("dash+xml")) >= 0;
+			}
 			uint64 uFirst, uTotal;
 			if (dwStatus == HTTP_STATUS_PARTIAL_CONTENT) {
 				if (GetHeader(req.hRequest, WINHTTP_QUERY_CONTENT_RANGE, sValue) && ParseContentRange(sValue, uFirst, uTotal))
@@ -791,6 +801,12 @@ void CWebDownloadQueue::AddUrl(const CString &sUrl, int cat)
 		AddLogLine(true, _T("Web download: %u addresses from %s"), (unsigned)series.size(), (LPCTSTR)sUrl);
 		for (const CString &sOne : series)
 			AddUrl(sOne, cat);
+		return;
+	}
+	// Pegaso: the list of the pieces of a video goes to the window which lets its quality,
+	// its language and its name be chosen
+	if (PegasoVideoIsList(sUrl) && theApp.emuledlg != NULL && theApp.emuledlg->m_hWnd != NULL) {
+		CPegasoVideoDlg::Open(theApp.emuledlg, sUrl);
 		return;
 	}
 	std::shared_ptr<SWebProbe> pProbe = std::make_shared<SWebProbe>();
@@ -882,6 +898,12 @@ void CWebDownloadQueue::Process()
 		}
 		m_probes.erase(m_probes.begin() + i);
 
+		if (pProbe->page && theApp.emuledlg != NULL && theApp.emuledlg->m_hWnd != NULL) {
+			// Pegaso: a page - the window looks for a video in it, and says so if there is none
+			AddLogLine(false, _T("Web download: %s is a page, looked at for a video"), (LPCTSTR)pProbe->url);
+			CPegasoVideoDlg::Open(theApp.emuledlg, pProbe->url);
+			continue;
+		}
 		if (!pProbe->error.IsEmpty()) {
 			LogError(LOG_STATUSBAR, _T("Web download failed: %s - %s"), (LPCTSTR)pProbe->error, (LPCTSTR)pProbe->url);
 			continue;

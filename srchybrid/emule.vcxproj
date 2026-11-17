@@ -438,6 +438,7 @@
     <ClCompile Include="PegasoRename.cpp" />
     <ClCompile Include="PegasoAuto.cpp" />
     <ClCompile Include="PegasoBridge.cpp" />
+    <ClCompile Include="PegasoVideo.cpp" />
     <ClCompile Include="PegasoPrivacy.cpp" />
     <ClCompile Include="PegasoTorrentCreate.cpp" />
     <ClCompile Include="Version.cpp" />
@@ -748,6 +749,7 @@
     <ClInclude Include="PegasoRename.h" />
     <ClInclude Include="PegasoAuto.h" />
     <ClInclude Include="PegasoBridge.h" />
+    <ClInclude Include="PegasoVideo.h" />
     <ClInclude Include="PegasoPrivacy.h" />
     <ClInclude Include="PegasoTorrentCreate.h" />
     <ClInclude Include="UserMsgs.h" />
